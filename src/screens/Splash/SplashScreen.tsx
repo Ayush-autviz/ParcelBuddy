@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Dimensions,
+  Animated,
+  StatusBar,
 } from 'react-native';
-
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useAuth } from '../../contexts/AuthContext';
 import { SvgXml } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
+
+type RootStackParamList = {
+  Splash: undefined;
+  Auth: undefined;
+  MainApp: undefined;
+};
+
+type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
 
 const Logo =`
 <svg width="228" height="178" viewBox="0 0 228 178" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -48,32 +60,77 @@ const EllipseTop = `
 </svg>
 `
 
-const SplashScreen = () => {
+const SplashScreen: React.FC = () => {
+  const navigation = useNavigation<SplashScreenNavigationProp>();
+  const { isAuthenticated } = useAuth();
+  const fadeAnim = new Animated.Value(0);
+  const scaleAnim = new Animated.Value(0.3);
+
+  useEffect(() => {
+    // Start animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 10,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Navigate based on authentication state after 3 seconds
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        navigation.replace('MainApp');
+      } else {
+        navigation.replace('Auth');
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [fadeAnim, scaleAnim, navigation, isAuthenticated]);
+
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F9FAFF" />
+      
       {/* Top Left Ellipse */}
       <View style={styles.topEllipse}>
-        <SvgXml xml={EllipseTop}/>
+        <SvgXml xml={EllipseTop} width={width * 1.5} height={height * 0.6} />
       </View>
 
       {/* Bottom Right Ellipse */}
       <View style={styles.bottomEllipse}>
-       <SvgXml xml={EllipseBottom} />
+        <SvgXml xml={EllipseBottom} width={width * 1.5} height={height * 0.6} />
       </View>
 
       {/* Center Content */}
-      <View style={styles.centerContent}>
+      <Animated.View 
+        style={[
+          styles.centerContent,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
         {/* Logo */}
         <View style={styles.logoContainer}>
           <SvgXml xml={Logo} width={200} height={200} />
         </View>
         <Text style={styles.title}>ParcelBuddy</Text>
 
-{/* Tagline */}
-<Text style={styles.tagline}>
-  Your bag's extra space, someone's{'\n'}perfect place.
-</Text>
-      </View>
+        {/* Tagline */}
+        <Text style={styles.tagline}>
+          Your bag's extra space, someone's{'\n'}perfect place.
+        </Text>
+      </Animated.View>
+
+      {/* Loading Indicator */}
     </View>
   );
 };
@@ -115,6 +172,25 @@ const styles = StyleSheet.create({
     color: '#203049',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  loadingContainer: {
+    position: 'absolute',
+    bottom: 100,
+    alignItems: 'center',
+    width: '100%',
+    zIndex: 10,
+  },
+  loadingBar: {
+    width: 200,
+    height: 4,
+    backgroundColor: 'rgba(32, 48, 73, 0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  loadingProgress: {
+    height: '100%',
+    backgroundColor: '#3395C7',
+    borderRadius: 2,
   },
 });
 

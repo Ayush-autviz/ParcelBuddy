@@ -26,6 +26,7 @@ const RootNavigator: React.FC = () => {
 
   return (
     <Stack.Navigator
+      initialRouteName="Splash"
       screenOptions={{
         headerShown: false,
       }}
