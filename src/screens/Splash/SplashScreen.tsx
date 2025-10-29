@@ -100,12 +100,12 @@ const SplashScreen: React.FC = () => {
       
       {/* Top Left Ellipse */}
       <View style={styles.topEllipse}>
-        <SvgXml xml={EllipseTop} width={width * 1.5} height={height * 0.6} />
+        <SvgXml xml={EllipseTop}  />
       </View>
 
       {/* Bottom Right Ellipse */}
       <View style={styles.bottomEllipse}>
-        <SvgXml xml={EllipseBottom} width={width * 1.5} height={height * 0.6} />
+        <SvgXml xml={EllipseBottom}  />
       </View>
 
       {/* Center Content */}
