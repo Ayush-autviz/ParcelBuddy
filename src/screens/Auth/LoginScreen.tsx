@@ -13,6 +13,7 @@ import { SvgXml } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import PhoneInput from 'react-native-international-phone-number';
+import { ChevronDown } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -117,6 +118,7 @@ const LoginScreen: React.FC = () => {
               <PhoneInput
                 ref={phoneInputRef}
                 defaultValue={phoneNumber}
+                value={phoneNumber}
                 defaultCountry="US"
                 onChangePhoneNumber={(number) => {
                   setPhoneNumber(number);
@@ -126,6 +128,7 @@ const LoginScreen: React.FC = () => {
                     setCountryCode(`+${country.callingCode[0]}`);
                   }
                 }}
+                customCaret={() => <ChevronDown size={16} color="#666" />}
                 phoneInputStyles={
                   {
                     container: {
@@ -145,10 +148,12 @@ const LoginScreen: React.FC = () => {
                     callingCode: {
                       display: 'none',
                     },
+                    input: {
+                      paddingLeft: -10,
+                    }
          
                   }
                 }
-
                 placeholder="Enter mobile number"
               />
             </View>
