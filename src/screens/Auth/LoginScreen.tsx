@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,13 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
-  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { SvgXml } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import PhoneInput from 'react-native-international-phone-number';
 
 const { width, height } = Dimensions.get('window');
 
@@ -34,9 +34,9 @@ const Logo =`
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
   const { login } = useAuth();
+  const phoneInputRef = useRef(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+1');
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleGetOTP = async () => {
@@ -114,23 +114,42 @@ const LoginScreen: React.FC = () => {
           {/* Phone Number Input */}
           <View style={styles.phoneInputContainer}>
             <View style={styles.phoneInputWrapper}>
-              {/* Country Code */}
-              <TouchableOpacity
-                style={styles.countryCodeContainer}
-                onPress={() => setShowCountryPicker(!showCountryPicker)}
-              >
-                <Text style={styles.countryCodeText}>{countryCode}</Text>
-                <Text style={styles.dropdownIcon}>▼</Text>
-              </TouchableOpacity>
+              <PhoneInput
+                ref={phoneInputRef}
+                defaultValue={phoneNumber}
+                defaultCountry="US"
+                onChangePhoneNumber={(number) => {
+                  setPhoneNumber(number);
+                }}
+                onChangeSelectedCountry={(country: any) => {
+                  if (country?.callingCode && country.callingCode.length > 0) {
+                    setCountryCode(`+${country.callingCode[0]}`);
+                  }
+                }}
+                phoneInputStyles={
+                  {
+                    container: {
+                      borderWidth: 0,
+                      borderRadius: 12,
+                      backgroundColor: "#FFFFFF",
+                      height: 55,
+                    },
+                    flagContainer: {
+                      borderWidth: 0,
+                      borderRadius: 12,
+                      backgroundColor: "#FFFFFF",
+                    },
+                    divider: {
+                      display: 'none',
+                    },
+                    callingCode: {
+                      display: 'none',
+                    },
+         
+                  }
+                }
 
-              {/* Mobile Number Input */}
-              <TextInput
-                style={styles.phoneNumberInput}
                 placeholder="Enter mobile number"
-                placeholderTextColor="#ADAEBC"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
               />
             </View>
           </View>
@@ -216,9 +235,11 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    marginTop:10,
+    marginBottom:30,
+    fontWeight: '500',
     color: '#203049',
-    marginBottom: 8,
+    textAlign: 'center',
   },
   inputLabel: {
     fontSize: 16,
@@ -230,34 +251,31 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   phoneInputWrapper: {
-    flexDirection: 'row',
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 12,
     backgroundColor: '#FAFAFA',
     overflow: 'hidden',
+    width: '100%',
   },
-  countryCodeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+  textContainer: {
+    backgroundColor: 'white',
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  flagContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
     borderRightWidth: 1,
     borderRightColor: '#E0E0E0',
-    backgroundColor: 'white',
   },
   countryCodeText: {
     fontSize: 16,
     color: '#203049',
     fontWeight: '600',
-    marginRight: 4,
-  },
-  dropdownIcon: {
-    fontSize: 10,
-    color: '#666',
   },
   phoneNumberInput: {
-    flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
@@ -281,13 +299,13 @@ const styles = StyleSheet.create({
   },
   termsText: {
     fontSize: 14,
-    color: '#666666',
+    color: '#307183',
     textAlign: 'center',
     lineHeight: 20,
   },
   linkText: {
     fontSize: 14,
-    color: '#3395C7',
+    color: '#737373',
     textDecorationLine: 'underline',
     fontWeight: '600',
   },
