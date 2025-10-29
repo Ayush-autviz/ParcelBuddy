@@ -151,9 +151,31 @@ const LoginScreen: React.FC = () => {
                     input: {
                       paddingLeft: -10,
                     }
+
          
                   }
                 }
+                modalStyles={{
+                  searchContainer: {
+        
+                  },
+                  searchInput: {
+                    backgroundColor: 'white',
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: '#E0E0E0',
+                    padding: 14,
+                    fontSize: 16,
+                    color: '#203049',
+                    fontWeight: '500',
+                  },
+                  countryItem: {
+                    padding: 14,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
+                    borderRadius: 14,
+                  },
+                }}
                 placeholder="Enter mobile number"
               />
             </View>
