@@ -11,6 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { SvgXml } from 'react-native-svg';
+import { Colors } from '../../constants/colors';
+import { Fonts } from '../../constants/fonts';
 
 const { width, height } = Dimensions.get('window');
 
@@ -96,7 +98,7 @@ const SplashScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F9FAFF" />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
       
       {/* Top Left Ellipse */}
       <View style={styles.topEllipse}>
@@ -138,7 +140,7 @@ const SplashScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFF',
+    backgroundColor: Colors.backgroundLight,
     position: 'relative',
   },
   topEllipse: {
@@ -161,15 +163,15 @@ const styles = StyleSheet.create({
    // marginBottom: 20,
   },
   title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#203049',
+    fontSize: Fonts.xxxl,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textPrimary,
     marginTop: 20,
     marginBottom: 10,
   },
   tagline: {
-    fontSize: 16,
-    color: '#203049',
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
   },
   loadingProgress: {
     height: '100%',
-    backgroundColor: '#3395C7',
+    backgroundColor: Colors.primaryCyan,
     borderRadius: 2,
   },
 });

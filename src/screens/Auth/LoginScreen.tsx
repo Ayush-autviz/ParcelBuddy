@@ -8,12 +8,16 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
+import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
-import LinearGradient from 'react-native-linear-gradient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import PhoneInput from 'react-native-international-phone-number';
 import { ChevronDown } from 'lucide-react-native';
+import { Colors } from '../../constants/colors';
+import { Fonts } from '../../constants/fonts';
+import GradientButton from '../../components/GradientButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,8 +36,10 @@ const Logo =`
 </svg>
 `;
 
+type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
+
 const LoginScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const { login } = useAuth();
   const phoneInputRef = useRef(null);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -59,8 +65,7 @@ const LoginScreen: React.FC = () => {
           text: 'OK',
           onPress: () => {
             // Navigate to OTP verification screen
-            // For now, simulate login
-            login('user@parcelbuddy.com', 'password');
+            navigation.navigate('OTPScreen', { phoneNumber: `${countryCode}${phoneNumber}` });
           },
         },
       ]);
@@ -182,22 +187,12 @@ const LoginScreen: React.FC = () => {
           </View>
 
           {/* Get OTP Button with Gradient */}
-          <TouchableOpacity
-            style={styles.otpButton}
+          <GradientButton
+            title={loading ? 'Sending OTP...' : 'Get OTP'}
             onPress={handleGetOTP}
-            disabled={loading}
-          >
-            <LinearGradient
-              colors={['#4DBAA5', '#3095CB']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradientButton}
-            >
-              <Text style={styles.otpButtonText}>
-                {loading ? 'Sending OTP...' : 'Get OTP'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            loading={loading}
+            style={styles.otpButton}
+          />
 
           {/* Terms and Privacy Policy */}
           <Text style={styles.termsText}>
@@ -218,7 +213,7 @@ const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFF',
+    backgroundColor: Colors.backgroundLight,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -234,19 +229,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   appName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#203049',
+    fontSize: Fonts.xxl,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textPrimary,
     marginBottom: 10,
   },
   tagline: {
-    fontSize: 14,
-    color: '#203049',
+    fontSize: Fonts.sm,
+    color: Colors.textPrimary,
     textAlign: 'center',
     lineHeight: 24,
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundWhite,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 24,
@@ -261,17 +256,17 @@ const styles = StyleSheet.create({
     minHeight: height * 0.6,
   },
   cardTitle: {
-    fontSize: 24,
+    fontSize: Fonts.xl,
     marginTop:10,
     marginBottom:30,
-    fontWeight: '500',
-    color: '#203049',
+    fontWeight: Fonts.weightMedium,
+    color: Colors.textPrimary,
     textAlign: 'center',
   },
   inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#307183',
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textSecondary,
     marginBottom: 12,
   },
   phoneInputContainer: {
@@ -279,62 +274,50 @@ const styles = StyleSheet.create({
   },
   phoneInputWrapper: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: Colors.borderLight,
     borderRadius: 12,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.backgroundGray,
     overflow: 'hidden',
     width: '100%',
   },
   textContainer: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundWhite,
     borderTopRightRadius: 12,
     borderBottomRightRadius: 12,
   },
   flagContainer: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundWhite,
     borderTopLeftRadius: 12,
     borderBottomLeftRadius: 12,
     borderRightWidth: 1,
-    borderRightColor: '#E0E0E0',
+    borderRightColor: Colors.borderLight,
   },
   countryCodeText: {
-    fontSize: 16,
-    color: '#203049',
-    fontWeight: '600',
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
+    fontWeight: Fonts.weightSemiBold,
   },
   phoneNumberInput: {
     paddingHorizontal: 16,
     paddingVertical: 16,
-    fontSize: 16,
-    backgroundColor: 'white',
-    color: '#203049',
+    fontSize: Fonts.base,
+    backgroundColor: Colors.backgroundWhite,
+    color: Colors.textPrimary,
   },
   otpButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
     marginBottom: 24,
   },
-  gradientButton: {
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  otpButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   termsText: {
-    fontSize: 14,
-    color: '#307183',
+    fontSize: Fonts.sm,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
   linkText: {
-    fontSize: 14,
-    color: '#737373',
+    fontSize: Fonts.sm,
+    color: Colors.textTertiary,
     textDecorationLine: 'underline',
-    fontWeight: '600',
+    fontWeight: Fonts.weightSemiBold,
   },
 });
 
