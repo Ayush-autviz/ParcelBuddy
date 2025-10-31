@@ -6,6 +6,7 @@ import {
   Dimensions,
   Animated,
   StatusBar,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -122,7 +123,7 @@ const SplashScreen: React.FC = () => {
       >
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <SvgXml xml={Logo} width={200} height={200} />
+          <Image source={require('../../assets/images/Logo.png')} style={styles.logo} />
         </View>
         <Text style={styles.title}>ParcelBuddy</Text>
 
@@ -193,6 +194,10 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: Colors.primaryCyan,
     borderRadius: 2,
+  },
+  logo: {
+    width: 130,
+    height: 140,
   },
 });
 
