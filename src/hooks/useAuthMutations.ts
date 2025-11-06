@@ -13,9 +13,9 @@ export const useVerifyOtp = (): UseMutationResult<any, Error, { phone: string; o
   });
 };
 
-export const useProfileSetup = (): UseMutationResult<any, Error, Record<string, any>, unknown> => {
+export const useProfileSetup = (): UseMutationResult<any, Error, FormData, unknown> => {
   return useMutation({
-    mutationFn: (data: Record<string, any>) => profileSetup(data),
+    mutationFn: (data: FormData) => profileSetup(data),
   });
 };
 

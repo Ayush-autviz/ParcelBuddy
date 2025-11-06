@@ -8,13 +8,18 @@ export const getOtp = async (data: any) => {
 };
 
 // verify otp
-export const verifyOtp = async (phone: string, otp: string) => {
-  const response = await apiClient.post('/auth/verify-otp/', { phone, otp });
+export const verifyOtp = async (data: any) => {
+  console.log('data', data);
+  const response = await apiClient.post('/auth/verify-otp/', data);
   return response.data;
 };
 
 // profile setup
-export const profileSetup = async (data: any) => {
-  const response = await apiClient.post('/auth/profile-setup/', data);
+export const profileSetup = async (data: FormData) => {
+  const response = await apiClient.put('/auth/profile-setup/', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };

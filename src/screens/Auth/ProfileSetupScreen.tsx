@@ -23,6 +23,8 @@ import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
 import * as ImagePicker from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useProfileSetup } from '../../hooks/useAuthMutations';
+import { useAuthStore } from '../../services/store';
 
 const { width } = Dimensions.get('window');
 
@@ -47,9 +49,9 @@ const UserIcon = `
 `;
 
 const ProfileSetupScreen: React.FC = () => {
-  const navigation = useNavigation<ProfileSetupNavigationProp>();
-  const { login } = useAuth();
+  const navigation = useNavigation<any>();
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImageAsset, setProfileImageAsset] = useState<ImagePicker.Asset | null>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
@@ -57,7 +59,9 @@ const ProfileSetupScreen: React.FC = () => {
   const [bio, setBio] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const {setUser} = useAuthStore();
+  
+  const profileSetupMutation = useProfileSetup();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -80,11 +84,12 @@ const ProfileSetupScreen: React.FC = () => {
     ImagePicker.launchImageLibrary(options, (response) => {
       if (response.assets && response.assets[0]) {
         setProfileImage(response.assets[0].uri || null);
+        setProfileImageAsset(response.assets[0]);
       }
     });
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = () => {
     if (!fullName.trim()) {
       Alert.alert('Error', 'Please enter your full name');
       return;
@@ -110,34 +115,46 @@ const ProfileSetupScreen: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      // TODO: Implement actual profile save API call
-      console.log('Saving profile:', {
-        profileImage,
-        fullName,
-        email,
-        dateOfBirth: dateOfBirth?.toISOString(),
-        bio,
-      });
+    // Split full name into first and last name
+    const nameParts = fullName.trim().split(' ');
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.slice(1).join(' ') || '';
 
-      // Simulate API call
-      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('first_name', first_name);
+    formData.append('last_name', last_name);
+    formData.append('email', email.trim());
+    formData.append('profile.bio', bio.trim() || '');
 
-      Alert.alert('Success', 'Profile saved successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Navigate to main app
-            login('user@parcelbuddy.com', 'password');
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save profile. Please try again.');
-    } finally {
-      setLoading(false);
+    // Append profile photo if available
+    if (profileImageAsset && profileImageAsset.uri) {
+      const fileExtension = profileImageAsset.uri.split('.').pop() || 'jpg';
+      const fileName = profileImageAsset.fileName || `profile_photo.${fileExtension}`;
+      
+      formData.append('profile.profile_photo', {
+        uri: profileImageAsset.uri,
+        type: profileImageAsset.type || `image/${fileExtension}`,
+        name: fileName,
+      } as any);
     }
+
+    console.log('Saving profile with FormData', formData);
+
+    profileSetupMutation.mutate(formData, {
+      onSuccess: (response: any) => {
+        setUser(response.user);
+        console.log('response', response);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainApp' }],
+        });
+      },
+      onError: (error: any) => {
+        console.log('Error saving profile:', error.response);
+        Alert.alert('Error', error.response.data.error);
+      },
+    });
   };
 
   const formatDate = (date: Date | null) => {
@@ -327,9 +344,9 @@ const ProfileSetupScreen: React.FC = () => {
 
           {/* Save Profile Button */}
           <GradientButton
-            title="Save Profile"
+            title={profileSetupMutation.isPending ? 'Saving...' : 'Save Profile'}
             onPress={handleSaveProfile}
-            loading={loading}
+            loading={profileSetupMutation.isPending}
             style={styles.saveButton}
           />
         </View>

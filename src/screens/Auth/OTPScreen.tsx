@@ -18,6 +18,8 @@ import { ArrowLeft, Phone } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
+import { useVerifyOtp, useGetOtp } from '../../hooks/useAuthMutations';
+import { useAuthStore } from '../../services/store';
 
 const { width, height } = Dimensions.get('window');
 
@@ -68,11 +70,13 @@ const OtpIllustration = `
 const OTPScreen: React.FC = () => {
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute();
-  const { login } = useAuth();
   const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(150); // 2 minutes 30 seconds in seconds
-  const phoneNumber = (route.params as { phoneNumber?: string })?.phoneNumber || '+1 (555) 123-4567';
+  const [timer, setTimer] = useState(150); 
+  const phoneNumber = (route.params as { phoneNumber?: string })?.phoneNumber || '';
+  const { setToken } = useAuthStore();
+  
+  const verifyOtpMutation = useVerifyOtp();
+  const resendOtpMutation = useGetOtp();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -94,50 +98,67 @@ const OTPScreen: React.FC = () => {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const handleVerify = async () => {
+  const handleVerify = () => {
     if (otp.length !== 6) {
       Alert.alert('Error', 'Please enter the complete 6-digit code');
       return;
     }
 
-    setLoading(true);
-    try {
-      // TODO: Implement actual OTP verification API call
-      console.log('Verifying OTP:', otp);
+    const cleanedOtp = otp.replace(/\D/g, '');
+    
+    const cleanedPhone = phoneNumber.replace(/[^\d+]/g, '');
+    
+    const formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
 
-      // Simulate API call
-      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
 
-      Alert.alert('Success', 'OTP verified successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Navigate to profile setup
-            navigation.navigate('ProfileSetup');
-          },
+    verifyOtpMutation.mutate(
+      { phone: formattedPhone, otp: cleanedOtp },
+      {
+        onSuccess: (response: any) => {
+          console.log('response', response);
+          setToken({
+            access_token: response.tokens.access,
+            refresh_token: response.tokens.refresh,
+          });
+          navigation.navigate('ProfileSetup');
         },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Invalid OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+        onError: (error: any) => {
+          console.log('Error verifying OTP:', error.response.data.error);
+          Alert.alert('Error', error.response.data.error);
+        },
+      }
+    );
   };
 
-  const handleResendOTP = async () => {
-    try {
-      // TODO: Implement actual OTP resend API call
-      console.log('Resending OTP to:', phoneNumber);
+  const handleResendOTP = () => {
+    // Clean phone number - remove formatting but keep + and digits
+    const cleanedPhone = phoneNumber.replace(/[^\d+]/g, '');
+    const formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
 
-      // Simulate API call
-      await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+    console.log('Resending OTP to:', formattedPhone);
 
-      // Reset timer to 2:30
-      setTimer(150);
-      Alert.alert('Success', 'OTP resent successfully!');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to resend OTP. Please try again.');
-    }
+    resendOtpMutation.mutate(
+      { phone: formattedPhone },
+      {
+        onSuccess: () => {
+          // Reset timer to 2:30
+          setTimer(150);
+          Alert.alert('Success', 'OTP resent successfully!');
+        },
+        onError: (error: any) => {
+          console.log('Error resending OTP:', error);
+          console.log('Error response:', error?.response?.data);
+          const errorMessage = 
+            error?.response?.data?.message || 
+            error?.response?.data?.error || 
+            error?.response?.data?.phone?.[0] ||
+            error?.response?.data?.detail ||
+            error?.message || 
+            'Failed to resend OTP. Please try again.';
+          Alert.alert('Error', errorMessage);
+        },
+      }
+    );
   };
 
   return (
@@ -199,18 +220,21 @@ const OTPScreen: React.FC = () => {
 
           {/* Verify Button */}
           <GradientButton
-            title="Verify & Continue"
+            title={verifyOtpMutation.isPending ? 'Verifying...' : 'Verify & Continue'}
             onPress={handleVerify}
-            loading={loading}
+            loading={verifyOtpMutation.isPending}
             style={styles.verifyButton}
           />
 
           {/* Resend Section */}
           <View style={styles.resendContainer}>
             <Text style={styles.resendText}>Didn't receive the code?</Text>
-            <TouchableOpacity onPress={handleResendOTP} disabled={timer > 0}>
-              <Text style={[styles.resendLink, timer > 0 && styles.resendLinkDisabled]}>
-              Resend OTP
+            <TouchableOpacity 
+              onPress={handleResendOTP} 
+              disabled={timer > 0 || resendOtpMutation.isPending}
+            >
+              <Text style={[styles.resendLink, (timer > 0 || resendOtpMutation.isPending) && styles.resendLinkDisabled]}>
+                {resendOtpMutation.isPending ? 'Sending...' : 'Resend OTP'}
               </Text>
             </TouchableOpacity>
           </View>
