@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 20 : 10,
     paddingTop: 10,
     borderRadius: 30,
-    marginHorizontal: 16,
+    marginHorizontal: 8,
     marginBottom: Platform.OS === 'ios' ? 20 : 20,
     position: 'absolute',
     shadowColor: '#000',

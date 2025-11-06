@@ -17,10 +17,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { ArrowLeft, Camera, CheckCircle, Calendar, Check } from 'lucide-react-native';
+import { Camera, CheckCircle, Calendar, Check } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
+import { Header } from '../../components';
 import * as ImagePicker from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useProfileSetup } from '../../hooks/useAuthMutations';
@@ -188,6 +189,9 @@ const ProfileSetupScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
+      {/* Header */}
+      <Header title="Profile Setup" showBackButton />
+      
       <KeyboardAwareScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
@@ -196,18 +200,6 @@ const ProfileSetupScreen: React.FC = () => {
         enableAutomaticScroll={true}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <ArrowLeft size={24} color={Colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile Setup</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
         {/* Profile Photo Upload Section */}
         <View style={styles.profilePhotoSection}>
           <TouchableOpacity
@@ -366,26 +358,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: Colors.backgroundLight,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: Fonts.xl,
-    fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
-  },
-  headerSpacer: {
-    width: 40,
   },
   profilePhotoSection: {
     alignItems: 'center',

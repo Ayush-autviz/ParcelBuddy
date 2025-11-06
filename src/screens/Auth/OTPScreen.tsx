@@ -14,10 +14,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { SvgXml } from 'react-native-svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { OtpInput } from 'react-native-otp-entry';
-import { ArrowLeft, Phone } from 'lucide-react-native';
+import { Phone } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
+import { Header } from '../../components';
 import { useVerifyOtp, useGetOtp } from '../../hooks/useAuthMutations';
 import { useAuthStore } from '../../services/store';
 
@@ -164,6 +165,9 @@ const OTPScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
+      {/* Header */}
+      <Header title="Verification" showBackButton />
+      
       <KeyboardAwareScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
@@ -172,18 +176,6 @@ const OTPScreen: React.FC = () => {
         enableAutomaticScroll={true}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <ArrowLeft size={24} color={Colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Verification</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
         {/* Illustration */}
         <View style={styles.illustrationContainer}>
           <SvgXml xml={OtpIllustration} width={181} height={174} />
@@ -259,26 +251,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: Colors.backgroundLight,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: Fonts.xl,
-    fontWeight: Fonts.weightBold,
-    color: Colors.textPrimary,
-  },
-  headerSpacer: {
-    width: 40,
   },
   illustrationContainer: {
     alignItems: 'center',

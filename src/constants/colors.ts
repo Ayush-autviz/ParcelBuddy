@@ -20,9 +20,9 @@ export const Colors = {
   borderLight: '#E0E0E0',
   
   // Gradient Colors
-  gradientStart: '#4DBAA5',
-  gradientEnd: '#3095CB',
-  
+  gradientStart: '#3095CB',
+  gradientEnd: '#4DBAA5',
+  // 4DBAA5/
   // Status Colors
   success: '#4DBAA5',
   error: '#FF3B30',
