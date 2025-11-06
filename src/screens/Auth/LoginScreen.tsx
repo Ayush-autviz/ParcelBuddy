@@ -19,50 +19,59 @@ import { ChevronDown } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
+import { useGetOtp } from '../../hooks/useAuthMutations';
 
 const { width, height } = Dimensions.get('window');
-
-// Logo SVG
-
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const { login } = useAuth();
-  const phoneInputRef = useRef(null);
+  const phoneInputRef = useRef<any>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
-  const [loading, setLoading] = useState(false);
+  const [countryCode, setCountryCode] = useState('');
+  
+  const getOtpMutation = useGetOtp();
 
-  const handleGetOTP = async () => {
+  const handleGetOTP = () => {
     if (!phoneNumber.trim()) {
       Alert.alert('Error', 'Please enter your mobile number');
       return;
     }
 
-    setLoading(true);
-    try {
-      // TODO: Implement actual OTP API call
-      console.log('OTP request for:', countryCode, phoneNumber);
-
-      // Simulate API call
-      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
-
-      Alert.alert('Success', 'OTP sent successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Navigate to OTP verification screen
-            navigation.navigate('OTPScreen', { phoneNumber: `${countryCode}${phoneNumber}` });
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send OTP. Please try again.');
-    } finally {
-      setLoading(false);
+    let fullPhoneNumber: string;
+    
+    if (phoneInputRef.current?.getPhoneNumber) {
+      fullPhoneNumber = phoneInputRef.current.getPhoneNumber();
+    } else {
+      const cleanedPhoneNumber = phoneNumber.replace(/\D/g, '');
+      const countryCodeClean = countryCode.replace(/^\+/, '');
+      fullPhoneNumber = `+${countryCodeClean}${cleanedPhoneNumber}`;
     }
+
+    if (!fullPhoneNumber.startsWith('+')) {
+      fullPhoneNumber = `+${fullPhoneNumber}`;
+    }
+
+    fullPhoneNumber = fullPhoneNumber.replace(/[^\d+]/g, '');
+
+    if (!fullPhoneNumber || fullPhoneNumber.length < 10) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return;
+    }
+
+    getOtpMutation.mutate(
+      { phone: fullPhoneNumber },
+      {
+        onSuccess: () => {
+          navigation.navigate('OTPScreen', { phoneNumber: fullPhoneNumber });
+        },
+        onError: (error: any) => {
+          console.log('Error sending OTP:', error);
+          Alert.alert('Error', error?.message);
+        },
+      }
+    );
   };
 
   const handleTermsPress = () => {
@@ -118,9 +127,10 @@ const LoginScreen: React.FC = () => {
                   setPhoneNumber(number);
                 }}
                 onChangeSelectedCountry={(country: any) => {
-                  if (country?.callingCode && country.callingCode.length > 0) {
-                    setCountryCode(`+${country.callingCode[0]}`);
-                  }
+                  // if (country?.callingCode && country.callingCode.length > 0) {
+                    console.log('country', country);
+                    setCountryCode(country?.idd?.root);
+                  // }
                 }}
                 customCaret={() => <ChevronDown size={16} color="#666" />}
                 phoneInputStyles={
@@ -177,9 +187,9 @@ const LoginScreen: React.FC = () => {
 
           {/* Get OTP Button with Gradient */}
           <GradientButton
-            title={loading ? 'Sending OTP...' : 'Get OTP'}
+            title={getOtpMutation.isPending ? 'Sending OTP...' : 'Get OTP'}
             onPress={handleGetOTP}
-            loading={loading}
+            loading={getOtpMutation.isPending}
             style={styles.otpButton}
           />
 

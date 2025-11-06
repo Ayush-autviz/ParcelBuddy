@@ -1,120 +1,85 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
+import { useAuthStore } from './store';
 
-// Create axios instance with default config
-const apiClient: AxiosInstance = axios.create({
-  baseURL: 'https://api.example.com', // Replace with your API base URL
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+const instance = axios.create({
+  timeout: 90000,
+  withCredentials: true,
 });
 
-// Request interceptor for adding auth tokens, logging, etc.
-apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
-    // Add authorization token if available
-    const token = getAuthToken(); // You'll need to implement this
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+const BaseURL = 'http://13.233.74.72:8000';
 
-    // Log requests in development
-    if (__DEV__) {
-      console.log('API Request:', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        data: config.data,
-      });
-    }
+// Request Interceptor
+instance.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().token?.access_token;
+  config.baseURL = BaseURL;
 
-    return config;
-  },
-  (error) => {
-    console.error('Request interceptor error:', error);
-    return Promise.reject(error);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
 
-// Response interceptor for handling common responses/errors
-apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    // Log responses in development
-    if (__DEV__) {
-      console.log('API Response:', {
-        status: response.status,
-        url: response.config.url,
-        data: response.data,
-      });
-    }
+  return config;
+});
 
+// Response Interceptor
+instance.interceptors.response.use(
+  (response) => {
+    console.log('RESPONSE IN INTERCEPTOR', response);
     return response;
   },
-  (error) => {
-    // Handle common error cases
-    if (error.response) {
-      const { status, data } = error.response;
+  async (error) => {
+    const originalRequest = error.config;
 
-      // Handle unauthorized access
-      if (status === 401) {
-        // Clear auth token and redirect to login
-        clearAuthToken();
-        // You might want to navigate to login screen here
-        console.log('Unauthorized - redirecting to login');
-      }
+    // Prevent infinite loops
+    if (error.response?.status === 403 && !originalRequest._retry) {
+      originalRequest._retry = true;
 
-      // Handle server errors
-      if (status >= 500) {
-        console.error('Server error:', data);
-      }
+      console.log('403 Forbidden - Trying to refresh token');
 
-      // Handle rate limiting
-      if (status === 429) {
-        console.warn('Rate limited - please wait before retrying');
+      try {
+        const authState = useAuthStore.getState();
+        const token = authState.token;
+        const refresh_token = token?.refresh_token;
+        const username = authState.user?.username;
+
+        console.log('Token state:', token);
+        console.log('Refresh token:', refresh_token);
+        console.log('Username:', username);
+
+        if (!refresh_token) {
+          console.error('No refresh token available');
+          useAuthStore.getState().logout();
+          return Promise.reject(error);
+        }
+
+        if (!username) {
+          console.error('No username available');
+          useAuthStore.getState().logout();
+          return Promise.reject(error);
+        }
+
+        const res = await axios.post(`${BaseURL}/auth/cognito/refresh/`, {
+          refresh_token,
+          username,
+        });
+
+        console.log('Refresh token response:', res.data);
+
+        const newToken = {
+          access_token: res.data.access_token,
+          refresh_token: res.data.refresh_token || refresh_token,
+        };
+        useAuthStore.getState().setToken(newToken);
+
+        originalRequest.headers.Authorization = `Bearer ${res.data.access_token}`;
+        return instance(originalRequest);
+      } catch (refreshError) {
+        console.log('Refresh token failed:', refreshError);
+        useAuthStore.getState().logout();
       }
-    } else if (error.request) {
-      // Network error
-      console.error('Network error:', error.request);
-    } else {
-      // Other error
-      console.error('Request setup error:', error.message);
     }
 
     return Promise.reject(error);
   }
 );
 
-// Helper functions for token management
-const getAuthToken = (): string | null => {
-  // Implement your token retrieval logic here
-  // This could be from AsyncStorage, SecureStore, etc.
-  return null; // Replace with actual implementation
-};
-
-const clearAuthToken = (): void => {
-  // Implement your token clearing logic here
-  // Remove token from storage
-};
-
-// Export the configured axios instance
-export default apiClient;
-
-// Export additional utilities
-export const apiEndpoints = {
-  // Define your API endpoints here
-  auth: {
-    login: '/auth/login',
-    register: '/auth/register',
-    refresh: '/auth/refresh',
-  },
-  parcels: {
-    list: '/parcels',
-    create: '/parcels',
-    update: (id: string) => `/parcels/${id}`,
-    delete: (id: string) => `/parcels/${id}`,
-  },
-  user: {
-    profile: '/user/profile',
-    updateProfile: '/user/profile',
-  },
-};
+export default instance;
