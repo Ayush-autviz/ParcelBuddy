@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, PersistOptions } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PlaceResultItemData } from '../components';
 
 type User = Record<string, any>;
 
@@ -56,5 +57,67 @@ export const useAuthStore = create<AuthState>()(
       }
       }),
     persistConfig
+  )
+);
+
+// Search Screen Store - Only for from/to values
+interface SearchFormStateData {
+  from: string;
+  to: string;
+  selectedFrom: PlaceResultItemData | null;
+  selectedTo: PlaceResultItemData | null;
+}
+
+interface SearchFormState extends SearchFormStateData {
+  setFrom: (from: string) => void;
+  setTo: (to: string) => void;
+  setSelectedFrom: (place: PlaceResultItemData | null) => void;
+  setSelectedTo: (place: PlaceResultItemData | null) => void;
+  clearSearchForm: () => void;
+}
+
+type SearchFormStorePersist = PersistOptions<SearchFormState, SearchFormStateData>;
+
+const searchFormPersistConfig: SearchFormStorePersist = {
+  name: 'search-form-storage',
+  storage: {
+    getItem: async (name) => {
+      const value = await AsyncStorage.getItem(name);
+      return value ? JSON.parse(value) : null;
+    },
+    setItem: async (name, value) => {
+      await AsyncStorage.setItem(name, JSON.stringify(value));
+    },
+    removeItem: async (name) => {
+      await AsyncStorage.removeItem(name);
+    },
+  },
+  partialize: (state) => ({
+    from: state.from,
+    to: state.to,
+    selectedFrom: state.selectedFrom,
+    selectedTo: state.selectedTo,
+  }),
+};
+
+export const useSearchFormStore = create<SearchFormState>()(
+  persist(
+    (set) => ({
+      from: '',
+      to: '',
+      selectedFrom: null,
+      selectedTo: null,
+      setFrom: (from) => set({ from }),
+      setTo: (to) => set({ to }),
+      setSelectedFrom: (place) => set({ selectedFrom: place }),
+      setSelectedTo: (place) => set({ selectedTo: place }),
+      clearSearchForm: () => set({
+        from: '',
+        to: '',
+        selectedFrom: null,
+        selectedTo: null,
+      }),
+    }),
+    searchFormPersistConfig
   )
 );

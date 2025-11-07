@@ -5,15 +5,18 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { MapPin, Calendar } from 'lucide-react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Card, Header } from '../../components';
-import { TabButton, SearchInput, SearchHistoryItem } from '../../components';
-import GradientButton from '../../components/GradientButton';
+import { Card, Header, GradientButton, TabButton, SearchInput, SearchHistoryItem, PlaceResultItemData } from '../../components';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SearchStackParamList } from '../../navigation/SearchNavigator';
+import { useSearchFormStore } from '../../services/store';
 
 const { width } = Dimensions.get('window');
 
@@ -26,11 +29,17 @@ interface SearchHistory {
   date: string;
 }
 
+type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'SearchList'>;
+
 const SearchScreen: React.FC = () => {
+  const navigation = useNavigation<SearchScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<TabType>('Domestic');
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
   const [date, setDate] = useState('');
+
+  // Use Zustand store only for from/to values - data is stored directly in PlacesSearchScreen
+  const { from, to, selectedFrom, selectedTo, setFrom, setTo } = useSearchFormStore();
+
+  const isDomestic = activeTab === 'Domestic';
 
   // Mock search history data
   const searchHistory: SearchHistory[] = [
@@ -39,15 +48,32 @@ const SearchScreen: React.FC = () => {
     { id: '3', from: 'New York', to: 'Boston', date: 'Sep, 2025' },
   ];
 
+  const handleFromFocus = () => {
+    navigation.navigate('PlacesSearch', {
+      fieldType: 'from',
+      isDomestic,
+      initialValue: from,
+    });
+  };
+
+  const handleToFocus = () => {
+    navigation.navigate('PlacesSearch', {
+      fieldType: 'to',
+      isDomestic,
+      initialValue: to,
+    });
+  };
+
+
   const handleSearch = () => {
     // TODO: Implement search functionality
-    console.log('Search:', { from, to, date, type: activeTab });
   };
 
   const handleHistoryPress = (item: SearchHistory) => {
-    // TODO: Implement history item press functionality
-    console.log('History item pressed:', item);
+    setFrom(item.from);
+    setTo(item.to);
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -90,25 +116,33 @@ const SearchScreen: React.FC = () => {
 
           {/* Input Fields */}
           <View style={styles.inputsContainer}>
-            <SearchInput
-              icon={MapPin}
-              placeholder="From"
-              value={from}
-              onChangeText={setFrom}
-              containerStyle={styles.input}
-            />
-            <SearchInput
-              icon={MapPin}
-              placeholder="To"
-              value={to}
-              onChangeText={setTo}
-              containerStyle={styles.input}
-            />
+            <TouchableOpacity onPress={handleFromFocus} activeOpacity={0.7}>
+              <SearchInput
+                icon={MapPin}
+                placeholder="From"
+                value={from}
+                editable={false}
+                pointerEvents="none"
+                containerStyle={styles.input}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleToFocus} activeOpacity={0.7}>
+              <SearchInput
+                icon={MapPin}
+                placeholder="To"
+                value={to}
+                editable={false}
+                pointerEvents="none"
+                containerStyle={styles.input}
+              />
+            </TouchableOpacity>
             <SearchInput
               icon={Calendar}
               placeholder="mm / yy"
               value={date}
               onChangeText={setDate}
+              returnKeyType="done"
+              onSubmitEditing={handleSearch}
               containerStyle={styles.input}
             />
           </View>

@@ -5,9 +5,7 @@ export { default as GradientButton } from './GradientButton';
 export { default as Header } from './Header';
 
 // Export search components
-export { default as TabButton } from './search/TabButton';
-export { default as SearchInput } from './search/SearchInput';
-export { default as SearchHistoryItem } from './search/SearchHistoryItem';
+export * from './search';
 
 // Export create components
 export { default as SectionCard } from './create/SectionCard';

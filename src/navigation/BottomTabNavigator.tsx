@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Search, PlusCircle, ShoppingCart, MessageCircle, User, MessageSquare } from 'lucide-react-native';
 
 // Import screens
-import SearchScreen from '../screens/Search/SearchScreen';
+import SearchNavigator from './SearchNavigator';
 import CreateScreen from '../screens/Create/CreateScreen';
 import TrackNavigator from './TrackNavigator';
 import ChatScreen from '../screens/Chat/ChatScreen';
@@ -69,7 +69,7 @@ const BottomTabNavigator: React.FC = () => {
     >
       <Tab.Screen
         name="Search"
-        component={SearchScreen}
+        component={SearchNavigator}
         options={{
           title: 'Search',
         }}
