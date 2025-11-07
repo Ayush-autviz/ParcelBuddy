@@ -72,12 +72,14 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
   tabGradientFirst: {
-    borderTopLeftRadius: 100  ,
-    borderBottomLeftRadius: 100,
+    // borderTopLeftRadius: 100  ,
+    // borderBottomLeftRadius: 100,
+    borderRadius: 100,
   },
   tabGradientLast: {
-    borderTopRightRadius: 100,
-    borderBottomRightRadius: 100,
+        // borderTopRightRadius: 100,
+        // borderBottomRightRadius: 100,
+        borderRadius: 100,
   },
   tabTextActive: {
     color: Colors.textWhite,

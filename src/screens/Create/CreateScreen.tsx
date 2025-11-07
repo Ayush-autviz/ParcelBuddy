@@ -173,10 +173,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 20,
     marginBottom: 20,
-    borderRadius: 12,
+    borderRadius: 100,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: Colors.gradientEnd,
   },
   fieldContainer: {
     marginBottom: 16,

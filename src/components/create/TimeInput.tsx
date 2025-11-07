@@ -5,7 +5,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 
 interface TimeInputProps extends Omit<TextInputProps, 'style'> {
-  containerStyle?: ViewStyle;
+  containerStyle?: any;
   inputStyle?: ViewStyle;
 }
 

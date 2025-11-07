@@ -13,3 +13,9 @@ export { default as SearchHistoryItem } from './search/SearchHistoryItem';
 export { default as SectionCard } from './create/SectionCard';
 export { default as TimeInput } from './create/TimeInput';
 export { default as TextArea } from './create/TextArea';
+
+// Export track components
+export { default as StatusBadge } from './track/StatusBadge';
+export { default as RideCard } from './track/RideCard';
+export type { StatusType } from './track/StatusBadge';
+export type { RideCardData } from './track/RideCard';
