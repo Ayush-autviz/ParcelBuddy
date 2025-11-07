@@ -11,6 +11,8 @@ export * from './search';
 export { default as SectionCard } from './create/SectionCard';
 export { default as TimeInput } from './create/TimeInput';
 export { default as TextArea } from './create/TextArea';
+export { default as DatePickerInput } from './create/DatePickerInput';
+export { default as TimePickerInput } from './create/TimePickerInput';
 
 // Export track components
 export { default as StatusBadge } from './track/StatusBadge';

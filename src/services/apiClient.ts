@@ -13,6 +13,8 @@ instance.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token?.access_token;
   config.baseURL = BaseURL;
 
+  console.log('Token:', token);
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -21,65 +23,51 @@ instance.interceptors.request.use((config) => {
 });
 
 // Response Interceptor
-instance.interceptors.response.use(
-  (response) => {
-    console.log('RESPONSE IN INTERCEPTOR', response);
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
+// instance.interceptors.response.use(
+//   (response) => {
+//     console.log('RESPONSE IN INTERCEPTOR', response);
+//     return response;
+//   },
+//   async (error) => {
+//     const originalRequest = error.config;
 
-    // Prevent infinite loops
-    if (error.response?.status === 403 && !originalRequest._retry) {
-      originalRequest._retry = true;
+//     // Prevent infinite loops
+//     if (error.response?.status === 403 && !originalRequest._retry) {
+//       originalRequest._retry = true;
 
-      console.log('403 Forbidden - Trying to refresh token');
+//       console.log('403 Forbidden - Trying to refresh token');
 
-      try {
-        const authState = useAuthStore.getState();
-        const token = authState.token;
-        const refresh_token = token?.refresh_token;
-        const username = authState.user?.username;
+//       try {
+//         const authState = useAuthStore.getState();
+//         const token = authState.token;
+//         const refresh_token = token?.refresh_token;
+//         const username = authState.user?.username;
 
-        console.log('Token state:', token);
-        console.log('Refresh token:', refresh_token);
-        console.log('Username:', username);
 
-        if (!refresh_token) {
-          console.error('No refresh token available');
-          useAuthStore.getState().logout();
-          return Promise.reject(error);
-        }
 
-        if (!username) {
-          console.error('No username available');
-          useAuthStore.getState().logout();
-          return Promise.reject(error);
-        }
+//         const res = await axios.post(`${BaseURL}/auth/cognito/refresh/`, {
+//           refresh_token,
+//           username,
+//         });
 
-        const res = await axios.post(`${BaseURL}/auth/cognito/refresh/`, {
-          refresh_token,
-          username,
-        });
+//         console.log('Refresh token response:', res.data);
 
-        console.log('Refresh token response:', res.data);
+//         const newToken = {
+//           access_token: res.data.access_token,
+//           refresh_token: res.data.refresh_token || refresh_token,
+//         };
+//         useAuthStore.getState().setToken(newToken);
 
-        const newToken = {
-          access_token: res.data.access_token,
-          refresh_token: res.data.refresh_token || refresh_token,
-        };
-        useAuthStore.getState().setToken(newToken);
+//         originalRequest.headers.Authorization = `Bearer ${res.data.access_token}`;
+//         return instance(originalRequest);
+//       } catch (refreshError) {
+//         console.log('Refresh token failed:', refreshError);
+//         useAuthStore.getState().logout();
+//       }
+//     }
 
-        originalRequest.headers.Authorization = `Bearer ${res.data.access_token}`;
-        return instance(originalRequest);
-      } catch (refreshError) {
-        console.log('Refresh token failed:', refreshError);
-        useAuthStore.getState().logout();
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 export default instance;

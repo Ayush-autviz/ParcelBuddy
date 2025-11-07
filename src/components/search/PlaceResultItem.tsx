@@ -10,6 +10,8 @@ export interface PlaceResultItemData {
   address?: string;
   city?: string;
   country?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface PlaceResultItemProps {

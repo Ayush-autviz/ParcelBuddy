@@ -66,6 +66,10 @@ interface SearchFormStateData {
   to: string;
   selectedFrom: PlaceResultItemData | null;
   selectedTo: PlaceResultItemData | null;
+  fromLatitude?: number;
+  fromLongitude?: number;
+  toLatitude?: number;
+  toLongitude?: number;
 }
 
 interface SearchFormState extends SearchFormStateData {
@@ -73,6 +77,8 @@ interface SearchFormState extends SearchFormStateData {
   setTo: (to: string) => void;
   setSelectedFrom: (place: PlaceResultItemData | null) => void;
   setSelectedTo: (place: PlaceResultItemData | null) => void;
+  setFromCoordinates: (latitude?: number, longitude?: number) => void;
+  setToCoordinates: (latitude?: number, longitude?: number) => void;
   clearSearchForm: () => void;
 }
 
@@ -97,6 +103,10 @@ const searchFormPersistConfig: SearchFormStorePersist = {
     to: state.to,
     selectedFrom: state.selectedFrom,
     selectedTo: state.selectedTo,
+    fromLatitude: state.fromLatitude,
+    fromLongitude: state.fromLongitude,
+    toLatitude: state.toLatitude,
+    toLongitude: state.toLongitude,
   }),
 };
 
@@ -107,15 +117,39 @@ export const useSearchFormStore = create<SearchFormState>()(
       to: '',
       selectedFrom: null,
       selectedTo: null,
+      fromLatitude: undefined,
+      fromLongitude: undefined,
+      toLatitude: undefined,
+      toLongitude: undefined,
       setFrom: (from) => set({ from }),
       setTo: (to) => set({ to }),
-      setSelectedFrom: (place) => set({ selectedFrom: place }),
-      setSelectedTo: (place) => set({ selectedTo: place }),
+      setSelectedFrom: (place) => set({ 
+        selectedFrom: place,
+        fromLatitude: place?.latitude,
+        fromLongitude: place?.longitude,
+      }),
+      setSelectedTo: (place) => set({ 
+        selectedTo: place,
+        toLatitude: place?.latitude,
+        toLongitude: place?.longitude,
+      }),
+      setFromCoordinates: (latitude, longitude) => set({ 
+        fromLatitude: latitude, 
+        fromLongitude: longitude 
+      }),
+      setToCoordinates: (latitude, longitude) => set({ 
+        toLatitude: latitude, 
+        toLongitude: longitude 
+      }),
       clearSearchForm: () => set({
         from: '',
         to: '',
         selectedFrom: null,
         selectedTo: null,
+        fromLatitude: undefined,
+        fromLongitude: undefined,
+        toLatitude: undefined,
+        toLongitude: undefined,
       }),
     }),
     searchFormPersistConfig
@@ -128,6 +162,10 @@ interface CreateFormStateData {
   destination: string;
   selectedOrigin: PlaceResultItemData | null;
   selectedDestination: PlaceResultItemData | null;
+  originLatitude?: number;
+  originLongitude?: number;
+  destinationLatitude?: number;
+  destinationLongitude?: number;
 }
 
 interface CreateFormState extends CreateFormStateData {
@@ -135,6 +173,8 @@ interface CreateFormState extends CreateFormStateData {
   setDestination: (destination: string) => void;
   setSelectedOrigin: (place: PlaceResultItemData | null) => void;
   setSelectedDestination: (place: PlaceResultItemData | null) => void;
+  setOriginCoordinates: (latitude?: number, longitude?: number) => void;
+  setDestinationCoordinates: (latitude?: number, longitude?: number) => void;
   clearCreateForm: () => void;
 }
 
@@ -159,6 +199,10 @@ const createFormPersistConfig: CreateFormStorePersist = {
     destination: state.destination,
     selectedOrigin: state.selectedOrigin,
     selectedDestination: state.selectedDestination,
+    originLatitude: state.originLatitude,
+    originLongitude: state.originLongitude,
+    destinationLatitude: state.destinationLatitude,
+    destinationLongitude: state.destinationLongitude,
   }),
 };
 
@@ -169,15 +213,39 @@ export const useCreateFormStore = create<CreateFormState>()(
       destination: '',
       selectedOrigin: null,
       selectedDestination: null,
+      originLatitude: undefined,
+      originLongitude: undefined,
+      destinationLatitude: undefined,
+      destinationLongitude: undefined,
       setOrigin: (origin) => set({ origin }),
       setDestination: (destination) => set({ destination }),
-      setSelectedOrigin: (place) => set({ selectedOrigin: place }),
-      setSelectedDestination: (place) => set({ selectedDestination: place }),
+      setSelectedOrigin: (place) => set({ 
+        selectedOrigin: place,
+        originLatitude: place?.latitude,
+        originLongitude: place?.longitude,
+      }),
+      setSelectedDestination: (place) => set({ 
+        selectedDestination: place,
+        destinationLatitude: place?.latitude,
+        destinationLongitude: place?.longitude,
+      }),
+      setOriginCoordinates: (latitude, longitude) => set({ 
+        originLatitude: latitude, 
+        originLongitude: longitude 
+      }),
+      setDestinationCoordinates: (latitude, longitude) => set({ 
+        destinationLatitude: latitude, 
+        destinationLongitude: longitude 
+      }),
       clearCreateForm: () => set({
         origin: '',
         destination: '',
         selectedOrigin: null,
         selectedDestination: null,
+        originLatitude: undefined,
+        originLongitude: undefined,
+        destinationLatitude: undefined,
+        destinationLongitude: undefined,
       }),
     }),
     createFormPersistConfig

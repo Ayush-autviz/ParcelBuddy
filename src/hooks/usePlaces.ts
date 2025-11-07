@@ -23,6 +23,8 @@ export const usePlaces = (
           address: item.address || item.place_name || '',
           city: item.city || '',
           country: item.country || '',
+          latitude: item.latitude || item.lat || item.latitude_coordinate || undefined,
+          longitude: item.longitude || item.lng || item.lon || item.longitude_coordinate || undefined,
         }));
       }
 
@@ -33,6 +35,8 @@ export const usePlaces = (
           address: item.address || item.place_name || '',
           city: item.city || '',
           country: item.country || '',
+          latitude: item.latitude || item.lat || item.latitude_coordinate || undefined,
+          longitude: item.longitude || item.lng || item.lon || item.longitude_coordinate || undefined,
         }));
       }
 

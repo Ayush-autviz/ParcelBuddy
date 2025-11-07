@@ -13,13 +13,13 @@ export const getAllRides = async () => {
 };
 
 // get ride by id
-export const getRideById = async (id: string) => {
+export const getPublishedRideById = async (id: string) => {
     const response = await apiClient.get(`/rides/${id}/`);
     return response.data;
 };
 
 // get my rides
-export const getMyRides = async () => {
+export const getPublishedRides = async () => {
     const response = await apiClient.get(`/rides/my_rides/`);
     return response.data;
 };
