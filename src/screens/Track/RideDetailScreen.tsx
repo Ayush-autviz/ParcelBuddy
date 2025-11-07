@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,6 +17,7 @@ import { Fonts } from '../../constants/fonts';
 import { Card, Header } from '../../components';
 import { EmptyStateCard } from '../../components/track';
 import LuggageRequestItem, { LuggageRequestItemData } from '../../components/track/LuggageRequestItem';
+import { useLuggageRequestsForRide } from '../../hooks/useLuggage';
 
 export type TrackStackParamList = {
   TrackList: undefined;
@@ -35,14 +37,10 @@ type RideDetailScreenNavigationProp = StackNavigationProp<TrackStackParamList, '
 const RideDetailScreen: React.FC = () => {
   const route = useRoute<RideDetailScreenRouteProp>();
   const navigation = useNavigation<RideDetailScreenNavigationProp>();
-  const { date, origin, originTime, destination, destinationTime } = route.params;
+  const { rideId, date, origin, originTime, destination, destinationTime } = route.params;
 
-  // Mock luggage requests data - replace with actual API data
-  const luggageRequests: LuggageRequestItemData[] = [
-    { id: '1', senderName: 'Ethan Carter', itemCount: 12 },
-    { id: '2', senderName: 'Olivia Bennete', itemCount: 1 },
-    { id: '3', senderName: 'Christ Nolan', itemCount: 12 },
-  ];
+  // Fetch luggage requests from API
+  const { data: luggageRequests = [], isLoading: isLoadingRequests, isError: isErrorRequests } = useLuggageRequestsForRide(rideId);
 
   const handleEdit = () => {
     // TODO: Implement edit functionality
@@ -105,7 +103,18 @@ const RideDetailScreen: React.FC = () => {
         {/* Luggage Request Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Luggage Request (Incoming)</Text>
-          {luggageRequests.length > 0 ? (
+          {isLoadingRequests ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={Colors.primaryTeal} />
+              <Text style={styles.loadingText}>Loading requests...</Text>
+            </View>
+          ) : isErrorRequests ? (
+            <EmptyStateCard
+              icon={Package}
+              title="Error loading requests"
+              description="Failed to load luggage requests. Please try again."
+            />
+          ) : luggageRequests.length > 0 ? (
             luggageRequests.map((request) => (
               <LuggageRequestItem
                 key={request.id}
@@ -267,6 +276,17 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+    marginLeft: 12,
   },
 });
 
