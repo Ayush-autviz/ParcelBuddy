@@ -53,6 +53,7 @@ const SearchScreen: React.FC = () => {
       fieldType: 'from',
       isDomestic,
       initialValue: from,
+      storeType: 'search', // Pass storeType to indicate it's from SearchScreen
     });
   };
 
@@ -61,6 +62,7 @@ const SearchScreen: React.FC = () => {
       fieldType: 'to',
       isDomestic,
       initialValue: to,
+      storeType: 'search', // Pass storeType to indicate it's from SearchScreen
     });
   };
 

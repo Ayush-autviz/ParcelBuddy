@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 import { MapPin, Calendar, Clock, Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
@@ -11,21 +12,54 @@ import { Header, TabButton, SearchInput, SectionCard, TimeInput, TextArea } from
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuthStore } from '../../services/store';
+import { useCreateFormStore } from '../../services/store';
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
 
 type TabType = 'Domestic' | 'International';
 
+type CreateScreenNavigationProp = BottomTabNavigationProp<BottomTabParamList, 'Create'>;
+
 const CreateScreen: React.FC = () => {
+  const navigation = useNavigation<CreateScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<TabType>('Domestic');
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
   const [date, setDate] = useState('');
   const [pickupTime, setPickupTime] = useState('');
   const [dropoffTime, setDropoffTime] = useState('');
   const [maxWeight, setMaxWeight] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
-  const {logout} = useAuthStore();
-  logout();
+
+  // Use Zustand store for origin/destination
+  const { origin, destination, setOrigin, setDestination } = useCreateFormStore();
+
+  const isDomestic = activeTab === 'Domestic';
+
+  const handleOriginFocus = () => {
+    // Navigate to PlacesSearchScreen through Search tab
+    navigation.navigate('Search', {
+      screen: 'PlacesSearch',
+      params: {
+        fieldType: 'origin',
+        isDomestic,
+        initialValue: origin,
+        storeType: 'create',
+      },
+    });
+  };
+
+  const handleDestinationFocus = () => {
+    // Navigate to PlacesSearchScreen through Search tab
+    navigation.navigate('Search', {
+      screen: 'PlacesSearch',
+      params: {
+        fieldType: 'destination',
+        isDomestic,
+        initialValue: destination,
+        storeType: 'create',
+      },
+    });
+  };
 
   const handlePublish = () => {
     // TODO: Implement publish ride functionality
@@ -74,23 +108,29 @@ const CreateScreen: React.FC = () => {
         <SectionCard title="Route Details">
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Origin</Text>
-            <SearchInput
-              icon={MapPin}
-              placeholder="Enter Pickup Location"
-              value={origin}
-              onChangeText={setOrigin}
-              containerStyle={styles.input}
-            />
+            <TouchableOpacity onPress={handleOriginFocus} activeOpacity={0.7}>
+              <SearchInput
+                icon={MapPin}
+                placeholder="Enter Pickup Location"
+                value={origin}
+                editable={false}
+                pointerEvents="none"
+                containerStyle={styles.input}
+              />
+            </TouchableOpacity>
           </View>
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Destination</Text>
-            <SearchInput
-              icon={MapPin}
-              placeholder="Enter Destination"
-              value={destination}
-              onChangeText={setDestination}
-              containerStyle={styles.input}
-            />
+            <TouchableOpacity onPress={handleDestinationFocus} activeOpacity={0.7}>
+              <SearchInput
+                icon={MapPin}
+                placeholder="Enter Destination"
+                value={destination}
+                editable={false}
+                pointerEvents="none"
+                containerStyle={styles.input}
+              />
+            </TouchableOpacity>
           </View>
         </SectionCard>
 

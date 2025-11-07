@@ -6,8 +6,11 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, StackActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -15,18 +18,25 @@ import { Header, SearchInput, PlaceResultItem, PlaceResultItemData, Card } from 
 import { usePlaces } from '../../hooks/usePlaces';
 import { MapPin } from 'lucide-react-native';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
-import { useSearchFormStore } from '../../services/store';
+import { useSearchFormStore, useCreateFormStore } from '../../services/store';
 
 type PlacesSearchScreenRouteProp = RouteProp<SearchStackParamList, 'PlacesSearch'>;
-type PlacesSearchScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'PlacesSearch'>;
+type PlacesSearchScreenNavigationProp = CompositeNavigationProp<
+  StackNavigationProp<SearchStackParamList, 'PlacesSearch'>,
+  BottomTabNavigationProp<BottomTabParamList>
+>;
 
 const PlacesSearchScreen: React.FC = () => {
   const route = useRoute<PlacesSearchScreenRouteProp>();
   const navigation = useNavigation<PlacesSearchScreenNavigationProp>();
-  const { fieldType, isDomestic, initialValue = '' } = route.params;
+  const { fieldType, isDomestic, initialValue = '', storeType = 'search' } = route.params;
 
-  // Get store setters to save data directly
-  const { setFrom, setTo, setSelectedFrom, setSelectedTo } = useSearchFormStore();
+  // Get store setters based on storeType
+  const searchStore = useSearchFormStore();
+  const createStore = useCreateFormStore();
+  
+  // Determine which store to use
+  const isSearchStore = storeType === 'search';
 
   const [query, setQuery] = useState(initialValue);
   const [searchQuery, setSearchQuery] = useState(''); // Query to actually search with
@@ -44,19 +54,42 @@ const PlacesSearchScreen: React.FC = () => {
   };
 
   const handleSelectPlace = (place: PlaceResultItemData) => {
-    // Store the selected place directly in Zustand store
+    // Store the selected place directly in the appropriate Zustand store
     const placeValue = place.address || place.name || '';
     
-    if (fieldType === 'from') {
-      setFrom(placeValue);
-      setSelectedFrom(place);
-    } else if (fieldType === 'to') {
-      setTo(placeValue);
-      setSelectedTo(place);
+    if (isSearchStore) {
+      // Use search store
+      if (fieldType === 'from') {
+        searchStore.setFrom(placeValue);
+        searchStore.setSelectedFrom(place);
+      } else if (fieldType === 'to') {
+        searchStore.setTo(placeValue);
+        searchStore.setSelectedTo(place);
+      }
+      // Navigate back to SearchScreen (same navigator)
+      navigation.goBack();
+    } else {
+      // Use create store
+      if (fieldType === 'origin') {
+        createStore.setOrigin(placeValue);
+        createStore.setSelectedOrigin(place);
+      } else if (fieldType === 'destination') {
+        createStore.setDestination(placeValue);
+        createStore.setSelectedDestination(place);
+      }
+      // Navigate back to CreateScreen and reset SearchNavigator stack
+      // First, pop to root of SearchNavigator (SearchList), then navigate to Create tab
+      const parent = navigation.getParent();
+      if (parent) {
+        // Pop to root of SearchNavigator stack (SearchList)
+        navigation.dispatch(StackActions.popToTop());
+        // Navigate to Create tab
+        parent.navigate('Create');
+      } else {
+        // Fallback: just navigate to Create
+        navigation.navigate('Create');
+      }
     }
-    
-    // Navigate back to SearchScreen
-    navigation.goBack();
   };
 
   const renderPlaceItem = ({ item }: { item: PlaceResultItemData }) => (
@@ -101,14 +134,22 @@ const PlacesSearchScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        title={fieldType === 'from' ? 'Select Origin' : 'Select Destination'}
+        title={
+          fieldType === 'from' || fieldType === 'origin'
+            ? 'Select Origin'
+            : 'Select Destination'
+        }
         showBackButton
       />
 
       <View style={styles.searchContainer}>
         <SearchInput
           icon={MapPin}
-          placeholder={fieldType === 'from' ? 'Search origin...' : 'Search destination...'}
+          placeholder={
+            fieldType === 'from' || fieldType === 'origin'
+              ? 'Search origin...'
+              : 'Search destination...'
+          }
           value={query}
           onChangeText={setQuery}
           autoFocus

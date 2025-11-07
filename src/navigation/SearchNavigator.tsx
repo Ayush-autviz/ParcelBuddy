@@ -10,9 +10,10 @@ export type SearchStackParamList = {
     fieldType?: 'from' | 'to';
   };
   PlacesSearch: {
-    fieldType: 'from' | 'to';
+    fieldType: 'from' | 'to' | 'origin' | 'destination';
     isDomestic: boolean;
     initialValue?: string;
+    storeType?: 'search' | 'create'; // Which store to use
   };
 };
 

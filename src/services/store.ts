@@ -121,3 +121,65 @@ export const useSearchFormStore = create<SearchFormState>()(
     searchFormPersistConfig
   )
 );
+
+// Create Screen Store - Only for origin/destination values
+interface CreateFormStateData {
+  origin: string;
+  destination: string;
+  selectedOrigin: PlaceResultItemData | null;
+  selectedDestination: PlaceResultItemData | null;
+}
+
+interface CreateFormState extends CreateFormStateData {
+  setOrigin: (origin: string) => void;
+  setDestination: (destination: string) => void;
+  setSelectedOrigin: (place: PlaceResultItemData | null) => void;
+  setSelectedDestination: (place: PlaceResultItemData | null) => void;
+  clearCreateForm: () => void;
+}
+
+type CreateFormStorePersist = PersistOptions<CreateFormState, CreateFormStateData>;
+
+const createFormPersistConfig: CreateFormStorePersist = {
+  name: 'create-form-storage',
+  storage: {
+    getItem: async (name) => {
+      const value = await AsyncStorage.getItem(name);
+      return value ? JSON.parse(value) : null;
+    },
+    setItem: async (name, value) => {
+      await AsyncStorage.setItem(name, JSON.stringify(value));
+    },
+    removeItem: async (name) => {
+      await AsyncStorage.removeItem(name);
+    },
+  },
+  partialize: (state) => ({
+    origin: state.origin,
+    destination: state.destination,
+    selectedOrigin: state.selectedOrigin,
+    selectedDestination: state.selectedDestination,
+  }),
+};
+
+export const useCreateFormStore = create<CreateFormState>()(
+  persist(
+    (set) => ({
+      origin: '',
+      destination: '',
+      selectedOrigin: null,
+      selectedDestination: null,
+      setOrigin: (origin) => set({ origin }),
+      setDestination: (destination) => set({ destination }),
+      setSelectedOrigin: (place) => set({ selectedOrigin: place }),
+      setSelectedDestination: (place) => set({ selectedDestination: place }),
+      clearCreateForm: () => set({
+        origin: '',
+        destination: '',
+        selectedOrigin: null,
+        selectedDestination: null,
+      }),
+    }),
+    createFormPersistConfig
+  )
+);

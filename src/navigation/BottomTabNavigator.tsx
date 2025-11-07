@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigatorScreenParams } from '@react-navigation/native';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Search, PlusCircle, ShoppingCart, MessageCircle, User, MessageSquare } from 'lucide-react-native';
 
@@ -12,9 +13,11 @@ import ProfileScreen from '../screens/Profile/ProfileScreen';
 import { Colors } from '../constants/colors';
 import { Fonts } from '../constants/fonts';
 
+import { SearchStackParamList } from './SearchNavigator';
+
 // Define the bottom tab param list
 export type BottomTabParamList = {
-  Search: undefined;
+  Search: NavigatorScreenParams<SearchStackParamList> | undefined;
   Create: undefined;
   Track: undefined;
   Chat: undefined;
