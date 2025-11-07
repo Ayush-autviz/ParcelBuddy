@@ -10,6 +10,7 @@ import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, SearchInput, SectionCard, TimeInput, TextArea } from '../../components';
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TabType = 'Domestic' | 'International';
 
@@ -38,7 +39,7 @@ const CreateScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <Header title="Create Ride" variant="centered" />
 
@@ -153,7 +154,7 @@ const CreateScreen: React.FC = () => {
           style={styles.publishButton}
         />
       </KeyboardAwareScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

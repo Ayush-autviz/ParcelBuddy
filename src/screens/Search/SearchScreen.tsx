@@ -13,6 +13,7 @@ import { Fonts } from '../../constants/fonts';
 import { Card, Header } from '../../components';
 import { TabButton, SearchInput, SearchHistoryItem } from '../../components';
 import GradientButton from '../../components/GradientButton';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -49,7 +50,7 @@ const SearchScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <Header title="Search Rides" variant="centered" />
       
@@ -134,7 +135,7 @@ const SearchScreen: React.FC = () => {
           ))}
         </View>
       </KeyboardAwareScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   FlatList,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, RideCard, RideCardData } from '../../components';
@@ -72,7 +73,7 @@ const TrackScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <Header title="My Rides" variant="centered" />
 
@@ -106,7 +107,7 @@ const TrackScreen: React.FC = () => {
           <Text style={styles.emptyText}>No {activeTab.toLowerCase()} rides yet</Text>
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
