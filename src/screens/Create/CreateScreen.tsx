@@ -11,6 +11,7 @@ import { Header, TabButton, SearchInput, SectionCard, TimeInput, TextArea } from
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuthStore } from '../../services/store';
 
 type TabType = 'Domestic' | 'International';
 
@@ -23,6 +24,8 @@ const CreateScreen: React.FC = () => {
   const [dropoffTime, setDropoffTime] = useState('');
   const [maxWeight, setMaxWeight] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
+  const {logout} = useAuthStore();
+  logout();
 
   const handlePublish = () => {
     // TODO: Implement publish ride functionality

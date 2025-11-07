@@ -26,6 +26,7 @@ import * as ImagePicker from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useProfileSetup } from '../../hooks/useAuthMutations';
 import { useAuthStore } from '../../services/store';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -187,7 +188,7 @@ const ProfileSetupScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
       {/* Header */}
       <Header title="Profile Setup" showBackButton />
@@ -343,7 +344,7 @@ const ProfileSetupScreen: React.FC = () => {
           />
         </View>
       </KeyboardAwareScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -21,6 +21,7 @@ import GradientButton from '../../components/GradientButton';
 import { Header } from '../../components';
 import { useVerifyOtp, useGetOtp } from '../../hooks/useAuthMutations';
 import { useAuthStore } from '../../services/store';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -121,7 +122,17 @@ const OTPScreen: React.FC = () => {
             access_token: response.tokens.access,
             refresh_token: response.tokens.refresh,
           });
-          navigation.navigate('ProfileSetup');
+          if (!response.profile_setup) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'ProfileSetup' }],
+            });
+          } else {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'MainApp' }],
+            });
+          }
         },
         onError: (error: any) => {
           console.log('Error verifying OTP:', error.response.data.error);
@@ -163,7 +174,7 @@ const OTPScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
       {/* Header */}
       <Header title="Verification" showBackButton />
@@ -237,7 +248,7 @@ const OTPScreen: React.FC = () => {
           )}
         </View>
       </KeyboardAwareScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
