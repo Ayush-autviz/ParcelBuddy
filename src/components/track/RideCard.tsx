@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     minWidth: 80,
     justifyContent: 'center',
     height: 36,
+    borderRadius: 100,
   },
   rateButtonText: {
     fontSize: Fonts.sm,

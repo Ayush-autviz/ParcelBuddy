@@ -5,14 +5,19 @@ import {
   StyleSheet,
   FlatList,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, RideCard, RideCardData } from '../../components';
+import { TrackStackParamList } from '../../navigation/TrackNavigator';
 
 type TabType = 'Booked' | 'Published';
+type TrackScreenNavigationProp = StackNavigationProp<TrackStackParamList, 'TrackList'>;
 
 const TrackScreen: React.FC = () => {
+  const navigation = useNavigation<TrackScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<TabType>('Published');
 
   // Mock ride data
@@ -55,8 +60,18 @@ const TrackScreen: React.FC = () => {
   const rides = activeTab === 'Booked' ? bookedRides : publishedRides;
 
   const handleRidePress = (ride: RideCardData) => {
-    // TODO: Implement ride detail navigation
-    console.log('Ride pressed:', ride);
+    // Format date for display (convert from "Oct 03" to "Tue, 23 Apr" format)
+    // For now, using a simple conversion - you may want to enhance this
+    const formattedDate = ride.date; // You can enhance this date formatting
+    
+    navigation.navigate('RideDetail', {
+      rideId: ride.id,
+      date: formattedDate,
+      origin: ride.origin,
+      originTime: ride.originTime,
+      destination: ride.destination,
+      destinationTime: ride.destinationTime,
+    });
   };
 
   const handleRatePress = (ride: RideCardData) => {

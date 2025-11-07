@@ -6,7 +6,7 @@ import { Search, PlusCircle, ShoppingCart, MessageCircle, User, MessageSquare } 
 // Import screens
 import SearchScreen from '../screens/Search/SearchScreen';
 import CreateScreen from '../screens/Create/CreateScreen';
-import TrackScreen from '../screens/Track/TrackScreen';
+import TrackNavigator from './TrackNavigator';
 import ChatScreen from '../screens/Chat/ChatScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import { Colors } from '../constants/colors';
@@ -83,7 +83,7 @@ const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Track"
-        component={TrackScreen}
+        component={TrackNavigator}
         options={{
           title: 'Track',
         }}
