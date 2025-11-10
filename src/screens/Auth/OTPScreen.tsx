@@ -201,7 +201,7 @@ const OTPScreen: React.FC = () => {
 
           {/* Phone Number Display */}
           <View style={styles.phoneDisplayContainer}>
-            <Phone size={20} color={Colors.primaryTeal} />
+            <Phone size={18} color={Colors.primaryCyan} fill={Colors.primaryCyan} />
             <Text style={styles.phoneNumberText}>{phoneNumber}</Text>
           </View>
 
@@ -273,18 +273,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundLight,
     padding: 24,
     paddingTop: 20,
+    
   },
   title: {
     fontSize: Fonts.xxxl,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: Fonts.base,
-    color: Colors.textSecondary,
+    color: Colors.textLight,
     marginBottom: 24,
     lineHeight: 24,
+    textAlign: 'center',
   },
   phoneDisplayContainer: {
     flexDirection: 'row',
@@ -294,7 +297,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: Colors.backgroundGray,
+    backgroundColor: Colors.backgroundWhite,
     marginBottom: 32,
   },
   phoneNumberText: {
@@ -338,14 +341,15 @@ const styles = StyleSheet.create({
   },
   resendText: {
     fontSize: Fonts.sm,
-    color: Colors.textPrimary,
+    color: Colors.textLight,
     marginBottom: 8,
   },
   resendLink: {
     fontSize: Fonts.sm,
-    color: Colors.primaryTeal,
+    color: Colors.primaryCyan,
     textDecorationLine: 'underline',
-    fontWeight: Fonts.weightSemiBold,
+    fontWeight: Fonts.weightMedium,
+    marginBottom: 16,
   },
   resendLinkDisabled: {
     color: Colors.textLight,
@@ -353,7 +357,7 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: Fonts.sm,
-    color: Colors.textSecondary,
+    color: Colors.textLight,
     textAlign: 'center',
   },
 });

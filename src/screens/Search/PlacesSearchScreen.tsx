@@ -111,7 +111,7 @@ const PlacesSearchScreen: React.FC = () => {
     if (searchQuery.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <MapPin size={64} color={Colors.textLight} />
+          <MapPin size={64} color={Colors.primaryCyan} />
           <Text style={styles.emptyTitle}>Search for places</Text>
           <Text style={styles.emptyDescription}>
             Type at least 2 characters and press Enter to search

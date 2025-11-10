@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useAuthStore } from '../../services/store';
 
 type RootStackParamList = {
   Home: undefined;
@@ -13,9 +14,23 @@ type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Prof
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-
+  const { logout} = useAuthStore();
   const handleGoBack = () => {
     navigation.goBack();
+  };
+
+  const handleLogout = async () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', style: 'destructive', onPress: async () => {
+        await logout();
+        Alert.alert('Success', 'Logged out successfully');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Auth' }],
+        });
+      } },
+    ]);
   };
 
   return (
@@ -54,6 +69,10 @@ const ProfileScreen: React.FC = () => {
           </View>
         </View>
       </View>
+
+      <TouchableOpacity onPress={handleLogout}>
+        <Text>Logout</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };

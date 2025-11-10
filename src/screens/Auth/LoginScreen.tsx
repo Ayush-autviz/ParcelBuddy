@@ -127,10 +127,7 @@ const LoginScreen: React.FC = () => {
                   setPhoneNumber(number);
                 }}
                 onChangeSelectedCountry={(country: any) => {
-                  // if (country?.callingCode && country.callingCode.length > 0) {
-                    console.log('country', country);
                     setCountryCode(country?.idd?.root);
-                  // }
                 }}
                 customCaret={() => <ChevronDown size={16} color="#666" />}
                 phoneInputStyles={
@@ -308,15 +305,15 @@ const styles = StyleSheet.create({
   },
   termsText: {
     fontSize: Fonts.sm,
-    color: Colors.textSecondary,
+    color: Colors.textLight,
     textAlign: 'center',
     lineHeight: 20,
   },
   linkText: {
     fontSize: Fonts.sm,
-    color: Colors.textTertiary,
+    color: Colors.primaryCyan,
     textDecorationLine: 'underline',
-    fontWeight: Fonts.weightSemiBold,
+    fontWeight: Fonts.weightMedium,
   },
   logo: {
     width: 130,
