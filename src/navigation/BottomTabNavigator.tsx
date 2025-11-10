@@ -14,6 +14,12 @@ import { Colors } from '../constants/colors';
 import { Fonts } from '../constants/fonts';
 
 import { SearchStackParamList } from './SearchNavigator';
+import { FocusedChatIcon, FocusedCreateIcon, FocusedProfileIcon, FocusedSearchIcon, FocusedTrackIcon, SearchIcon } from '../assets/icons/svg/bottomTabs';
+import { SvgXml } from 'react-native-svg';
+import { CreateIcon } from '../assets/icons/svg/bottomTabs';
+import { TrackIcon } from '../assets/icons/svg/bottomTabs';
+import { ChatIcon } from '../assets/icons/svg/bottomTabs';
+import { ProfileIcon } from '../assets/icons/svg/bottomTabs';
 
 // Define the bottom tab param list
 export type BottomTabParamList = {
@@ -29,20 +35,25 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 // Custom tab bar icon component
 const TabBarIcon: React.FC<{ focused: boolean; iconName: string }> = ({ focused, iconName }) => {
   const iconColor = focused ? Colors.primaryCyan : Colors.textLight;
-  const iconSize = 24;
+  const iconSize = 18;
 
   const renderIcon = () => {
     switch (iconName) {
       case 'Search':
-        return <Search size={iconSize} color={iconColor} />;
+        // return <Search size={iconSize} color={iconColor} />;
+        return <SvgXml xml={focused ? FocusedSearchIcon : SearchIcon} height={iconSize} width={iconSize}  />;
       case 'Create':
-        return <PlusCircle size={iconSize} color={iconColor} />;
+        // return <PlusCircle size={iconSize} color={iconColor} />;
+        return <SvgXml xml={focused ? FocusedCreateIcon : CreateIcon} height={iconSize} width={iconSize}  />;
       case 'Track':
-        return <ShoppingCart size={iconSize} color={iconColor} />;
+        // return <ShoppingCart size={iconSize} color={iconColor} />;
+        return <SvgXml xml={focused ? FocusedTrackIcon : TrackIcon} height={iconSize} width={iconSize}  />;
       case 'Chat':
-        return <MessageSquare size={iconSize} color={iconColor} />;
+        // return <MessageSquare size={iconSize} color={iconColor} />;
+        return <SvgXml xml={focused ? FocusedChatIcon : ChatIcon} height={iconSize} width={iconSize}  />;
       case 'Profile':
-        return <User size={iconSize} color={iconColor} />;
+        // return <User size={iconSize} color={iconColor} />;
+        return <SvgXml xml={focused ? FocusedProfileIcon : ProfileIcon} height={iconSize} width={iconSize}  />;
       default:
         return null;
     }

@@ -51,7 +51,8 @@ const TimePickerInput: React.FC<TimePickerInputProps> = ({
         activeOpacity={0.7}
       >
         <View style={styles.iconContainer}>
-          <Clock size={20} color={Colors.primaryTeal} />
+          <Clock size={20} color={Colors.primaryTeal} strokeWidth={1.5}/>
+
         </View>
         <Text
           style={[

@@ -2,7 +2,7 @@ export const Colors = {
   // Primary Colors
   primaryBlue: '#007AFF',
   primaryTeal: '#4DBAA5',
-  primaryCyan: '#3095CB',
+  primaryCyan: '#307183',
   
   // Text Colors
   textPrimary: '#203049',

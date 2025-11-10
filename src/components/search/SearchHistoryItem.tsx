@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { RefreshCw, ChevronRight, History } from 'lucide-react-native';
+import { ChevronRight,  } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
+import { SvgXml } from 'react-native-svg';
+import { TimeIcon } from '../../assets/icons/svg/main';
 
 interface SearchHistoryItemProps {
   from: string;
@@ -23,9 +25,8 @@ const SearchHistoryItem: React.FC<SearchHistoryItemProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* <View style={styles.iconContainer}> */}
-        <History size={24} color={Colors.textPrimary} />
-      {/* </View> */}
+     
+     <SvgXml xml={TimeIcon} height={20} width={20} />
       <View style={styles.content}>
         <Text style={styles.route}>
           {from} → {to}

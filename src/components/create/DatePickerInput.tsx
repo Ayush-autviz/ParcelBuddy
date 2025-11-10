@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Calendar } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
+import { SvgXml } from 'react-native-svg';
+import { CalendarIcon } from '../../assets/icons/svg/main';
 
 interface DatePickerInputProps {
   value: Date | null;
@@ -53,7 +54,8 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
         activeOpacity={0.7}
       >
         <View style={styles.iconContainer}>
-          <Calendar size={20} color={Colors.primaryTeal} />
+          {/* <Calendar size={20} color={Colors.primaryTeal} /> */}
+          <SvgXml xml={CalendarIcon} height={20} width={20} />
         </View>
         <Text
           style={[

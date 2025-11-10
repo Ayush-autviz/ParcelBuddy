@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weightSemiBold,
   },
   tabTextInactive: {
-    color: Colors.textPrimary,
+    color: Colors.primaryCyan,
     fontSize: Fonts.base,
     // fontWeight: Fonts.weightMedium,
   },

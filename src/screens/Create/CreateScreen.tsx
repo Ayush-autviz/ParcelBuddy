@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { MapPin, Clock, Package } from 'lucide-react-native';
+import {  Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput } from '../../components';
@@ -18,6 +18,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
 import { useCreateRide } from '../../hooks/useRideMutations';
 import { Alert } from 'react-native';
+import { MapPinIcon } from '../../assets/icons/svg/main';
 
 type TabType = 'Domestic' | 'International';
 
@@ -208,7 +209,7 @@ const CreateScreen: React.FC = () => {
             <Text style={styles.label}>Origin</Text>
             <TouchableOpacity onPress={handleOriginFocus} activeOpacity={0.7}>
               <SearchInput
-                icon={MapPin}
+                icon={MapPinIcon}
                 placeholder="Enter Pickup Location"
                 value={origin}
                 editable={false}
@@ -221,7 +222,7 @@ const CreateScreen: React.FC = () => {
             <Text style={styles.label}>Destination</Text>
             <TouchableOpacity onPress={handleDestinationFocus} activeOpacity={0.7}>
               <SearchInput
-                icon={MapPin}
+                icon={MapPinIcon}
                 placeholder="Enter Destination"
                 value={destination}
                 editable={false}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,8 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { MapPin } from 'lucide-react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -18,17 +17,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { useSearchFormStore } from '../../services/store';
 import { useSearchRides } from '../../hooks/useSearchRides';
+import { useSearchHistory, SearchHistoryItem as SearchHistoryItemType } from '../../hooks/useSearchHistory';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MapPinIcon } from '../../assets/icons/svg/main';
 
 const { width } = Dimensions.get('window');
 
 type TabType = 'Domestic' | 'International';
-
-interface SearchHistory {
-  id: string;
-  from: string;
-  to: string;
-  date: string;
-}
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'SearchList'>;
 
@@ -36,6 +31,7 @@ const SearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<TabType>('Domestic');
   const [date, setDate] = useState<Date | null>(null);
+  const shouldClearOnFocus = useRef(false);
 
   // Use Zustand store only for from/to values - data is stored directly in PlacesSearchScreen
   const { 
@@ -48,20 +44,34 @@ const SearchScreen: React.FC = () => {
     fromLatitude,
     fromLongitude,
     toLatitude,
-    toLongitude
+    toLongitude,
+    clearSearchForm
   } = useSearchFormStore();
 
   // Search rides mutation
   const searchRidesMutation = useSearchRides();
 
-  const isDomestic = activeTab === 'Domestic';
+  // Fetch search history from API
+  const { data: searchHistory = [], isLoading: isHistoryLoading, refetch: refetchHistory } = useSearchHistory();
 
-  // Mock search history data
-  const searchHistory: SearchHistory[] = [
-    { id: '1', from: 'New York', to: 'Boston', date: 'Aug, 2025' },
-    { id: '2', from: 'Boston', to: 'LA', date: 'Sep, 2025' },
-    { id: '3', from: 'New York', to: 'Boston', date: 'Sep, 2025' },
-  ];
+  // Clear form when screen comes into focus after a successful search
+  // This ensures clearing happens when screen is active, not before navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      if (shouldClearOnFocus.current) {
+        // Clear form data - both store and AsyncStorage
+        clearSearchForm();
+        setFrom('');
+        setTo('');
+        setDate(null);
+        // Manually clear AsyncStorage to ensure persistence is cleared
+        AsyncStorage.removeItem('search-form-storage').catch(console.error);
+        shouldClearOnFocus.current = false;
+      }
+    }, [])
+  );
+
+  const isDomestic = activeTab === 'Domestic';
 
   const handleFromFocus = () => {
     navigation.navigate('PlacesSearch', {
@@ -106,6 +116,11 @@ const SearchScreen: React.FC = () => {
       return;
     }
 
+    // Capture values before clearing (needed for navigation)
+    const searchFrom = from;
+    const searchTo = to;
+    const searchDate = date;
+
     // Prepare search parameters
     const searchParams = {
       origin: from,
@@ -144,12 +159,19 @@ const SearchScreen: React.FC = () => {
           review_count: ride.traveler?.profile?.review_count || 128,
         }));
         
+        // Set flag to clear form when screen comes back into focus
+        // This ensures clearing happens when screen is active, not before navigation
+        shouldClearOnFocus.current = true;
+        
+        // Refetch search history to include the new search
+        refetchHistory();
+        
         // Navigate to Available Rides screen with results
         navigation.navigate('AvailableRides', {
           rides: transformedRides,
-          from: from,
-          to: to,
-          date: formatDate(date),
+          from: searchFrom,
+          to: searchTo,
+          date: formatDate(searchDate),
         });
       },
       onError: (error: any) => {
@@ -159,7 +181,7 @@ const SearchScreen: React.FC = () => {
     });
   };
 
-  const handleHistoryPress = (item: SearchHistory) => {
+  const handleHistoryPress = (item: SearchHistoryItemType) => {
     setFrom(item.from);
     setTo(item.to);
   };
@@ -208,7 +230,7 @@ const SearchScreen: React.FC = () => {
           <View style={styles.inputsContainer}>
             <TouchableOpacity onPress={handleFromFocus} activeOpacity={0.7}>
               <SearchInput
-                icon={MapPin}
+                icon={MapPinIcon}
                 placeholder="From"
                 value={from}
                 editable={false}
@@ -218,7 +240,7 @@ const SearchScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={handleToFocus} activeOpacity={0.7}>
               <SearchInput
-                icon={MapPin}
+                icon={MapPinIcon}
                 placeholder="To"
                 value={to}
                 editable={false}
@@ -248,15 +270,21 @@ const SearchScreen: React.FC = () => {
         {/* Search History Section */}
         <View style={styles.historySection}>
           <Text style={styles.historyTitle}>Search History</Text>
-          {searchHistory.map((item) => (
-            <SearchHistoryItem
-              key={item.id}
-              from={item.from}
-              to={item.to}
-              date={item.date}
-              onPress={() => handleHistoryPress(item)}
-            />
-          ))}
+          {isHistoryLoading ? (
+            <Text style={styles.loadingText}>Loading history...</Text>
+          ) : searchHistory.length === 0 ? (
+            <Text style={styles.emptyText}>No search history available</Text>
+          ) : (
+            searchHistory.map((item) => (
+              <SearchHistoryItem
+                key={item.id}
+                from={item.from}
+                to={item.to}
+                date={item.date}
+                onPress={() => handleHistoryPress(item)}
+              />
+            ))
+          )}
         </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>
@@ -314,9 +342,21 @@ const styles = StyleSheet.create({
   },
   historyTitle: {
     fontSize: Fonts.xl,
-    // fontWeight: Fonts.weightBold,
+    // fontWeight: Fonts.weightRegular,
     color: Colors.textPrimary,
     marginBottom: 16,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  emptyText: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });
 

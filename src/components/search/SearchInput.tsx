@@ -2,9 +2,12 @@ import React from 'react';
 import { View, TextInput, StyleSheet, ViewStyle, TextInputProps } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-
+import { SvgXml } from 'react-native-svg';
+import { MapPinIcon } from '../../assets/icons/svg/main';
+import { CalendarIcon } from '../../assets/icons/svg/main';
+import { TimeIcon } from '../../assets/icons/svg/main';
 interface SearchInputProps extends Omit<TextInputProps, 'style'> {
-  icon?: React.ComponentType<{ size: number; color: string }>;
+  icon?: any;
   containerStyle?: ViewStyle;
   inputStyle?: ViewStyle;
 }
@@ -19,7 +22,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
     <View style={[styles.container, containerStyle]}>
       {Icon && (
         <View style={styles.iconContainer}>
-          <Icon size={20} color={Colors.primaryTeal} />
+          {/* <Icon size={20} color={Colors.primaryTeal} /> */}
+          <SvgXml xml={Icon} height={20} width={20} />
         </View>
       )}
       <TextInput
