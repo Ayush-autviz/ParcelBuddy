@@ -41,3 +41,31 @@ export const getRideSearchHistory = async () => {
     const response = await apiClient.get(`/ride-search-history/`);
     return response.data;
 };
+
+// search rides
+export const searchRides = async (params: {
+    origin?: string;
+    destination?: string;
+    origin_lat?: number;
+    origin_lng?: number;
+    destination_lat?: number;
+    destination_lng?: number;
+    date_from?: string;
+    max_price?: number;
+    ordering?: string;
+}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.origin) queryParams.append('origin', params.origin);
+    if (params.destination) queryParams.append('destination', params.destination);
+    if (params.origin_lat !== undefined) queryParams.append('origin_lat', params.origin_lat.toString());
+    if (params.origin_lng !== undefined) queryParams.append('origin_lng', params.origin_lng.toString());
+    if (params.destination_lat !== undefined) queryParams.append('destination_lat', params.destination_lat.toString());
+    if (params.destination_lng !== undefined) queryParams.append('destination_lng', params.destination_lng.toString());
+    if (params.date_from) queryParams.append('date_from', params.date_from);
+    if (params.max_price !== undefined) queryParams.append('max_price', params.max_price.toString());
+    if (params.ordering) queryParams.append('ordering', params.ordering);
+    
+    const response = await apiClient.get(`/rides?${queryParams.toString()}`);
+    return response.data;
+};

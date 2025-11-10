@@ -4,6 +4,9 @@ import SearchScreen from '../screens/Search/SearchScreen';
 import PlacesSearchScreen from '../screens/Search/PlacesSearchScreen';
 import { PlaceResultItemData } from '../components';
 
+import AvailableRidesScreen from '../screens/Search/AvailableRidesScreen';
+import { AvailableRideData } from '../components/search/AvailableRideCard';
+
 export type SearchStackParamList = {
   SearchList: {
     selectedPlace?: PlaceResultItemData;
@@ -14,6 +17,12 @@ export type SearchStackParamList = {
     isDomestic: boolean;
     initialValue?: string;
     storeType?: 'search' | 'create'; // Which store to use
+  };
+  AvailableRides: {
+    rides: AvailableRideData[];
+    from: string;
+    to: string;
+    date: string;
   };
 };
 
@@ -29,6 +38,7 @@ const SearchNavigator: React.FC = () => {
     >
       <Stack.Screen name="SearchList" component={SearchScreen} />
       <Stack.Screen name="PlacesSearch" component={PlacesSearchScreen} />
+      <Stack.Screen name="AvailableRides" component={AvailableRidesScreen} />
     </Stack.Navigator>
   );
 };
