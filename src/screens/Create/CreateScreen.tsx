@@ -18,7 +18,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
 import { useCreateRide } from '../../hooks/useRideMutations';
 import { Alert } from 'react-native';
-import { MapPinIcon } from '../../assets/icons/svg/main';
+import { MapPinIcon, WeightIcon } from '../../assets/icons/svg/main';
 
 type TabType = 'Domestic' | 'International';
 
@@ -285,11 +285,11 @@ const CreateScreen: React.FC = () => {
         </SectionCard>
 
         {/* Luggage Capacity Section */}
-        <SectionCard title="Luggage Capacity">
+        <SectionCard title="Luggage">
           <View style={styles.fieldContainer}>
-            <Text style={[styles.label, styles.labelTeal]}>Maximum Weight (kg)</Text>
+            <Text style={[styles.label]}>Maximum Weight (kg)</Text>
             <SearchInput
-              icon={Package}
+              icon={WeightIcon}
               placeholder="Enter max weight"
               value={maxWeight}
               onChangeText={setMaxWeight}
@@ -298,12 +298,13 @@ const CreateScreen: React.FC = () => {
             />
           </View>
           <View style={styles.fieldContainer}>
-            <Text style={[styles.label, styles.labelTeal]}>Dimensions (cm)</Text>
+            <Text style={[styles.label]}>Dimensions (cm)</Text>
             <View style={styles.dimensionsRow}>
               <View style={styles.dimensionItem}>
                 <SearchInput
-                  icon={Package}
+                  lucideIcon={Package}
                   placeholder="Height"
+                  inputStyle={{fontSize: Fonts.sm}}
                   value={height}
                   onChangeText={setHeight}
                   keyboardType="numeric"
@@ -312,8 +313,9 @@ const CreateScreen: React.FC = () => {
               </View>
               <View style={styles.dimensionItem}>
                 <SearchInput
-                  icon={Package}
-                  placeholder="Width"
+                  lucideIcon={Package}
+                  placeholder="Width" 
+                  inputStyle={{fontSize: Fonts.sm}}
                   value={width}
                   onChangeText={setWidth}
                   keyboardType="numeric"
@@ -322,8 +324,9 @@ const CreateScreen: React.FC = () => {
               </View>
               <View style={styles.dimensionItem}>
                 <SearchInput
-                  icon={Package}
+                  lucideIcon={Package}
                   placeholder="Length"
+                  inputStyle={{fontSize: Fonts.sm}}
                   value={length}
                   onChangeText={setLength}
                   keyboardType="numeric"
@@ -384,7 +387,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
+    color: Colors.primaryCyan,
     marginBottom: 8,
   },
   labelTeal: {

@@ -10,7 +10,7 @@ import {
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
-import { MapPin, Edit, Trash2, Package } from 'lucide-react-native';
+import { Edit, Trash2, Package, Briefcase } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -18,6 +18,8 @@ import { Card, Header } from '../../components';
 import { EmptyStateCard } from '../../components/track';
 import LuggageRequestItem, { LuggageRequestItemData } from '../../components/track/LuggageRequestItem';
 import { useLuggageRequestsForRide } from '../../hooks/useLuggage';
+import { SvgXml } from 'react-native-svg';
+import { MapPinIcon } from '../../assets/icons/svg/main';
 
 export type TrackStackParamList = {
   TrackList: undefined;
@@ -59,7 +61,7 @@ const RideDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Ride Detail" showBackButton />
+      <Header title="Ride Detail" showBackButton  />
 
       <ScrollView
         style={styles.scrollView}
@@ -68,14 +70,13 @@ const RideDetailScreen: React.FC = () => {
       >
         {/* Ride Information Card */}
         <Card style={styles.rideCard} padding={20}>
-          <Text style={styles.date}>{date}</Text>
+          {/* <Text style={styles.date}>{date}</Text> */}
 
           {/* Pickup Location */}
-          <View style={styles.locationRow}>
+          <View style={[styles.locationRow, { marginBottom: 20 }]}>
             <View style={styles.locationLeft}>
               <View style={styles.iconContainer}>
-                <MapPin size={20} color={Colors.primaryTeal} />
-                <View style={styles.verticalLine} />
+                <SvgXml xml={MapPinIcon} height={16} width={16} />
               </View>
               <View style={styles.locationDetails}>
                 <Text style={styles.locationLabel}>Pickup</Text>
@@ -89,7 +90,7 @@ const RideDetailScreen: React.FC = () => {
           <View style={styles.locationRow}>
             <View style={styles.locationLeft}>
               <View style={styles.iconContainer}>
-                <MapPin size={20} color={Colors.primaryTeal} />
+                <SvgXml xml={MapPinIcon} height={16} width={16} />
               </View>
               <View style={styles.locationDetails}>
                 <Text style={styles.locationLabel}>Destination</Text>
@@ -110,7 +111,7 @@ const RideDetailScreen: React.FC = () => {
             </View>
           ) : isErrorRequests ? (
             <EmptyStateCard
-              icon={Package}
+              icon={Briefcase}
               title="Error loading requests"
               description="Failed to load luggage requests. Please try again."
             />
@@ -124,7 +125,7 @@ const RideDetailScreen: React.FC = () => {
             ))
           ) : (
             <EmptyStateCard
-              icon={Package}
+              icon={Briefcase}
               title="No requests yet"
               description="You'll see requests here once senders find your ride."
             />
@@ -190,14 +191,27 @@ const styles = StyleSheet.create({
   locationRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
+    alignItems: 'center',
+    // marginBottom: 20,
   },
   locationLeft: {
     flexDirection: 'row',
     flex: 1,
   },
   iconContainer: {
+    backgroundColor: Colors.backgroundWhite,
+    width: 36,
+    height: 36,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    justifyContent: 'center',
+    borderRadius: 100,
     alignItems: 'center',
     marginRight: 12,
   },
@@ -213,17 +227,17 @@ const styles = StyleSheet.create({
   locationLabel: {
     fontSize: Fonts.xs,
     color: Colors.textTertiary,
-    marginBottom: 4,
+    // marginBottom: 4,
   },
   locationAddress: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     fontWeight: Fonts.weightMedium,
     color: Colors.textPrimary,
   },
   time: {
     fontSize: Fonts.sm,
     fontWeight: Fonts.weightMedium,
-    color: Colors.textPrimary,
+    color: Colors.textLight,
     marginLeft: 12,
   },
   section: {
@@ -231,7 +245,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Fonts.lg,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
     marginBottom: 16,
   },

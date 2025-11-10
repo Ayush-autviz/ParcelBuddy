@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({
   showBackButton = false,
   onBackPress,
   rightAction,
-  variant = 'default',
+  variant = 'centered',
   style,
   titleStyle,
 }) => {

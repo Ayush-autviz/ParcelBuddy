@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     color: Colors.textPrimary,
     paddingVertical: 14,
   },

@@ -49,8 +49,10 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
   const driverName = `${ride.traveler.first_name} ${ride.traveler.last_name}`.trim();
   const formattedDate = formatDate(ride.travel_date);
   const availableWeight = parseFloat(ride.available_weight_kg).toFixed(0);
-  const rating = ride.rating || 4.8; // Default rating if not provided
+  const rating = ride?.rating // Default rating if not provided
   const reviewCount = ride.review_count || 128; // Default review count if not provided
+
+  console.log('rating', rating);
 
   return (
     <TouchableOpacity
@@ -78,7 +80,7 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
               <Text style={styles.driverName}>{driverName}</Text>
               <Text style={styles.rideDate}>{formattedDate}</Text>
               <View style={styles.routeContainer}>
-                <MapPin size={14} color={Colors.primaryTeal} />
+                {/* <MapPin size={14} color={Colors.primaryTeal} /> */}
                 <Text style={styles.routeText}>
                   {ride.origin_name} → {ride.destination_name}
                 </Text>
@@ -95,7 +97,7 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
             <View style={styles.ratingContainer}>
               <Text style={styles.ratingValue}>{rating}</Text>
               <Star size={14} color="#FFD700" fill="#FFD700" style={styles.starIcon} />
-              <Text style={styles.reviewCount}>({reviewCount})</Text>
+              {/* <Text style={styles.reviewCount}>({reviewCount})</Text> */}
             </View>
           </View>
         </View>
@@ -138,8 +140,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 36,
+    height: 36,
     borderRadius: 24,
     backgroundColor: Colors.primaryTeal + '20',
   },
@@ -152,18 +154,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   driverInfo: {
-    flex: 1,
+    flex: 1
   },
   driverName: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
-    marginBottom: 4,
+    // marginBottom: 2,
   },
   rideDate: {
-    fontSize: Fonts.sm,
+    fontSize: Fonts.xs,
     color: Colors.textTertiary,
-    marginBottom: 8,
+    // marginBottom: 8,
   },
   routeContainer: {
     flexDirection: 'row',
@@ -172,17 +174,18 @@ const styles = StyleSheet.create({
   routeText: {
     fontSize: Fonts.sm,
     color: Colors.textPrimary,
-    marginLeft: 4,
+    // marginLeft: 4,
   },
   rightSection: {
     alignItems: 'flex-end',
   },
   capacityContainer: {
-    marginBottom: 12,
+    marginBottom: 4,
+    alignItems: 'flex-end',
   },
   capacityValue: {
-    fontSize: Fonts.lg,
-    fontWeight: Fonts.weightBold,
+    fontSize: Fonts.sm,
+    fontWeight: Fonts.weightMedium,
     color: Colors.primaryCyan,
     marginBottom: 2,
   },

@@ -19,27 +19,51 @@ const EmptyStateCard: React.FC<EmptyStateCardProps> = ({
   style,
 }) => {
   return (
-    <Card style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.content}>
-        <Icon size={64} color={Colors.primaryTeal} />
+        <View style={styles.iconContainer}>
+          <Icon size={40} color={Colors.primaryTeal} strokeWidth={1.5} />
+        </View>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
       </View>
-    </Card>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
+    padding: 32,
+    backgroundColor: Colors.backgroundGray,
+    borderColor: '#E0E0E0',
+    borderWidth: 1,
+    borderRadius: 12,
+
   },
   content: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconContainer: {
+    backgroundColor: Colors.backgroundWhite,
+    width: 80,
+    height: 80,
+    shadowColor: Colors.textLight,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 100,
+  },
   title: {
     fontSize: Fonts.lg,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
     marginTop: 16,
     marginBottom: 8,
@@ -49,6 +73,7 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     textAlign: 'center',
     lineHeight: 20,
+    marginHorizontal: 30,
   },
 });
 

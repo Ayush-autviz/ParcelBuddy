@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
+import { Colors } from '../constants/colors';
 
 interface CardProps {
   children: React.ReactNode;
@@ -35,14 +36,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   shadow: {
-    shadowColor: '#000',
+    shadowColor: Colors.textLight,
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 4,
   },
 });
 

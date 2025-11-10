@@ -5,6 +5,9 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import StatusBadge, { StatusType } from './StatusBadge';
 import GradientButton from '../GradientButton';
+import { SvgXml } from 'react-native-svg';
+import { FilledTimeIcon, MapPinIcon } from '../../assets/icons/svg/main';
+
 
 export interface RideCardData {
   id: string;
@@ -54,28 +57,32 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       <View style={styles.routeContainer}>
         <View style={styles.routeRow}>
           <View style={styles.iconWrapper}>
-            <MapPin size={16} color={Colors.primaryTeal} />
+            {/* <MapPin size={16} color={Colors.primaryTeal} /> */}
+            <SvgXml xml={MapPinIcon} height={16} width={16} />
           </View>
           <Text style={styles.routeText}>{ride.origin}</Text>
           <View style={styles.separatorWrapper}>
             <Text style={styles.separator}>•</Text>
           </View>
           <View style={styles.timeIconWrapper}>
-            <Clock size={14} color={Colors.primaryTeal} />
+            {/* <Clock size={14} color={Colors.primaryTeal} /> */}
+            <SvgXml xml={FilledTimeIcon} height={14} width={14} />
           </View>
           <Text style={styles.timeText}>{ride.originTime}</Text>
         </View>
 
         <View style={styles.routeRow}>
           <View style={styles.iconWrapper}>
-            <MapPin size={16} color={Colors.primaryTeal} />
+            {/* <MapPin size={16} color={Colors.primaryTeal} /> */}
+            <SvgXml xml={MapPinIcon} height={16} width={16} />
           </View>
           <Text style={styles.routeText}>{ride.destination}</Text>
           <View style={styles.separatorWrapper}>
             <Text style={styles.separator}>•</Text>
           </View>
           <View style={styles.timeIconWrapper}>
-            <Clock size={14} color={Colors.primaryTeal} />
+            {/* <Clock size={14} color={Colors.primaryTeal} /> */}
+            <SvgXml xml={FilledTimeIcon} height={14} width={14} />
           </View>
           <Text style={styles.timeText}>{ride.destinationTime}</Text>
         </View>
@@ -123,7 +130,7 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: Fonts.sm,
-    color: Colors.textTertiary,
+    color: Colors.primaryCyan,
     fontWeight: Fonts.weightMedium,
   },
   routeContainer: {
@@ -142,7 +149,7 @@ const styles = StyleSheet.create({
   routeText: {
     fontSize: Fonts.base,
     color: Colors.textPrimary,
-    fontWeight: Fonts.weightMedium,
+    // fontWeight: Fonts.weightMedium,
     marginRight: 8,
   },
   separatorWrapper: {
@@ -162,8 +169,8 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: Fonts.sm,
-    color: Colors.primaryTeal,
-    fontWeight: Fonts.weightMedium,
+    color: Colors.textPrimary,
+    // fontWeight: Fonts.weightMedium,
   },
   footer: {
     flexDirection: 'row',

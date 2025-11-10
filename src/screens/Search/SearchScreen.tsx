@@ -147,6 +147,7 @@ const SearchScreen: React.FC = () => {
             last_name: ride.traveler?.last_name || '',
             profile: {
               profile_photo: ride.traveler?.profile?.profile_photo,
+              rating: ride.traveler?.profile?.average_rating,
             },
           },
           travel_date: ride.travel_date,
@@ -155,7 +156,7 @@ const SearchScreen: React.FC = () => {
           available_weight_kg: ride.available_weight_kg,
           price_per_kg: ride.price_per_kg,
           // Rating and review_count would come from traveler profile if available
-          rating: ride.traveler?.profile?.rating || 4.8,
+          rating: ride.traveler?.profile?.rating || 0,
           review_count: ride.traveler?.profile?.review_count || 128,
         }));
         
