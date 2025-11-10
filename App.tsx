@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Import navigation and auth
 import { RootNavigator, AuthProvider } from './src/navigation';
+import { ToastProvider } from './src/components/Toast';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -28,12 +29,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <NavigationContainer>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
-        </NavigationContainer>
+        <ToastProvider>
+          <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+          <NavigationContainer>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+          </NavigationContainer>
+        </ToastProvider>
       </SafeAreaProvider>
     </QueryClientProvider>
   );

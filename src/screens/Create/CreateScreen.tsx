@@ -8,7 +8,7 @@ import {
 import {  Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput } from '../../components';
+import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast } from '../../components';
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,6 +36,7 @@ const CreateScreen: React.FC = () => {
   const [width, setWidth] = useState('');
   const [length, setLength] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
+  const { showWarning, showSuccess } = useToast();
 
   // Use Zustand store for origin/destination
   const { 
@@ -98,27 +99,32 @@ const CreateScreen: React.FC = () => {
   const handlePublish = () => {
     // Validation
     if (!origin || !destination) {
-      Alert.alert('Error', 'Please select origin and destination');
+      // Alert.alert('Error', 'Please select origin and destination');
+      showWarning('Please select origin and destination');
       return;
     }
 
     if (!originLatitude || !originLongitude || !destinationLatitude || !destinationLongitude) {
-      Alert.alert('Error', 'Please select valid origin and destination locations');
+      // Alert.alert('Error', 'Please select valid origin and destination locations');
+      showWarning('Please select valid origin and destination locations');
       return;
     }
 
     if (!departureDate || !departureTime) {
-      Alert.alert('Error', 'Please select departure date and time');
+      // Alert.alert('Error', 'Please select departure date and time');
+      showWarning('Please select departure date and time');
       return;
     }
 
     if (!arrivalDate || !arrivalTime) {
-      Alert.alert('Error', 'Please select arrival date and time');
+      // Alert.alert('Error', 'Please select arrival date and time');
+      showWarning('Please select arrival date and time');
       return;
     }
 
     if (!maxWeight || !height || !width || !length) {
-      Alert.alert('Error', 'Please fill in all luggage capacity fields');
+      // Alert.alert('Error', 'Please fill in all luggage capacity fields');
+      showWarning('Please fill in all luggage  fields');
       return;
     }
 
@@ -147,11 +153,7 @@ const CreateScreen: React.FC = () => {
     // Call API
     createRideMutation.mutate(requestData, {
       onSuccess: (response) => {
-        Alert.alert('Success', 'Ride created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Reset form
+        showSuccess('Ride created successfully!');
               clearCreateForm();
               setDepartureDate(null);
               setDepartureTime(null);
@@ -162,9 +164,6 @@ const CreateScreen: React.FC = () => {
               setWidth('');
               setLength('');
               setAdditionalNotes('');
-            },
-          },
-        ]);
       },
       onError: (error: any) => {
         const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create ride';
