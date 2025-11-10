@@ -6,6 +6,11 @@ export interface SearchHistoryItem {
   from: string;
   to: string;
   date: string;
+  travel_date: string; // Original date format from API
+  origin_lat?: number;
+  origin_lng?: number;
+  destination_lat?: number;
+  destination_lng?: number;
 }
 
 export const useSearchHistory = (): UseQueryResult<SearchHistoryItem[], Error> => {
@@ -39,6 +44,11 @@ export const useSearchHistory = (): UseQueryResult<SearchHistoryItem[], Error> =
           from: item.origin_name || '',
           to: item.destination_name || '',
           date: item.travel_date ? formatDate(item.travel_date) : 'Date not available',
+          travel_date: item.travel_date || '',
+          origin_lat: item.origin_lat,
+          origin_lng: item.origin_lng,
+          destination_lat: item.destination_lat,
+          destination_lng: item.destination_lng,
         } as SearchHistoryItem;
       });
     },

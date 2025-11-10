@@ -18,6 +18,7 @@ import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { useSearchFormStore } from '../../services/store';
 import { useSearchRides } from '../../hooks/useSearchRides';
 import { useSearchHistory, SearchHistoryItem as SearchHistoryItemType } from '../../hooks/useSearchHistory';
+import { useToast } from '../../components/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPinIcon } from '../../assets/icons/svg/main';
 
@@ -45,6 +46,8 @@ const SearchScreen: React.FC = () => {
     fromLongitude,
     toLatitude,
     toLongitude,
+    setFromCoordinates,
+    setToCoordinates,
     clearSearchForm
   } = useSearchFormStore();
 
@@ -53,6 +56,9 @@ const SearchScreen: React.FC = () => {
 
   // Fetch search history from API
   const { data: searchHistory = [], isLoading: isHistoryLoading, refetch: refetchHistory } = useSearchHistory();
+
+  // Toast hook
+  const { showWarning } = useToast();
 
   // Clear form when screen comes into focus after a successful search
   // This ensures clearing happens when screen is active, not before navigation
@@ -102,17 +108,17 @@ const SearchScreen: React.FC = () => {
   const handleSearch = () => {
     // Validation
     if (!from || !to) {
-      console.log('Please select origin and destination');
+      showWarning('Please select origin and destination');
       return;
     }
 
     if (!fromLatitude || !fromLongitude || !toLatitude || !toLongitude) {
-      console.log('Please select valid origin and destination locations');
+      showWarning('Please select valid origin and destination locations');
       return;
     }
 
     if (!date) {
-      console.log('Please select a date');
+      showWarning('Please select a date');
       return;
     }
 
@@ -183,10 +189,74 @@ const SearchScreen: React.FC = () => {
   };
 
   const handleHistoryPress = (item: SearchHistoryItemType) => {
-    setFrom(item.from);
-    setTo(item.to);
+    // Directly trigger search API without populating form fields
+    if (
+      item.from &&
+      item.to &&
+      item.origin_lat &&
+      item.origin_lng &&
+      item.destination_lat &&
+      item.destination_lng &&
+      item.travel_date
+    ) {
+      const searchParams = {
+        origin: item.from,
+        destination: item.to,
+        origin_lat: item.origin_lat,
+        origin_lng: item.origin_lng,
+        destination_lat: item.destination_lat,
+        destination_lng: item.destination_lng,
+        date_from: item.travel_date,
+        max_price: 10,
+        ordering: '-travel_date',
+      };
+      
+      searchRidesMutation.mutate(searchParams, {
+        onSuccess: (response) => {
+          console.log('Search rides response:', response);
+          
+          // Transform API response to AvailableRideData format
+          const transformedRides = (response || []).map((ride: any) => ({
+            id: ride.id,
+            traveler: {
+              first_name: ride.traveler?.first_name || '',
+              last_name: ride.traveler?.last_name || '',
+              profile: {
+                profile_photo: ride.traveler?.profile?.profile_photo,
+              },
+            },
+            travel_date: ride.travel_date,
+            origin_name: ride.origin_name,
+            destination_name: ride.destination_name,
+            available_weight_kg: ride.available_weight_kg,
+            price_per_kg: ride.price_per_kg,
+            rating: ride.traveler?.profile?.rating || 4.8,
+            review_count: ride.traveler?.profile?.review_count || 128,
+          }));
+          
+          // Set flag to clear form when screen comes back into focus
+          shouldClearOnFocus.current = true;
+          
+          // Refetch search history to include the new search
+          refetchHistory();
+          
+          // Navigate to Available Rides screen with results
+          navigation.navigate('AvailableRides', {
+            rides: transformedRides,
+            from: item.from,
+            to: item.to,
+            date: item.travel_date,
+          });
+        },
+        onError: (error: any) => {
+          console.error('Search rides error:', error);
+          console.log('Error response:', error?.response?.data);
+        },
+      });
+    }
   };
 
+  console.log('searchHistory', searchHistory);
 
   return (
     <SafeAreaView style={styles.container}>

@@ -41,8 +41,12 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       duration: number = 3000,
       position: 'top' | 'bottom' = 'top'
     ) => {
+      if (!message || typeof message !== 'string') {
+        console.warn('Toast message must be a non-empty string');
+        return;
+      }
       const id = Date.now().toString() + Math.random().toString();
-      setToasts((prev) => [...prev, { id, message, type, duration, position }]);
+      setToasts((prev) => [...prev, { id, message: String(message), type, duration, position }]);
     },
     []
   );

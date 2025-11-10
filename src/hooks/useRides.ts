@@ -46,7 +46,7 @@ export const usePublishedRides = (): UseQueryResult<RideCardData[], Error> => {
 
         // Format time: "16:45:03" -> "4:45 PM"
         const formatTime = (timeString: string): string => {
-          const [hours, minutes] = timeString.split(':');
+          const [hours, minutes] = timeString?.split(':');
           const hour = parseInt(hours, 10);
           const ampm = hour >= 12 ? 'PM' : 'AM';
           const displayHour = hour % 12 || 12;

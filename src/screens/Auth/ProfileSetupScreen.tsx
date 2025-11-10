@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -30,7 +29,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
-type ProfileSetupNavigationProp = StackNavigationProp<AuthStackParamList, 'ProfileSetup'>;
 
 // User SVG with gradient
 const UserIcon = `
@@ -118,7 +116,7 @@ const ProfileSetupScreen: React.FC = () => {
     }
 
     // Split full name into first and last name
-    const nameParts = fullName.trim().split(' ');
+    const nameParts = fullName.trim()?.split(' ');
     const first_name = nameParts[0] || '';
     const last_name = nameParts.slice(1).join(' ') || '';
 
@@ -131,7 +129,7 @@ const ProfileSetupScreen: React.FC = () => {
 
     // Append profile photo if available
     if (profileImageAsset && profileImageAsset.uri) {
-      const fileExtension = profileImageAsset.uri.split('.').pop() || 'jpg';
+      const fileExtension = profileImageAsset.uri?.split('.').pop() || 'jpg';
       const fileName = profileImageAsset.fileName || `profile_photo.${fileExtension}`;
       
       formData.append('profile.profile_photo', {
