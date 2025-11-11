@@ -271,25 +271,24 @@ const styles = StyleSheet.create({
   },
   illustrationContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingTop: 20,
     backgroundColor: Colors.backgroundLight,
   },
   content: {
     flex: 1,
     backgroundColor: Colors.backgroundLight,
-    padding: 24,
-    paddingTop: 20,
+    paddingHorizontal: 24,
     
   },
   title: {
-    fontSize: Fonts.xxxl,
+    fontSize: Fonts.xl,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     color: Colors.textLight,
     marginBottom: 24,
     lineHeight: 24,

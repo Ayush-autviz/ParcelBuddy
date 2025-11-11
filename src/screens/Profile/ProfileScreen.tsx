@@ -1,8 +1,35 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import LinearGradient from 'react-native-linear-gradient';
+import {
+  User,
+  Shield,
+  Check,
+  Star,
+  Crown,
+  Clock,
+  FileText,
+  HelpCircle,
+  LogOut,
+  ChevronRight,
+} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '../../constants/colors';
+import { Fonts } from '../../constants/fonts';
+import { Header, GradientButton } from '../../components';
 import { useAuthStore } from '../../services/store';
+import { useQuery } from '@tanstack/react-query';
+import { getProfile } from '../../services/api/profile';
+import { useToast } from '../../components/Toast';
 
 type RootStackParamList = {
   Home: undefined;
@@ -12,181 +39,306 @@ type RootStackParamList = {
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
 
+interface MenuItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  icon: React.ComponentType<any>;
+  onPress: () => void;
+}
+
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-  const { logout} = useAuthStore();
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
+  const { logout, user } = useAuthStore();
+  const { showSuccess } = useToast();
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: () => getProfile(),
+  });
+
+  const profileData = profile?.[0] || user;
+  const firstName = profileData?.first_name || profileData?.user?.first_name || 'User';
+  const lastName = profileData?.last_name || profileData?.user?.last_name || '';
+  const fullName = `${firstName} ${lastName}`.trim() || 'User Name';
+  const profilePhoto = profileData?.profile?.profile_photo;
+  const age = profileData?.profile?.age || 28; // Default age if not available
 
   const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: async () => {
-        await logout();
-        Alert.alert('Success', 'Logged out successfully');
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }],
-        });
-      } },
-    ]);
+    await logout();
+    showSuccess('Logged out successfully');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Auth' }],
+    });
   };
 
+  const menuItems: MenuItem[] = [
+    {
+      id: 'edit',
+      title: 'Edit Profile',
+      icon: User,
+      onPress: () => {
+        // TODO: Navigate to edit profile
+        console.log('Edit Profile');
+      },
+    },
+    {
+      id: 'kyc',
+      title: 'KYC Status',
+      subtitle: 'Verified',
+      icon: Shield,
+      onPress: () => {
+        // TODO: Navigate to KYC
+        console.log('KYC Status');
+      },
+    },
+    {
+      id: 'ratings',
+      title: 'Ratings',
+      icon: Star,
+      onPress: () => {
+        // TODO: Navigate to ratings
+        console.log('Ratings');
+      },
+    },
+    {
+      id: 'subscription',
+      title: 'Current Subscription',
+      subtitle: 'Silver',
+      icon: Crown,
+      onPress: () => {
+        // TODO: Navigate to subscription
+        console.log('Subscription');
+      },
+    },
+    {
+      id: 'payment',
+      title: 'Payment History',
+      icon: Clock,
+      onPress: () => {
+        // TODO: Navigate to payment history
+        console.log('Payment History');
+      },
+    },
+    {
+      id: 'terms',
+      title: 'Terms & Privacy Policy',
+      icon: FileText,
+      onPress: () => {
+        // TODO: Navigate to terms
+        console.log('Terms & Privacy');
+      },
+    },
+    {
+      id: 'support',
+      title: 'Support',
+      icon: HelpCircle,
+      onPress: () => {
+        // TODO: Navigate to support
+        console.log('Support');
+      },
+    },
+  ];
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Profile</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <Header title="Profile" variant="centered" />
 
-      <View style={styles.content}>
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>U</Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Avatar Section */}
+        <View style={styles.avatarSection}>
+          <View style={styles.avatarContainer}>
+            {profilePhoto ? (
+              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+            ) : (
+              <LinearGradient
+                colors={[Colors.gradientStart, Colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatarGradient}
+              >
+                <User size={60} color={Colors.textWhite} />
+              </LinearGradient>
+            )}
           </View>
-          <Text style={styles.name}>User Name</Text>
-          <Text style={styles.email}>user@example.com</Text>
+          <Text style={styles.userName}>{fullName}</Text>
+          <Text style={styles.userAge}>{age} years old</Text>
         </View>
 
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Your Statistics</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>12</Text>
-              <Text style={styles.statLabel}>Active Parcels</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>45</Text>
-              <Text style={styles.statLabel}>Delivered</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>3</Text>
-              <Text style={styles.statLabel}>Pending</Text>
-            </View>
-          </View>
+        {/* Menu Items */}
+        <View style={styles.menuSection}>
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.menuItem}
+                onPress={item.onPress}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.iconContainer}>
+                    {item.id === 'kyc' ? (
+                      <View style={styles.shieldContainer}>
+                        <Shield size={20} color={Colors.primaryCyan} />
+                        <View style={styles.checkBadge}>
+                          <Check size={10} color={Colors.textWhite} />
+                        </View>
+                      </View>
+                    ) : item.id === 'support' ? (
+                      <View style={styles.supportContainer}>
+                        <HelpCircle size={20} color={Colors.primaryCyan} />
+                      </View>
+                    ) : (
+                      <Icon size={20} color={Colors.primaryCyan} />
+                    )}
+                  </View>
+                  <View style={styles.menuItemText}>
+                    <Text style={styles.menuItemTitle}>{item.title}</Text>
+                    {item.subtitle && (
+                      <Text style={styles.menuItemSubtitle}>{item.subtitle}</Text>
+                    )}
+                  </View>
+                </View>
+                <ChevronRight size={20} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      </View>
 
-      <TouchableOpacity onPress={handleLogout}>
-        <Text>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Logout Button */}
+        <GradientButton
+          title="Logout"
+          onPress={handleLogout}
+          style={styles.logoutButton}
+          icon={<LogOut size={20} color={Colors.textWhite} style={styles.logoutIcon} />}
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.backgroundLight,
   },
-  header: {
-    backgroundColor: 'white',
-    padding: 20,
-    paddingTop: 60,
-    flexDirection: 'row',
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+  avatarSection: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 32,
   },
-  backButton: {
-    marginRight: 16,
+  avatarContainer: {
+    marginBottom: 16,
   },
-  backButtonText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: Colors.backgroundGray,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  content: {
-    padding: 20,
-  },
-  profileCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#007AFF',
+  avatarGradient: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 16,
-    color: '#666',
-  },
-  statsCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
+    shadowColor: Colors.textPrimary,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#007AFF',
+  userName: {
+    fontSize: Fonts.xxl,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
+  userAge: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+  },
+  menuSection: {
+    marginBottom: 24,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryCyan + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  shieldContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: Colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.textWhite,
+  },
+  supportContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuItemText: {
+    flex: 1,
+  },
+  menuItemTitle: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightMedium,
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  menuItemSubtitle: {
+    fontSize: Fonts.sm,
+    color: Colors.textTertiary,
+  },
+  logoutButton: {
+    marginTop: 8,
+  },
+  logoutIcon: {
+    marginRight: 0,
   },
 });
 

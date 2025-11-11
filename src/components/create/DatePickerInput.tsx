@@ -13,6 +13,7 @@ interface DatePickerInputProps {
   minimumDate?: Date;
   maximumDate?: Date;
   containerStyle?: any;
+  iconContainerStyle?: any;
 }
 
 const DatePickerInput: React.FC<DatePickerInputProps> = ({
@@ -22,6 +23,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
   minimumDate,
   maximumDate,
   containerStyle,
+  iconContainerStyle,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -51,7 +53,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
         onPress={() => setShowPicker(true)}
         activeOpacity={0.7}
       >
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, iconContainerStyle]}>
           {/* <Calendar size={20} color={Colors.primaryTeal} /> */}
           <SvgXml xml={CalendarIcon} height={20} width={20} />
         </View>

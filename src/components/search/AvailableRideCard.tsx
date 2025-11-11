@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   driverName: {
-    fontSize: Fonts.sm,
+    fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     // marginBottom: 2,
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   capacityValue: {
-    fontSize: Fonts.sm,
+    fontSize: Fonts.lg,
     fontWeight: Fonts.weightMedium,
     color: Colors.primaryCyan,
     marginBottom: 2,
@@ -212,6 +212,8 @@ const styles = StyleSheet.create({
   },
   requestButton: {
     marginTop: 0,
+    height: 40,
+    justifyContent: 'center',
   },
   requestButtonText: {
     fontSize: Fonts.base,

@@ -5,6 +5,7 @@ import PlacesSearchScreen from '../screens/Search/PlacesSearchScreen';
 import { PlaceResultItemData } from '../components';
 
 import AvailableRidesScreen from '../screens/Search/AvailableRidesScreen';
+import SendRequestScreen from '../screens/Search/SendRequestScreen';
 import { AvailableRideData } from '../components/search/AvailableRideCard';
 
 export type SearchStackParamList = {
@@ -24,6 +25,9 @@ export type SearchStackParamList = {
     to: string;
     date: string;
   };
+  SendRequest: {
+    ride: AvailableRideData;
+  };
 };
 
 const Stack = createStackNavigator<SearchStackParamList>();
@@ -39,6 +43,7 @@ const SearchNavigator: React.FC = () => {
       <Stack.Screen name="SearchList" component={SearchScreen} />
       <Stack.Screen name="PlacesSearch" component={PlacesSearchScreen} />
       <Stack.Screen name="AvailableRides" component={AvailableRidesScreen} />
+      <Stack.Screen name="SendRequest" component={SendRequestScreen} />
     </Stack.Navigator>
   );
 };

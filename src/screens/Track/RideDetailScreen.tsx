@@ -9,12 +9,12 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import LinearGradient from 'react-native-linear-gradient';
 import { Edit, Trash2, Package, Briefcase } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Card, Header } from '../../components';
+import GradientButton from '../../components/GradientButton';
 import { EmptyStateCard } from '../../components/track';
 import LuggageRequestItem, { LuggageRequestItemData } from '../../components/track/LuggageRequestItem';
 import { useLuggageRequestsForRide } from '../../hooks/useLuggage';
@@ -136,21 +136,11 @@ const RideDetailScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Manage Ride</Text>
           <View style={styles.manageButtons}>
-            <TouchableOpacity
-              style={styles.editButton}
+            <GradientButton
+              title="Edit"
               onPress={handleEdit}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={[Colors.gradientStart, Colors.gradientEnd]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.editButtonGradient}
-              >
-                <Edit size={20} color={Colors.textWhite} style={styles.editIcon} />
-                <Text style={styles.editButtonText}>Edit</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+              style={styles.editButton}
+            />
             <TouchableOpacity
               style={styles.deleteButton}
               onPress={handleDelete}
@@ -254,23 +244,7 @@ const styles = StyleSheet.create({
   },
   editButton: {
     flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
     marginRight: 12,
-  },
-  editButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-  },
-  editIcon: {
-    marginRight: 8,
-  },
-  editButtonText: {
-    fontSize: Fonts.base,
-    fontWeight: Fonts.weightSemiBold,
-    color: Colors.textWhite,
   },
   deleteButton: {
     flex: 1,

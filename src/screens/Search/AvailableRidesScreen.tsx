@@ -39,8 +39,7 @@ const AvailableRidesScreen: React.FC = () => {
   const formattedDate = formatDate(date);
 
   const handleSendRequest = (ride: AvailableRideData) => {
-    // TODO: Implement send request functionality
-    console.log('Send request for ride:', ride.id);
+    navigation.navigate('SendRequest', { ride });
   };
 
   const handleRidePress = (ride: AvailableRideData) => {

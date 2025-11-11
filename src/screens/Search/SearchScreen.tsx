@@ -322,9 +322,10 @@ const SearchScreen: React.FC = () => {
             <DatePickerInput
               value={date}
               onChange={setDate}
-              placeholder="Select Date"
+              placeholder="mm / yy"
               minimumDate={new Date()}
               containerStyle={styles.input}
+              iconContainerStyle={styles.iconContainer}
             />
           </View>
 
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   historyTitle: {
-    fontSize: Fonts.xl,
+    fontSize: Fonts.lg,
     // fontWeight: Fonts.weightRegular,
     color: Colors.textPrimary,
     marginBottom: 16,
@@ -428,6 +429,9 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  iconContainer: {
+    marginRight: 16,
   },
 });
 
