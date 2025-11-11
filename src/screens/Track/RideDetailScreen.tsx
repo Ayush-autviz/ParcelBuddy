@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,11 +13,14 @@ import { Edit, Trash2, Package, Briefcase } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Card, Header } from '../../components';
+import { Card, Header, ConfirmationModal } from '../../components';
 import GradientButton from '../../components/GradientButton';
 import { EmptyStateCard } from '../../components/track';
 import LuggageRequestItem, { LuggageRequestItemData } from '../../components/track/LuggageRequestItem';
 import { useLuggageRequestsForRide } from '../../hooks/useLuggage';
+import { useDeleteRide } from '../../hooks/useRideMutations';
+import { useToast } from '../../components/Toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { SvgXml } from 'react-native-svg';
 import { MapPinIcon } from '../../assets/icons/svg/main';
 
@@ -40,9 +43,15 @@ const RideDetailScreen: React.FC = () => {
   const route = useRoute<RideDetailScreenRouteProp>();
   const navigation = useNavigation<RideDetailScreenNavigationProp>();
   const { rideId, date, origin, originTime, destination, destinationTime } = route.params;
+  const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Fetch luggage requests from API
   const { data: luggageRequests = [], isLoading: isLoadingRequests, isError: isErrorRequests } = useLuggageRequestsForRide(rideId);
+
+  // Delete ride mutation
+  const deleteRideMutation = useDeleteRide();
 
   const handleEdit = () => {
     // TODO: Implement edit functionality
@@ -50,8 +59,29 @@ const RideDetailScreen: React.FC = () => {
   };
 
   const handleDelete = () => {
-    // TODO: Implement delete functionality
-    console.log('Delete ride');
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteModal(false);
+    deleteRideMutation.mutate(rideId, {
+      onSuccess: () => {
+        showSuccess('Ride deleted successfully');
+        // Invalidate and refetch rides list
+        queryClient.invalidateQueries({ queryKey: ['publishedRides'] });
+        queryClient.invalidateQueries({ queryKey: ['allRides'] });
+        // Navigate back to track list
+        navigation.goBack();
+      },
+      onError: (error: any) => {
+        console.error('Delete ride error:', error);
+        showError(error?.response?.data?.message || 'Failed to delete ride. Please try again.');
+      },
+    });
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
   };
 
   const handleRequestPress = (request: LuggageRequestItemData) => {
@@ -142,16 +172,38 @@ const RideDetailScreen: React.FC = () => {
               style={styles.editButton}
             />
             <TouchableOpacity
-              style={styles.deleteButton}
+              style={[
+                styles.deleteButton,
+                deleteRideMutation.isPending && styles.deleteButtonDisabled,
+              ]}
               onPress={handleDelete}
               activeOpacity={0.7}
+              disabled={deleteRideMutation.isPending}
             >
-              <Trash2 size={20} color={Colors.textPrimary} style={styles.deleteIcon} />
-              <Text style={styles.deleteButtonText}>Delete</Text>
+              {deleteRideMutation.isPending ? (
+                <ActivityIndicator size="small" color={Colors.textPrimary} />
+              ) : (
+                <>
+                  <Trash2 size={20} color={Colors.textPrimary} style={styles.deleteIcon} />
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        title="Delete Ride"
+        message="Are you sure you want to delete this ride? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        type="destructive"
+      />
     </SafeAreaView>
   );
 };
@@ -264,6 +316,9 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
+  },
+  deleteButtonDisabled: {
+    opacity: 0.6,
   },
   loadingContainer: {
     flexDirection: 'row',

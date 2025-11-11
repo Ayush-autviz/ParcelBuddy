@@ -1,5 +1,5 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
-import { createRide } from '../services/api/ride';
+import { createRide, deleteRide } from '../services/api/ride';
 
 export interface CreateRideRequest {
   origin_name: string;
@@ -25,6 +25,12 @@ export interface CreateRideRequest {
 export const useCreateRide = (): UseMutationResult<any, Error, CreateRideRequest, unknown> => {
   return useMutation({
     mutationFn: (data: CreateRideRequest) => createRide(data),
+  });
+};
+
+export const useDeleteRide = (): UseMutationResult<any, Error, string, unknown> => {
+  return useMutation({
+    mutationFn: (id: string) => deleteRide(id),
   });
 };
 

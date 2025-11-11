@@ -52,7 +52,7 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        {/* <StatusBadge status={ride.status} /> */}
+        <StatusBadge status={ride.status} />
         <View></View>
         <Text style={styles.date}>{ride.date}</Text>
       </View>

@@ -19,6 +19,7 @@ import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
 import { useCreateRide } from '../../hooks/useRideMutations';
 import { Alert } from 'react-native';
 import { MapPinIcon, WeightIcon } from '../../assets/icons/svg/main';
+import { useQueryClient } from '@tanstack/react-query';
 
 type TabType = 'Domestic' | 'International';
 
@@ -26,6 +27,7 @@ type CreateScreenNavigationProp = BottomTabNavigationProp<BottomTabParamList, 'C
 
 const CreateScreen: React.FC = () => {
   const navigation = useNavigation<CreateScreenNavigationProp>();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('Domestic');
   const [departureDate, setDepartureDate] = useState<Date | null>(null);
   const [departureTime, setDepartureTime] = useState<Date | null>(null);
@@ -154,16 +156,22 @@ const CreateScreen: React.FC = () => {
     createRideMutation.mutate(requestData, {
       onSuccess: (response) => {
         showSuccess('Ride created successfully!');
-              clearCreateForm();
-              setDepartureDate(null);
-              setDepartureTime(null);
-              setArrivalDate(null);
-              setArrivalTime(null);
-              setMaxWeight('');
-              setHeight('');
-              setWidth('');
-              setLength('');
-              setAdditionalNotes('');
+        clearCreateForm();
+        setDepartureDate(null);
+        setDepartureTime(null);
+        setArrivalDate(null);
+        setArrivalTime(null);
+        setMaxWeight('');
+        setHeight('');
+        setWidth('');
+        setLength('');
+        setAdditionalNotes('');
+        
+        // Invalidate published rides query to refresh the list
+        queryClient.invalidateQueries({ queryKey: ['publishedRides'] });
+        
+        // Navigate to Track tab (Published tab is default in TrackScreen)
+        navigation.navigate('Track');
       },
       onError: (error: any) => {
         const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create ride';
