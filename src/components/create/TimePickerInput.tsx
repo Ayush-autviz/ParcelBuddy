@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Clock } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
@@ -35,9 +35,7 @@ const TimePickerInput: React.FC<TimePickerInputProps> = ({
     }
     if (selectedTime) {
       onChange(selectedTime);
-      if (Platform.OS === 'ios') {
-        setShowPicker(false);
-      }
+      // Don't close on iOS - let user click Done
     }
   };
 
@@ -64,14 +62,60 @@ const TimePickerInput: React.FC<TimePickerInputProps> = ({
         </Text>
       </TouchableOpacity>
 
-      {showPicker && (
-        <DateTimePicker
-          value={value || new Date()}
-          mode="time"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleTimeChange}
-          is24Hour={false}
-        />
+      {Platform.OS === 'ios' ? (
+        <Modal
+          visible={showPicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowPicker(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity
+                  onPress={() => setShowPicker(false)}
+                  style={styles.modalCancelButton}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Select Time</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (value) {
+                      setShowPicker(false);
+                    }
+                  }}
+                  style={styles.modalDoneButton}
+                >
+                  <Text style={[styles.modalDoneText, !value && styles.modalDoneTextDisabled]}>
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.timePickerContainer}>
+                <DateTimePicker
+                  value={value || new Date()}
+                  mode="time"
+                  display="spinner"
+                  onChange={handleTimeChange}
+                  is24Hour={false}
+                  textColor={Colors.textPrimary}
+                  style={styles.timePicker}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : (
+        showPicker && (
+          <DateTimePicker
+            value={value || new Date()}
+            mode="time"
+            display="default"
+            onChange={handleTimeChange}
+            is24Hour={false}
+          />
+        )
       )}
     </View>
   );
@@ -89,16 +133,77 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   iconContainer: {
-    marginRight: 12,
+    marginRight: 4,
   },
   text: {
     flex: 1,
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     color: Colors.textPrimary,
     paddingVertical: 14,
   },
   placeholderText: {
     color: Colors.textLight,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.backgroundWhite,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+    maxHeight: '60%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  modalCancelButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  modalCancelText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weightMedium,
+  },
+  modalTitle: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+    flex: 1,
+    textAlign: 'center',
+  },
+  modalDoneButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  modalDoneText: {
+    fontSize: Fonts.base,
+    color: Colors.primaryCyan,
+    fontWeight: Fonts.weightSemiBold,
+  },
+  modalDoneTextDisabled: {
+    color: Colors.textLight,
+    opacity: 0.5,
+  },
+  timePickerContainer: {
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 250,
+  },
+  timePicker: {
+    width: '100%',
+    height: 200,
   },
 });
 

@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   },
   bannerPlaceholder: {
     width: '100%',
-    height: 330,
+    height: 315,
     resizeMode: 'cover',
   },
   searchCard: {

@@ -22,6 +22,7 @@ import { Header } from '../../components';
 import { useVerifyOtp, useGetOtp } from '../../hooks/useAuthMutations';
 import { useAuthStore } from '../../services/store';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useToast } from '../../components/Toast';
 
 const { width, height } = Dimensions.get('window');
 
@@ -79,6 +80,7 @@ const OTPScreen: React.FC = () => {
   
   const verifyOtpMutation = useVerifyOtp();
   const resendOtpMutation = useGetOtp();
+  const { showWarning, showError, showSuccess } = useToast();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -102,7 +104,7 @@ const OTPScreen: React.FC = () => {
 
   const handleVerify = () => {
     if (otp.length !== 6) {
-      Alert.alert('Error', 'Please enter the complete 6-digit code');
+      showWarning('Please enter the complete 6-digit code');
       return;
     }
 
@@ -136,7 +138,11 @@ const OTPScreen: React.FC = () => {
         },
         onError: (error: any) => {
           console.log('Error verifying OTP:', error.response.data.error);
-          Alert.alert('Error', error.response.data.error);
+          const errorMessage = error?.response?.data?.error || 
+                              error?.response?.data?.message || 
+                              error?.message || 
+                              'Invalid OTP. Please try again.';
+          showError(errorMessage);
         },
       }
     );
@@ -155,7 +161,7 @@ const OTPScreen: React.FC = () => {
         onSuccess: () => {
           // Reset timer to 2:30
           setTimer(150);
-          Alert.alert('Success', 'OTP resent successfully!');
+          showSuccess('OTP resent successfully!');
         },
         onError: (error: any) => {
           console.log('Error resending OTP:', error);
@@ -167,7 +173,7 @@ const OTPScreen: React.FC = () => {
             error?.response?.data?.detail ||
             error?.message || 
             'Failed to resend OTP. Please try again.';
-          Alert.alert('Error', errorMessage);
+          showError(errorMessage);
         },
       }
     );

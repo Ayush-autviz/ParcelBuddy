@@ -42,6 +42,8 @@ const SplashScreen: React.FC = () => {
     enabled: !!token,
   });
 
+  console.log('profile', profile);
+
   useEffect(() => {
     // Start animations
     Animated.parallel([
@@ -78,7 +80,7 @@ const SplashScreen: React.FC = () => {
         routes: [{ name: 'Auth' }],
       });
     }
-    else if (profile.length !== 0) {
+    else if (profile?.length !== 0) {
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainApp' }],

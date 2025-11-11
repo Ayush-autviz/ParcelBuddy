@@ -6,7 +6,7 @@ import { Fonts } from '../../constants/fonts';
 import StatusBadge, { StatusType } from './StatusBadge';
 import GradientButton from '../GradientButton';
 import { SvgXml } from 'react-native-svg';
-import { FilledTimeIcon, MapPinIcon } from '../../assets/icons/svg/main';
+import { FilledTimeIcon, FilledUserIcon, MapPinIcon } from '../../assets/icons/svg/main';
 
 
 export interface RideCardData {
@@ -30,7 +30,8 @@ interface RideCardProps {
 
 const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }) => {
   const renderPassengerIcons = () => {
-    return Array.from({ length: ride.passengers }).map((_, index) => (
+    // return Array.from({ length: ride.passengers }).map((_, index) => (
+      return Array.from({ length: 3 }).map((_, index) => (
       <View
         key={index}
         style={[
@@ -38,7 +39,8 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
           index > 0 && styles.passengerAvatarOverlap,
         ]}
       >
-        <User size={16} color={Colors.gradientEnd} />
+        {/* <User size={16} color={Colors.gradientEnd} /> */}
+        <SvgXml xml={FilledUserIcon} height={16} width={16} />
       </View>
     ));
   };
@@ -50,7 +52,8 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <StatusBadge status={ride.status} />
+        {/* <StatusBadge status={ride.status} /> */}
+        <View></View>
         <Text style={styles.date}>{ride.date}</Text>
       </View>
 

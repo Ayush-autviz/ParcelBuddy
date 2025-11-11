@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -38,9 +38,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
     }
     if (selectedDate) {
       onChange(selectedDate);
-      if (Platform.OS === 'ios') {
-        setShowPicker(false);
-      }
+      // Don't close on iOS - let user click Done
     }
   };
 
@@ -67,15 +65,62 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
         </Text>
       </TouchableOpacity>
 
-      {showPicker && (
-        <DateTimePicker
-          value={value || new Date()}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleDateChange}
-          minimumDate={minimumDate}
-          maximumDate={maximumDate}
-        />
+      {Platform.OS === 'ios' ? (
+        <Modal
+          visible={showPicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowPicker(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity
+                  onPress={() => setShowPicker(false)}
+                  style={styles.modalCancelButton}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Select Date</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (value) {
+                      setShowPicker(false);
+                    }
+                  }}
+                  style={styles.modalDoneButton}
+                >
+                  <Text style={[styles.modalDoneText, !value && styles.modalDoneTextDisabled]}>
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.datePickerContainer}>
+                <DateTimePicker
+                  value={value || new Date()}
+                  mode="date"
+                  display="spinner"
+                  onChange={handleDateChange}
+                  minimumDate={minimumDate}
+                  maximumDate={maximumDate}
+                  textColor={Colors.textPrimary}
+                  style={styles.datePicker}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : (
+        showPicker && (
+          <DateTimePicker
+            value={value || new Date()}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+            minimumDate={minimumDate}
+            maximumDate={maximumDate}
+          />
+        )
       )}
     </View>
   );
@@ -93,7 +138,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   iconContainer: {
-    marginRight: 12,
+    marginRight: 4,
   },
   text: {
     flex: 1,
@@ -103,6 +148,67 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: Colors.textLight,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.backgroundWhite,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+    maxHeight: '60%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  modalCancelButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  modalCancelText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weightMedium,
+  },
+  modalTitle: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+    flex: 1,
+    textAlign: 'center',
+  },
+  modalDoneButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  modalDoneText: {
+    fontSize: Fonts.base,
+    color: Colors.primaryCyan,
+    fontWeight: Fonts.weightSemiBold,
+  },
+  modalDoneTextDisabled: {
+    color: Colors.textLight,
+    opacity: 0.5,
+  },
+  datePickerContainer: {
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 250,
+  },
+  datePicker: {
+    width: '100%',
+    height: 200,
   },
 });
 

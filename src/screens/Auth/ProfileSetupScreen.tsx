@@ -10,6 +10,7 @@ import {
   TextInput,
   Image,
   Platform,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -26,6 +27,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useProfileSetup } from '../../hooks/useAuthMutations';
 import { useAuthStore } from '../../services/store';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useToast } from '../../components/Toast';
+import { CameraIcon } from '../../assets/icons/svg/main';
 
 const { width } = Dimensions.get('window');
 
@@ -62,6 +65,7 @@ const ProfileSetupScreen: React.FC = () => {
   const {setUser} = useAuthStore();
   
   const profileSetupMutation = useProfileSetup();
+  const { showWarning, showError } = useToast();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -91,27 +95,27 @@ const ProfileSetupScreen: React.FC = () => {
 
   const handleSaveProfile = () => {
     if (!fullName.trim()) {
-      Alert.alert('Error', 'Please enter your full name');
+      showWarning('Please enter your full name');
       return;
     }
 
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email address');
+      showWarning('Please enter your email address');
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      showWarning('Please enter a valid email address');
       return;
     }
 
     if (!dateOfBirth) {
-      Alert.alert('Error', 'Please enter your date of birth');
+      showWarning('Please enter your date of birth');
       return;
     }
 
     if (!agreeToTerms) {
-      Alert.alert('Error', 'Please agree to the Terms of Service and Privacy Policy');
+      showWarning('Please agree to the Terms of Service and Privacy Policy');
       return;
     }
 
@@ -152,7 +156,11 @@ const ProfileSetupScreen: React.FC = () => {
       },
       onError: (error: any) => {
         console.log('Error saving profile:', error.response);
-        Alert.alert('Error', error.response.data.error);
+        const errorMessage = error?.response?.data?.error || 
+                            error?.response?.data?.message || 
+                            error?.message || 
+                            'Failed to save profile. Please try again.';
+        showError(errorMessage);
       },
     });
   };
@@ -171,9 +179,7 @@ const ProfileSetupScreen: React.FC = () => {
     }
     if (selectedDate) {
       setDateOfBirth(selectedDate);
-      if (Platform.OS === 'ios') {
-        setShowDatePicker(false);
-      }
+      // Don't close on iOS - let user click Done
     }
   };
 
@@ -189,7 +195,7 @@ const ProfileSetupScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
       {/* Header */}
-      <Header title="Profile Setup" showBackButton />
+      <Header title="Profile Setup" />
       
       <KeyboardAwareScrollView
         style={styles.scrollView}
@@ -214,7 +220,8 @@ const ProfileSetupScreen: React.FC = () => {
               </View>
             )}
             <View style={styles.cameraIconContainer}>
-              <Camera size={20} color={Colors.textWhite} />
+              {/* <Camera size={20} color={Colors.primaryCyan} /> */}
+              <SvgXml xml={CameraIcon} width={20} height={20} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleImagePicker}>
@@ -224,7 +231,7 @@ const ProfileSetupScreen: React.FC = () => {
 
         {/* Personal Information Section */}
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <Text style={[styles.sectionTitle, { color: Colors.textPrimary }]}>Personal Information</Text>
 
           {/* Full Name Input */}
           <View style={styles.inputContainer}>
@@ -284,21 +291,68 @@ const ProfileSetupScreen: React.FC = () => {
                 {dateOfBirth ? formatDate(dateOfBirth) : 'mm / dd / yyyy'}
               </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={dateOfBirth || new Date()}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-                maximumDate={new Date()}
-                minimumDate={new Date(1900, 0, 1)}
-              />
+            {Platform.OS === 'ios' ? (
+              <Modal
+                visible={showDatePicker}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowDatePicker(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity
+                        onPress={() => setShowDatePicker(false)}
+                        style={styles.modalCancelButton}
+                      >
+                        <Text style={styles.modalCancelText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.modalTitle}>Select Date of Birth</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (dateOfBirth) {
+                            setShowDatePicker(false);
+                          }
+                        }}
+                        style={styles.modalDoneButton}
+                      >
+                        <Text style={[styles.modalDoneText, !dateOfBirth && styles.modalDoneTextDisabled]}>
+                          Done
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.datePickerContainer}>
+                      <DateTimePicker
+                        value={dateOfBirth || new Date()}
+                        mode="date"
+                        display="spinner"
+                        onChange={handleDateChange}
+                        maximumDate={new Date()}
+                        minimumDate={new Date(1900, 0, 1)}
+                        textColor={Colors.textPrimary}
+                        style={styles.datePicker}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </Modal>
+            ) : (
+              showDatePicker && (
+                <DateTimePicker
+                  value={dateOfBirth || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                  maximumDate={new Date()}
+                  minimumDate={new Date(1900, 0, 1)}
+                />
+              )
             )}
           </View>
 
           {/* Bio Section */}
           <View style={styles.inputContainer}>
-            <Text style={styles.sectionTitle}>Add a Bio</Text>
+            <Text style={[styles.sectionTitle, { fontWeight: Fonts.weightMedium, marginBottom: 8, fontSize: Fonts.base }]}>Add a Bio</Text>
             <TextInput
               style={[styles.input, styles.bioInput]}
               placeholder="Tell us more about yourself"
@@ -368,12 +422,17 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     backgroundColor: Colors.backgroundWhite,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
     position: 'relative',
-    borderWidth: 2,
-    borderColor: Colors.borderLight,
+    // borderWidth: 2,
+    // borderColor: Colors.borderLight,
   },
   profilePhoto: {
     width: 120,
@@ -394,15 +453,15 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.textPrimary,
+    backgroundColor: Colors.backgroundGray,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: Colors.backgroundWhite,
+    // borderWidth: 3,
+    // borderColor: Colors.backgroundWhite,
   },
   uploadText: {
     fontSize: Fonts.base,
-    color: Colors.primaryTeal,
+    color: Colors.primaryCyan,
     fontWeight: Fonts.weightSemiBold,
   },
   content: {
@@ -414,7 +473,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Fonts.lg,
     fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
+    color: Colors.primaryCyan,
     marginBottom: 20,
   },
   inputContainer: {
@@ -422,8 +481,8 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: Fonts.base,
-    fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
+    fontWeight: Fonts.weightMedium,
+    color: Colors.primaryCyan,
     marginBottom: 8,
   },
   required: {
@@ -452,7 +511,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.primaryCyan + '20',
+    // backgroundColor: Colors.primaryCyan + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -516,6 +575,67 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.backgroundWhite,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+    maxHeight: '60%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  modalCancelButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  modalCancelText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weightMedium,
+  },
+  modalTitle: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+    flex: 1,
+    textAlign: 'center',
+  },
+  modalDoneButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  modalDoneText: {
+    fontSize: Fonts.base,
+    color: Colors.primaryCyan,
+    fontWeight: Fonts.weightSemiBold,
+  },
+  modalDoneTextDisabled: {
+    color: Colors.textLight,
+    opacity: 0.5,
+  },
+  datePickerContainer: {
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 250,
+  },
+  datePicker: {
+    width: '100%',
+    height: 200,
   },
 });
 

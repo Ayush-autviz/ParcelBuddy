@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Alert,
   Image
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +19,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
 import { useGetOtp } from '../../hooks/useAuthMutations';
+import { useToast } from '../../components/Toast';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,10 +32,11 @@ const LoginScreen: React.FC = () => {
   const [countryCode, setCountryCode] = useState('');
   
   const getOtpMutation = useGetOtp();
+  const { showWarning, showError } = useToast();
 
   const handleGetOTP = () => {
     if (!phoneNumber.trim()) {
-      Alert.alert('Error', 'Please enter your mobile number');
+      showWarning('Please enter your mobile number');
       return;
     }
 
@@ -56,7 +57,7 @@ const LoginScreen: React.FC = () => {
     fullPhoneNumber = fullPhoneNumber.replace(/[^\d+]/g, '');
 
     if (!fullPhoneNumber || fullPhoneNumber.length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number');
+      showWarning('Please enter a valid phone number');
       return;
     }
 
@@ -68,18 +69,24 @@ const LoginScreen: React.FC = () => {
         },
         onError: (error: any) => {
           console.log('Error sending OTP:', error);
-          Alert.alert('Error', error?.message);
+          const errorMessage = error?.response?.data?.message || 
+                              error?.response?.data?.error || 
+                              error?.message || 
+                              'Failed to send OTP. Please try again.';
+          showError(errorMessage);
         },
       }
     );
   };
 
   const handleTermsPress = () => {
-    Alert.alert('Terms of Service', 'Read our terms of service here');
+    // Terms of Service - can be implemented with navigation or web view
+    console.log('Terms of Service');
   };
 
   const handlePrivacyPress = () => {
-    Alert.alert('Privacy Policy', 'Read our privacy policy here');
+    // Privacy Policy - can be implemented with navigation or web view
+    console.log('Privacy Policy');
   };
 
   return (
