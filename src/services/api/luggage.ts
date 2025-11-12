@@ -5,3 +5,9 @@ export const getLuggageRequestsForRide = async (rideId: string) => {
     const response = await apiClient.get(`/rides/${rideId}/requests/`);
     return response.data;
 };
+
+// create a luggage request
+export const createLuggageRequest = async (data: any) => {
+    const response = await apiClient.post('/luggage-requests/', data);
+    return response.data;
+};

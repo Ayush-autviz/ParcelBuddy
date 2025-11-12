@@ -19,6 +19,7 @@ import { usePlaces } from '../../hooks/usePlaces';
 import { MapPin } from 'lucide-react-native';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { useSearchFormStore, useCreateFormStore } from '../../services/store';
+import { MapPinIcon } from '../../assets/icons/svg/main';
 
 type PlacesSearchScreenRouteProp = RouteProp<SearchStackParamList, 'PlacesSearch'>;
 type PlacesSearchScreenNavigationProp = CompositeNavigationProp<
@@ -144,7 +145,8 @@ const PlacesSearchScreen: React.FC = () => {
 
       <View style={styles.searchContainer}>
         <SearchInput
-          icon={MapPin}
+          // lucideIcon={MapPin}
+          icon={MapPinIcon}
           placeholder={
             fieldType === 'from' || fieldType === 'origin'
               ? 'Search origin...'

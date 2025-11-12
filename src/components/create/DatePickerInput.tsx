@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   iconContainer: {
-    marginRight: 4,
+    marginRight: 16,
   },
   text: {
     flex: 1,

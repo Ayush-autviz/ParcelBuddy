@@ -17,7 +17,7 @@ import { Fonts } from '../../constants/fonts';
 import { EllipseBottom, EllipseTop } from '../../constants/svg';
 import { useQuery } from '@tanstack/react-query';
 import { getProfile } from '../../services/api/profile';
-import { useAuthStore } from '../../services/store';
+import { useAuthStore, useSearchFormStore, useCreateFormStore } from '../../services/store';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,6 +35,8 @@ const SplashScreen: React.FC = () => {
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.3);
   const {token} = useAuthStore();
+  const { clearSearchForm } = useSearchFormStore();
+  const { clearCreateForm } = useCreateFormStore();
 
   const {data: profile, isLoading} = useQuery({
     queryKey: ['profile'],
@@ -42,9 +44,9 @@ const SplashScreen: React.FC = () => {
     enabled: !!token,
   });
 
-  console.log('profile', profile);
 
-  useEffect(() => {
+  useEffect(() => { 
+
     // Start animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -70,9 +72,11 @@ const SplashScreen: React.FC = () => {
     // }, 3000);
 
     // return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, navigation]);
+  }, [fadeAnim, scaleAnim, navigation, clearSearchForm, clearCreateForm]);
 
   useEffect(() => {
+    clearSearchForm();
+    clearCreateForm();
     const timer = setTimeout(() => {
     if (!token) {
       navigation.reset({

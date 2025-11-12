@@ -52,17 +52,22 @@ const ProfileScreen: React.FC = () => {
   const { logout, user } = useAuthStore();
   const { showSuccess } = useToast();
 
-  const { data: profile } = useQuery({
-    queryKey: ['profile'],
-    queryFn: () => getProfile(),
-  });
+  console.log('user', user);
+  
 
-  const profileData = profile?.[0] || user;
-  const firstName = profileData?.first_name || profileData?.user?.first_name || 'User';
-  const lastName = profileData?.last_name || profileData?.user?.last_name || '';
-  const fullName = `${firstName} ${lastName}`.trim() || 'User Name';
-  const profilePhoto = profileData?.profile?.profile_photo;
-  const age = profileData?.profile?.age || 28; // Default age if not available
+  // const { data: profile } = useQuery({
+  //   queryKey: ['profile'],
+  //   queryFn: () => getProfile(),
+  // });
+
+  // const profileData = profile?.[0] || user;
+  // const firstName = profileData?.first_name || profileData?.user?.first_name || 'User';
+  // const lastName = profileData?.last_name || profileData?.user?.last_name || '';
+  // const fullName = `${firstName} ${lastName}`.trim() || 'User Name';
+  // const profilePhoto = profileData?.profile?.profile_photo;
+  // const age = profileData?.profile?.age || 28; // Default age if not available
+
+  // log
 
   const handleLogout = async () => {
     await logout();
@@ -153,8 +158,8 @@ const ProfileScreen: React.FC = () => {
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
-            {profilePhoto ? (
-              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+            {user?.profile?.profile_photo ? (
+              <Image source={{ uri: user?.profile?.profile_photo }} style={styles.avatarImage} />
             ) : (
               <LinearGradient
                 colors={[Colors.gradientStart, Colors.gradientEnd]}
@@ -166,8 +171,8 @@ const ProfileScreen: React.FC = () => {
               </LinearGradient>
             )}
           </View>
-          <Text style={styles.userName}>{fullName}</Text>
-          <Text style={styles.userAge}>{age} years old</Text>
+          <Text style={styles.userName}>{user?.first_name} {user?.last_name}</Text>
+          {/* <Text style={styles.userAge}>{age} years old</Text> */}
         </View>
 
         {/* Menu Items */}
