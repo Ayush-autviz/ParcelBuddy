@@ -75,8 +75,8 @@ const SplashScreen: React.FC = () => {
   }, [fadeAnim, scaleAnim, navigation, clearSearchForm, clearCreateForm]);
 
   useEffect(() => {
-    clearSearchForm();
-    clearCreateForm();
+    // clearSearchForm();
+    // clearCreateForm();
     const timer = setTimeout(() => {
     if (!token) {
       navigation.reset({

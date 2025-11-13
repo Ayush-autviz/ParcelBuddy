@@ -21,6 +21,8 @@ import { SvgXml } from 'react-native-svg';
 import { MapPinIcon } from '../../assets/icons/svg/main';
 import * as ImagePicker from 'react-native-image-picker';
 import { User } from 'lucide-react-native';
+import { useCreateLuggageRequest } from '../../hooks/useLuggage';
+import { useToast } from '../../components/Toast';
 
 type SendRequestScreenRouteProp = RouteProp<SearchStackParamList, 'SendRequest'>;
 type SendRequestScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'SendRequest'>;
@@ -29,11 +31,15 @@ const SendRequestScreen: React.FC = () => {
   const route = useRoute<SendRequestScreenRouteProp>();
   const navigation = useNavigation<SendRequestScreenNavigationProp>();
   const { ride } = route.params;
+  const { showWarning, showError, showSuccess } = useToast();
+  const createLuggageRequestMutation = useCreateLuggageRequest();
 
   const [weight, setWeight] = useState('');
+  const [length, setLength] = useState('');
   const [height, setHeight] = useState('');
   const [width, setWidth] = useState('');
-  const [notes, setNotes] = useState('');
+  const [itemDescription, setItemDescription] = useState('');
+  const [specialInstructions, setSpecialInstructions] = useState('');
   const [images, setImages] = useState<string[]>([]);
 
   const formatDate = (dateString: string): string => {
@@ -72,14 +78,80 @@ const SendRequestScreen: React.FC = () => {
   };
 
   const handleBookNow = () => {
-    // TODO: Implement book now functionality
-    console.log('Book now:', {
-      rideId: ride.id,
-      weight,
-      height,
-      width,
-      notes,
-      images,
+    // Validation
+    if (!weight || !weight.trim()) {
+      showWarning('Please enter weight');
+      return;
+    }
+
+    if (!length || !length.trim()) {
+      showWarning('Please enter length');
+      return;
+    }
+
+    if (!height || !height.trim()) {
+      showWarning('Please enter height');
+      return;
+    }
+
+    if (!width || !width.trim()) {
+      showWarning('Please enter width');
+      return;
+    }
+
+    if (!itemDescription || !itemDescription.trim()) {
+      showWarning('Please enter item description');
+      return;
+    }
+
+    const weightNum = parseFloat(weight);
+    const lengthNum = parseFloat(length);
+    const heightNum = parseFloat(height);
+    const widthNum = parseFloat(width);
+
+    if (isNaN(weightNum) || weightNum <= 0) {
+      showWarning('Please enter a valid weight');
+      return;
+    }
+
+    if (isNaN(lengthNum) || lengthNum <= 0) {
+      showWarning('Please enter a valid length');
+      return;
+    }
+
+    if (isNaN(heightNum) || heightNum <= 0) {
+      showWarning('Please enter a valid height');
+      return;
+    }
+
+    if (isNaN(widthNum) || widthNum <= 0) {
+      showWarning('Please enter a valid width');
+      return;
+    }
+
+    // Prepare request data
+    const requestData = {
+      ride: ride.id,
+      weight_kg: weightNum,
+      length_cm: lengthNum,
+      width_cm: widthNum,
+      height_cm: heightNum,
+      item_description: itemDescription.trim(),
+      special_instructions: specialInstructions.trim() || undefined,
+      offered_price: 0,
+    };
+
+    // Call API
+    createLuggageRequestMutation.mutate(requestData, {
+      onSuccess: (response) => {
+        showSuccess('Request sent successfully!');
+        // Navigate back to available rides screen
+        navigation.goBack();
+      },
+      onError: (error: any) => {
+        const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Failed to send request';
+        showError(errorMessage);
+      },
     });
   };
 
@@ -120,7 +192,7 @@ const SendRequestScreen: React.FC = () => {
                 <Text style={styles.locationAddress}>{ride.origin_name}</Text>
               </View>
             </View>
-            <Text style={styles.time}>{formatTime(ride.travel_date)}</Text>
+            {/* <Text style={styles.time}>{formatTime(ride.travel_date)}</Text> */}
           </View>
 
           {/* Destination */}
@@ -134,7 +206,7 @@ const SendRequestScreen: React.FC = () => {
                 <Text style={styles.locationAddress}>{ride.destination_name}</Text>
               </View>
             </View>
-            <Text style={styles.time}>{formatTime(ride.travel_date)}</Text>
+            {/* <Text style={styles.time}>{formatTime(ride.travel_date)}</Text> */}
           </View>
         </Card>
 
@@ -173,21 +245,21 @@ const SendRequestScreen: React.FC = () => {
               <Text style={styles.inputLabel}>Weight (KG)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. 10"
+                placeholder="e.g. 2.5"
                 placeholderTextColor={Colors.textLight}
                 value={weight}
                 onChangeText={setWeight}
-                keyboardType="numeric"
+                keyboardType="decimal-pad"
               />
             </View>
             <View style={styles.dimensionItem}>
-              <Text style={styles.inputLabel}>Height (cm)</Text>
+              <Text style={styles.inputLabel}>Length (cm)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. 10"
+                placeholder="e.g. 50"
                 placeholderTextColor={Colors.textLight}
-                value={height}
-                onChangeText={setHeight}
+                value={length}
+                onChangeText={setLength}
                 keyboardType="numeric"
               />
             </View>
@@ -195,14 +267,39 @@ const SendRequestScreen: React.FC = () => {
               <Text style={styles.inputLabel}>Width (cm)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. 10"
+                placeholder="e.g. 35"
                 placeholderTextColor={Colors.textLight}
                 value={width}
                 onChangeText={setWidth}
                 keyboardType="numeric"
               />
             </View>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.inputLabel}>Height (cm)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. 25"
+                placeholderTextColor={Colors.textLight}
+                value={height}
+                onChangeText={setHeight}
+                keyboardType="numeric"
+              />
+            </View>
           </View>
+        </View>
+
+        {/* Item Description Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Item Description</Text>
+          <TextInput
+            style={styles.notesInput}
+            placeholder="e.g. Books, documents and laptop"
+            placeholderTextColor={Colors.textLight}
+            value={itemDescription}
+            onChangeText={setItemDescription}
+            multiline
+            numberOfLines={3}
+          />
         </View>
 
         {/* Images Section */}
@@ -235,15 +332,15 @@ const SendRequestScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Notes Section */}
+        {/* Special Instructions Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notes</Text>
+          <Text style={styles.sectionTitle}>Special Instructions</Text>
           <TextInput
             style={styles.notesInput}
-            placeholder="Small electronics and documents"
+            placeholder="e.g. Please handle with care. Contains fragile electronics."
             placeholderTextColor={Colors.textLight}
-            value={notes}
-            onChangeText={setNotes}
+            value={specialInstructions}
+            onChangeText={setSpecialInstructions}
             multiline
             numberOfLines={4}
           />
@@ -254,6 +351,7 @@ const SendRequestScreen: React.FC = () => {
           title="Book Now"
           onPress={handleBookNow}
           style={styles.bookButton}
+          loading={createLuggageRequestMutation.isPending}
         />
 
         {/* Disclaimer Section */}
@@ -409,6 +507,7 @@ const styles = StyleSheet.create({
   },
   dimensionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   dimensionItem: {

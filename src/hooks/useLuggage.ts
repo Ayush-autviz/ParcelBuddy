@@ -1,5 +1,5 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { getLuggageRequestsForRide } from '../services/api/luggage';
+import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
+import { getLuggageRequestsForRide, createLuggageRequest } from '../services/api/luggage';
 import { LuggageRequestItemData } from '../components/track/LuggageRequestItem';
 
 export interface LuggageRequestResponse {
@@ -57,6 +57,23 @@ export const useLuggageRequestsForRide = (
     enabled: !!rideId, // Only fetch if rideId is provided
     staleTime: 30000, // Cache for 30 seconds
     retry: 1,
+  });
+};
+
+export interface CreateLuggageRequestData {
+  ride: string;
+  weight_kg: number;
+  length_cm: number;
+  width_cm: number;
+  height_cm: number;
+  item_description: string;
+  special_instructions?: string;
+  offered_price: number;
+}
+
+export const useCreateLuggageRequest = (): UseMutationResult<any, Error, CreateLuggageRequestData, unknown> => {
+  return useMutation({
+    mutationFn: (data: CreateLuggageRequestData) => createLuggageRequest(data),
   });
 };
 
