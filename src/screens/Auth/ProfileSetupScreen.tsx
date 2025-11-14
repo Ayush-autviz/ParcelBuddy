@@ -128,6 +128,7 @@ const ProfileSetupScreen: React.FC = () => {
     const formData = new FormData();
     formData.append('first_name', first_name);
     formData.append('last_name', last_name);
+    formData.append('date_of_birth', dateOfBirth?.toISOString() || '');
     formData.append('email', email.trim());
     formData.append('profile.bio', bio.trim() || '');
 

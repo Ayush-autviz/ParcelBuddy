@@ -9,9 +9,9 @@ export interface CreateRideRequest {
   destination_lat: number;
   destination_lng: number;
   travel_date: string;
-  travel_time: string;
+  travel_time?: string;
   destination_date: string;
-  destination_time: string;
+  destination_time?: string;
   available_weight_kg: number;
   max_length_cm: number;
   max_width_cm: number;

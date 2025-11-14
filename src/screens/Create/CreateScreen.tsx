@@ -112,21 +112,21 @@ const CreateScreen: React.FC = () => {
       return;
     }
 
-    if (!departureDate || !departureTime) {
+    if (!departureDate) {
       // Alert.alert('Error', 'Please select departure date and time');
       showWarning('Please select departure date and time');
       return;
     }
 
-    if (!arrivalDate || !arrivalTime) {
+    if (!arrivalDate) {
       // Alert.alert('Error', 'Please select arrival date and time');
       showWarning('Please select arrival date and time');
       return;
     }
 
-    if (!maxWeight || !height || !width || !length) {
+    if (!maxWeight) {
       // Alert.alert('Error', 'Please fill in all luggage capacity fields');
-      showWarning('Please fill in all luggage  fields');
+      showWarning('Please fill in luggage weight field');
       return;
     }
 
@@ -139,9 +139,9 @@ const CreateScreen: React.FC = () => {
       destination_lat: destinationLatitude,
       destination_lng: destinationLongitude,
       travel_date: formatDate(departureDate),
-      travel_time: formatTime(departureTime),
+      // travel_time: formatTime(departureTime),
       destination_date: formatDate(arrivalDate),
-      destination_time: formatTime(arrivalTime),
+      // destination_time: formatTime(arrivalTime),
       available_weight_kg: parseFloat(maxWeight),
       max_length_cm: parseFloat(length),
       max_width_cm: parseFloat(width),
@@ -255,14 +255,14 @@ const CreateScreen: React.FC = () => {
                   containerStyle={styles.input}
                 />
               </View>
-              <View style={styles.dateTimeItem}>
+              {/* <View style={styles.dateTimeItem}>
                 <TimePickerInput
                   value={departureTime}
                   onChange={setDepartureTime}
                   placeholder="Select Time"
                   containerStyle={styles.input}
                 />
-              </View>
+              </View> */}
             </View>
           </View>
           
@@ -279,14 +279,14 @@ const CreateScreen: React.FC = () => {
                   containerStyle={styles.input}
                 />
               </View>
-              <View style={styles.dateTimeItem}>
+              {/* <View style={styles.dateTimeItem}>
                 <TimePickerInput
                   value={arrivalTime}
                   onChange={setArrivalTime}
                   placeholder="Select Time"
                   containerStyle={styles.input}
                 />
-              </View>
+              </View> */}
             </View>
           </View>
         </SectionCard>

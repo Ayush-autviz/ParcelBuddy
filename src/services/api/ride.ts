@@ -66,6 +66,6 @@ export const searchRides = async (params: {
     if (params.max_price !== undefined) queryParams.append('max_price', params.max_price.toString());
     if (params.ordering) queryParams.append('ordering', params.ordering);
     
-    const response = await apiClient.get(`/rides?${queryParams.toString()}`);
+    const response = await apiClient.get(`/rides?${queryParams.toString()}&type=month`);
     return response.data;
 };

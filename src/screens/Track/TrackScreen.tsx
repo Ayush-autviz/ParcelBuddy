@@ -23,7 +23,11 @@ const TrackScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('Published');
 
   // Fetch published rides from API
-  const { data: publishedRides = [], isLoading, isFetching, isError, refetch } = usePublishedRides();
+  const { data: publishedRides, isLoading, isFetching, isError, refetch, failureReason } = usePublishedRides();
+
+  console.log('publishedRides', publishedRides);
+  console.log('isError', isError);
+  console.log('failureReason', failureReason);
 
   // Mock booked rides (to be replaced with API when available)
   const bookedRides: RideCardData[] = [];
