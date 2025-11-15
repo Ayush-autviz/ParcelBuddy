@@ -1,5 +1,11 @@
 import apiClient from "../apiClient";
 
+// get luggage request 
+export const getLuggageRequests = async () => {
+    const response = await apiClient.get(`/luggage-requests/`);
+    return response.data;
+};
+
 // get luggage requests for a ride
 export const getLuggageRequestsForRide = async (rideId: string) => {
     const response = await apiClient.get(`/rides/${rideId}/requests/`);

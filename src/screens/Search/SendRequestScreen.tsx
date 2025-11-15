@@ -40,7 +40,7 @@ const SendRequestScreen: React.FC = () => {
   const [width, setWidth] = useState('');
   const [itemDescription, setItemDescription] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<ImagePicker.Asset[]>([]);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -71,10 +71,14 @@ const SendRequestScreen: React.FC = () => {
 
     ImagePicker.launchImageLibrary(options, (response) => {
       if (response.assets && response.assets.length > 0) {
-        const newImages = response.assets.map((asset) => asset.uri || '').filter(Boolean);
-        setImages((prev) => [...prev, ...newImages].slice(0, 5));
+        const newAssets = response.assets.filter((asset): asset is ImagePicker.Asset => asset !== null && asset !== undefined);
+        setImages((prev) => [...prev, ...newAssets].slice(0, 5));
       }
     });
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleBookNow = () => {
@@ -84,20 +88,35 @@ const SendRequestScreen: React.FC = () => {
       return;
     }
 
-    if (!length || !length.trim()) {
-      showWarning('Please enter length');
+    if (!images || images.length === 0) {
+      showWarning('Please upload at least one image');
       return;
     }
 
-    if (!height || !height.trim()) {
-      showWarning('Please enter height');
+    if (!itemDescription || !itemDescription.trim()) {
+      showWarning('Please enter item description');
       return;
     }
 
-    if (!width || !width.trim()) {
-      showWarning('Please enter width');
-      return;
-    }
+    // if (!specialInstructions || !specialInstructions.trim()) {
+    //   showWarning('Please enter special instructions');
+    //   return;
+    // }
+
+    // if (!length || !length.trim()) {
+    //   showWarning('Please enter length');
+    //   return;
+    // }
+
+    // if (!height || !height.trim()) {
+    //   showWarning('Please enter height');
+    //   return;
+    // }
+
+    // if (!width || !width.trim()) {
+    //   showWarning('Please enter width');
+    //   return;
+    // }
 
     if (!itemDescription || !itemDescription.trim()) {
       showWarning('Please enter item description');
@@ -109,40 +128,64 @@ const SendRequestScreen: React.FC = () => {
     const heightNum = parseFloat(height);
     const widthNum = parseFloat(width);
 
-    if (isNaN(weightNum) || weightNum <= 0) {
+    if (weight && weight.trim() !== '' && (isNaN(weightNum) || weightNum <= 0)) {
       showWarning('Please enter a valid weight');
       return;
     }
 
-    if (isNaN(lengthNum) || lengthNum <= 0) {
+    if (length && length.trim() !== '' && (isNaN(lengthNum) || lengthNum <= 0)) {
       showWarning('Please enter a valid length');
       return;
     }
 
-    if (isNaN(heightNum) || heightNum <= 0) {
+    if (height && height.trim() !== '' && (isNaN(heightNum) || heightNum <= 0)) {
       showWarning('Please enter a valid height');
       return;
     }
 
-    if (isNaN(widthNum) || widthNum <= 0) {
+    if (width && width.trim() !== '' && (isNaN(widthNum) || widthNum <= 0)) {
       showWarning('Please enter a valid width');
       return;
     }
 
-    // Prepare request data
-    const requestData = {
-      ride: ride.id,
-      weight_kg: weightNum,
-      length_cm: lengthNum,
-      width_cm: widthNum,
-      height_cm: heightNum,
-      item_description: itemDescription.trim(),
-      special_instructions: specialInstructions.trim() || undefined,
-      offered_price: 0,
-    };
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('ride', ride.id);
+    formData.append('weight_kg', weightNum.toString());
+    if (lengthNum) {
+    formData.append('length_cm', lengthNum.toString());
+    }
+    if (widthNum) {
+      formData.append('width_cm', widthNum.toString());
+    }
+    if (heightNum) {
+    formData.append('height_cm', heightNum.toString());
+    }
+    formData.append('item_description', itemDescription.trim());
+    
+    if (specialInstructions.trim()) {
+      formData.append('special_instructions', specialInstructions.trim());
+    }
+    
+    formData.append('offered_price', '0');
+
+    // Append luggage photos as array
+    images.forEach((imageAsset) => {
+      if (imageAsset.uri) {
+        const fileExtension = imageAsset.uri.split('.').pop() || 'jpg';
+        const fileName = imageAsset.fileName || `luggage_photo_${Date.now()}.${fileExtension}`;
+        const fileType = imageAsset.type || `image/${fileExtension}`;
+        
+        formData.append('luggage_photos', {
+          uri: imageAsset.uri,
+          type: fileType,
+          name: fileName,
+        } as any);
+      }
+    });
 
     // Call API
-    createLuggageRequestMutation.mutate(requestData, {
+    createLuggageRequestMutation.mutate(formData, {
       onSuccess: (response) => {
         showSuccess('Request sent successfully!');
         // Navigate back to available rides screen
@@ -212,7 +255,15 @@ const SendRequestScreen: React.FC = () => {
 
         {/* Driver Information Card */}
         <Card style={styles.driverCard} padding={16}>
-          <TouchableOpacity style={styles.driverRow} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={styles.driverRow} 
+            activeOpacity={0.7}
+            onPress={() => {
+              navigation.navigate('UserProfile', {
+                traveler: ride.traveler,
+              });
+            }}
+          >
             <View style={styles.driverLeft}>
               <View style={styles.driverAvatar}>
                 {ride.traveler.profile?.profile_photo ? (
@@ -312,20 +363,35 @@ const SendRequestScreen: React.FC = () => {
           >
             {images.length > 0 ? (
               <View style={styles.imagesGrid}>
-                {images.map((uri, index) => (
-                  <Image key={index} source={{ uri }} style={styles.uploadedImage} />
+                {images.map((imageAsset, index) => (
+                  <View key={index} style={styles.imageWrapper}>
+                    <Image 
+                      source={{ uri: imageAsset.uri }} 
+                      style={styles.uploadedImage} 
+                    />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Text style={styles.removeImageText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
                 ))}
                 {images.length < 5 && (
-                  <View style={styles.addImageButton}>
+                  <TouchableOpacity
+                    style={styles.addImageButton}
+                    onPress={handleImagePicker}
+                    activeOpacity={0.7}
+                  >
                     <Upload size={24} color={Colors.primaryCyan} />
-                  </View>
+                  </TouchableOpacity>
                 )}
               </View>
             ) : (
               <View style={styles.uploadContent}>
                 <Upload size={32} color={Colors.primaryCyan} />
                 <Text style={styles.uploadText}>
-                  Click to upload or drag and drop
+                  Click to upload
                 </Text>
               </View>
             )}
@@ -555,11 +621,33 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+  imageWrapper: {
+    position: 'relative',
+  },
   uploadedImage: {
     width: 80,
     height: 80,
     borderRadius: 8,
     backgroundColor: Colors.backgroundGray,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.textPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.backgroundWhite,
+  },
+  removeImageText: {
+    color: Colors.backgroundWhite,
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 20,
   },
   addImageButton: {
     width: 80,

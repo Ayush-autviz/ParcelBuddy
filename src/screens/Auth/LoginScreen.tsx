@@ -64,7 +64,9 @@ const LoginScreen: React.FC = () => {
     getOtpMutation.mutate(
       { phone: fullPhoneNumber },
       {
-        onSuccess: () => {
+        onSuccess: (response: any) => {
+          console.log('response', response);
+          
           navigation.navigate('OTPScreen', { phoneNumber: fullPhoneNumber });
         },
         onError: (error: any) => {
