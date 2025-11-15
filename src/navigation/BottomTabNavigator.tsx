@@ -9,7 +9,7 @@ import SearchNavigator from './SearchNavigator';
 import CreateScreen from '../screens/Create/CreateScreen';
 import TrackNavigator from './TrackNavigator';
 import ChatScreen from '../screens/Chat/ChatScreen';
-import ProfileScreen from '../screens/Profile/ProfileScreen';
+import ProfileNavigator from './ProfileNavigator';
 import { Colors } from '../constants/colors';
 import { Fonts } from '../constants/fonts';
 
@@ -111,7 +111,7 @@ const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileNavigator}
         options={{
           title: 'Profile',
         }}

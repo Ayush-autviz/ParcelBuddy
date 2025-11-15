@@ -31,13 +31,9 @@ import { useQuery } from '@tanstack/react-query';
 import { getProfile } from '../../services/api/profile';
 import { useToast } from '../../components/Toast';
 
-type RootStackParamList = {
-  Home: undefined;
-  Profile: undefined;
-  Settings: undefined;
-};
+import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
+type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileList'>;
 
 interface MenuItem {
   id: string;
@@ -72,10 +68,7 @@ const ProfileScreen: React.FC = () => {
   const handleLogout = async () => {
     await logout();
     showSuccess('Logged out successfully');
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Auth' }],
-    });
+    // Navigation will be handled by RootNavigator based on auth state
   };
 
   const menuItems: MenuItem[] = [
@@ -84,8 +77,7 @@ const ProfileScreen: React.FC = () => {
       title: 'Edit Profile',
       icon: User,
       onPress: () => {
-        // TODO: Navigate to edit profile
-        console.log('Edit Profile');
+        navigation.navigate('EditProfile');
       },
     },
     {
