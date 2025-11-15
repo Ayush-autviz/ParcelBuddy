@@ -19,9 +19,10 @@ import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
 import { SvgXml } from 'react-native-svg';
 import { MapPinIcon, TimeIcon, WeightIcon } from '../../assets/icons/svg/main';
 import { useToast } from '../../components/Toast';
-import { useLuggageRequestDetail } from '../../hooks/useLuggage';
+import { useLuggageRequestDetail, useCancelLuggageRequest } from '../../hooks/useLuggage';
 import { ActivityIndicator } from 'react-native';
 import { Package } from 'lucide-react-native';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Support both Search and Track navigators
 type BookingRequestDetailParams = {
@@ -41,37 +42,27 @@ const BookingRequestDetailScreen: React.FC = () => {
   const navigation = useNavigation<BookingRequestDetailScreenNavigationProp>();
   const { requestId, bookingRequest: paramBookingRequest, ride: paramRide } = route.params;
   const { showWarning, showSuccess, showError } = useToast();
+  const queryClient = useQueryClient();
+
+  // Get the actual request ID
+  const actualRequestId = requestId || paramBookingRequest?.id;
 
   // Fetch luggage request detail by ID if requestId is provided
   const { 
     data: luggageRequestDetail, 
     isLoading, 
     isError,
-    error 
-  } = useLuggageRequestDetail(requestId || paramBookingRequest?.id);
+    error,
+    refetch: refetchRequestDetail
+  } = useLuggageRequestDetail(actualRequestId);
+
+  // Cancel luggage request mutation
+  const cancelRequestMutation = useCancelLuggageRequest();
 
   // Use fetched data if available, otherwise fall back to params
   const bookingRequest = luggageRequestDetail || paramBookingRequest;
   const ride = luggageRequestDetail?.ride || paramRide;
 
-  // Calculate if cancellation is allowed (within 15 minutes)
-  const [canCancel, setCanCancel] = useState(true);
-
-  useEffect(() => {
-    if (bookingRequest?.created_on) {
-      const createdTime = new Date(bookingRequest.created_on);
-      const now = new Date();
-      const diffMs = now.getTime() - createdTime.getTime();
-      const diffMinutes = Math.floor(diffMs / 60000);
-      const remainingMinutes = 15 - diffMinutes;
-
-      if (remainingMinutes > 0) {
-        setCanCancel(true);
-      } else {
-        setCanCancel(false);
-      }
-    }
-  }, [bookingRequest]);
 
   // Format date: "2025-11-28" -> "Tue, 23 Apr"
   const formatDate = (dateString: string): string => {
@@ -110,19 +101,47 @@ const BookingRequestDetailScreen: React.FC = () => {
   };
 
   const handleCancelRequest = () => {
-    if (!canCancel) {
-      showWarning('Cancellation is only allowed within 15 minutes of booking');
+
+    if (!actualRequestId) {
+      showError('Request ID not available');
       return;
     }
-    // TODO: Implement cancel request API call
-    showWarning('Cancel request functionality will be implemented');
+
+    // Show confirmation before canceling
+    // For now, directly cancel. You can add a confirmation modal if needed
+    cancelRequestMutation.mutate(actualRequestId, {
+      onSuccess: () => {
+        showSuccess('Request cancelled successfully');
+        // Invalidate and refetch relevant queries
+        queryClient.invalidateQueries({ queryKey: ['luggageRequestDetail', actualRequestId] });
+        queryClient.invalidateQueries({ queryKey: ['bookedRides'] });
+        queryClient.invalidateQueries({ queryKey: ['luggageRequests'] });
+        // Refetch the current request detail to update the UI
+        refetchRequestDetail();
+        // Navigate back after a short delay
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      },
+      onError: (error: any) => {
+        console.error('Cancel request error:', error);
+        showError(error?.response?.data?.message || error?.message || 'Failed to cancel request. Please try again.');
+      },
+    });
   };
 
   const handleTravelerPress = () => {
-    if (ride?.traveler) {
+    // Try multiple sources for traveler data
+    const travelerData = ride?.traveler || bookingRequest?.ride?.traveler || bookingRequest?.traveler;
+    
+    if (travelerData) {
+      console.log('Navigating to UserProfile with traveler:', travelerData);
       navigation.navigate('UserProfile', {
-        traveler: ride.traveler,
+        traveler: travelerData,
       });
+    } else {
+      console.warn('No traveler data available for navigation');
+      showWarning('Traveler information not available');
     }
   };
 
@@ -283,39 +302,39 @@ const BookingRequestDetailScreen: React.FC = () => {
               containerStyle={styles.input}
             />
           </View>
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Dimensions (cm)</Text>
-            <View style={styles.dimensionsRow}>
-              <View style={styles.dimensionItem}>
-                <SearchInput
-                  lucideIcon={Package}
-                  placeholder="Height"
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={height || ''}
-                  editable={false}
-                  containerStyle={styles.input}
-                />
-              </View>
-              <View style={styles.dimensionItem}>
-                <SearchInput
-                  lucideIcon={Package}
-                  placeholder="Width" 
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={width || ''}
-                  editable={false}
-                  containerStyle={styles.input}
-                />
-              </View>
-              <View style={styles.dimensionItem}>
-                <SearchInput
-                  lucideIcon={Package}
-                  placeholder="Length"
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={length || ''}
-                  editable={false}
-                  containerStyle={styles.input}
-                />
-              </View>
+          <View style={styles.dimensionsRow}>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Height (cm)</Text>
+              <SearchInput
+                lucideIcon={Package}
+                placeholder="Height"
+                inputStyle={{fontSize: Fonts.sm}}
+                value={height || ''}
+                editable={false}
+                containerStyle={styles.input}
+              />
+            </View>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Width (cm)</Text>
+              <SearchInput
+                lucideIcon={Package}
+                placeholder="Width"
+                inputStyle={{fontSize: Fonts.sm}}
+                value={width || ''}
+                editable={false}
+                containerStyle={styles.input}
+              />
+            </View>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Length (cm)</Text>
+              <SearchInput
+                lucideIcon={Package}
+                placeholder="Length"
+                inputStyle={{fontSize: Fonts.sm}}
+                value={length || ''}
+                editable={false}
+                containerStyle={styles.input}
+              />
             </View>
           </View>
         </SectionCard>
@@ -371,7 +390,8 @@ const BookingRequestDetailScreen: React.FC = () => {
           title="Cancel Request"
           onPress={handleCancelRequest}
           style={styles.cancelButton}
-          disabled={!canCancel}
+          disabled={cancelRequestMutation.isPending}
+          loading={cancelRequestMutation.isPending}
         />
         {/* <Text style={styles.cancelNote}>
           (Allowed for 15 minutes only)
@@ -544,6 +564,7 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 0,
+    width: '100%',
   },
   dimensionsRow: {
     flexDirection: 'row',
@@ -551,6 +572,7 @@ const styles = StyleSheet.create({
   },
   dimensionItem: {
     flex: 1,
+    minWidth: 0, // Prevents flex items from overflowing
   },
   imagesGrid: {
     flexDirection: 'row',

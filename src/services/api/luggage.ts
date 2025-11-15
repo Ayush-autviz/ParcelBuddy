@@ -27,3 +27,9 @@ export const createLuggageRequest = async (data: FormData) => {
     });
     return response.data;
 };
+
+// cancel a luggage request
+export const cancelLuggageRequest = async (requestId: string) => {
+    const response = await apiClient.delete(`/luggage-requests/${requestId}/`);
+    return response.data;
+};

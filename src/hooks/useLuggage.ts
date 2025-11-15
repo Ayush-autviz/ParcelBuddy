@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests, getLuggageRequestById } from '../services/api/luggage';
+import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests, getLuggageRequestById, cancelLuggageRequest } from '../services/api/luggage';
 import { LuggageRequestItemData } from '../components/track/LuggageRequestItem';
 import { RideCardData, StatusType } from '../components/track';
 
@@ -136,6 +136,13 @@ export const useLuggageRequestDetail = (
   });
 };
 
+// Hook to cancel luggage request
+export const useCancelLuggageRequest = (): UseMutationResult<any, Error, string, unknown> => {
+  return useMutation({
+    mutationFn: (requestId: string) => cancelLuggageRequest(requestId),
+  });
+};
+
 // Interface for booked ride response (luggage request with ride_info)
 export interface BookedRideResponse {
   id: string;
@@ -186,7 +193,7 @@ export const useBookedRides = (): UseQueryResult<BookedRideCardData[], Error> =>
         return [];
       }
 
-      return requestsArray.map((request: BookedRideResponse) => {
+      return requestsArray.filter((request: BookedRideResponse) => request.status !== 'cancelled').map((request: BookedRideResponse) => {
         // Format date: "2025-11-07" -> "Nov 07"
         const formatDate = (dateString: string): string => {
           if (!dateString) {
