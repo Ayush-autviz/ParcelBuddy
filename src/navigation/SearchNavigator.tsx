@@ -6,6 +6,7 @@ import { PlaceResultItemData } from '../components';
 
 import AvailableRidesScreen from '../screens/Search/AvailableRidesScreen';
 import SendRequestScreen from '../screens/Search/SendRequestScreen';
+import BookingStatusScreen from '../screens/Search/BookingStatusScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
 import { AvailableRideData } from '../components/search/AvailableRideCard';
 
@@ -29,6 +30,9 @@ export type SearchStackParamList = {
   SendRequest: {
     ride: AvailableRideData;
   };
+  BookingStatus: {
+    bookingRequest: any; // The booking request response from API
+  };
   UserProfile: {
     traveler: AvailableRideData['traveler'];
   };
@@ -48,6 +52,7 @@ const SearchNavigator: React.FC = () => {
       <Stack.Screen name="PlacesSearch" component={PlacesSearchScreen} />
       <Stack.Screen name="AvailableRides" component={AvailableRidesScreen} />
       <Stack.Screen name="SendRequest" component={SendRequestScreen} />
+      <Stack.Screen name="BookingStatus" component={BookingStatusScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
     </Stack.Navigator>
   );

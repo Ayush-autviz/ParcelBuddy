@@ -5,7 +5,7 @@ import { Bell } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 
-export type StatusType = 'new' | 'full' | 'completed';
+export type StatusType = 'new' | 'full' | 'completed' | 'pending';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -30,6 +30,13 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
       case 'completed':
         return {
           label: 'Completed',
+          showIcon: false,
+          showDot: true,
+          dotColor: Colors.primaryTeal,
+        };
+      case 'pending':
+        return {
+          label: 'Waiting for approval',
           showIcon: false,
           showDot: true,
           dotColor: Colors.primaryTeal,

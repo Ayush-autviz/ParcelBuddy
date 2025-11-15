@@ -69,31 +69,18 @@ export const usePublishedRides = (): UseQueryResult<RideCardData[], Error> => {
           return `${displayHour}:${displayMinutes} ${ampm}`;
         };
 
-        // Map status: "active" -> "new", or determine based on other fields
-        const mapStatus = (status: string, viewsCount: number): StatusType => {
-          if (status === 'active') {
-            // You might want to add logic here based on views_count or other fields
-            // For now, defaulting to 'new'
-            return 'new';
-          }
-          // Add other status mappings as needed
-          return 'new';
-        };
 
-        // Determine if rate button should be shown (for completed rides)
-        const isCompleted = ride.status === 'completed' || ride.status === 'finished';
-        const showRate = isCompleted;
 
         return {
           id: ride.id || '',
-          status: mapStatus(ride.status || 'active', ride.views_count || 0),
+          status: ride.status,
           date: formatDate(ride.travel_date),
           origin: ride.origin_name || 'Unknown Origin',
           originTime: formatTime(ride.travel_time),
           destination: ride.destination_name || 'Unknown Destination',
           destinationTime: formatTime(ride.destination_time),
           passengers: 0, // Not available in API, set to 0 or calculate if needed
-          showRateButton: showRate,
+          // showRateButton: showRate,
         } as RideCardData;
       });
     },

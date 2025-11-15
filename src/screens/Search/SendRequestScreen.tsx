@@ -188,8 +188,10 @@ const SendRequestScreen: React.FC = () => {
     createLuggageRequestMutation.mutate(formData, {
       onSuccess: (response) => {
         showSuccess('Request sent successfully!');
-        // Navigate back to available rides screen
-        navigation.goBack();
+        // Navigate to booking status screen
+        navigation.navigate('BookingStatus', {
+          bookingRequest: response,
+        });
       },
       onError: (error: any) => {
         const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Failed to send request';

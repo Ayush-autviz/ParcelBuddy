@@ -14,6 +14,7 @@ import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, RideCard, RideCardData, EmptyStateCard } from '../../components';
 import { TrackStackParamList } from '../../navigation/TrackNavigator';
 import { usePublishedRides } from '../../hooks/useRides';
+import { useBookedRides } from '../../hooks/useLuggage';
 
 type TabType = 'Booked' | 'Published';
 type TrackScreenNavigationProp = StackNavigationProp<TrackStackParamList, 'TrackList'>;
@@ -23,16 +24,35 @@ const TrackScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('Published');
 
   // Fetch published rides from API
-  const { data: publishedRides, isLoading, isFetching, isError, refetch, failureReason } = usePublishedRides();
+  const { 
+    data: publishedRides, 
+    isLoading: isLoadingPublished, 
+    isFetching: isFetchingPublished, 
+    isError: isErrorPublished, 
+    refetch: refetchPublished, 
+    failureReason: failureReasonPublished 
+  } = usePublishedRides();
+
+  // Fetch booked rides (luggage requests) from API
+  const { 
+    data: bookedRides , 
+    isLoading: isLoadingBooked, 
+    isFetching: isFetchingBooked, 
+    isError: isErrorBooked, 
+    refetch: refetchBooked, 
+    failureReason: failureReasonBooked 
+  } = useBookedRides();
 
   console.log('publishedRides', publishedRides);
-  console.log('isError', isError);
-  console.log('failureReason', failureReason);
-
-  // Mock booked rides (to be replaced with API when available)
-  const bookedRides: RideCardData[] = [];
+  console.log('bookedRides', bookedRides);
+  console.log('isErrorPublished', isErrorPublished);
+  console.log('isErrorBooked', isErrorBooked);
 
   const rides = activeTab === 'Booked' ? bookedRides : publishedRides;
+  const isLoading = activeTab === 'Booked' ? isLoadingBooked : isLoadingPublished;
+  const isFetching = activeTab === 'Booked' ? isFetchingBooked : isFetchingPublished;
+  const isError = activeTab === 'Booked' ? isErrorBooked : isErrorPublished;
+  const refetch = activeTab === 'Booked' ? refetchBooked : refetchPublished;
 
   const handleRidePress = (ride: RideCardData) => {
     // Format date for display (convert from "Oct 03" to "Tue, 23 Apr" format)
