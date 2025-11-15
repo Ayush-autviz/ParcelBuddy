@@ -60,34 +60,30 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       <View style={styles.routeContainer}>
         <View style={styles.routeRow}>
           <View style={styles.iconWrapper}>
-            {/* <MapPin size={16} color={Colors.primaryTeal} /> */}
             <SvgXml xml={MapPinIcon} height={16} width={16} />
           </View>
           <Text style={styles.routeText}>{ride.origin}</Text>
-          <View style={styles.separatorWrapper}>
+          {/* <View style={styles.separatorWrapper}>
             <Text style={styles.separator}>•</Text>
           </View>
           <View style={styles.timeIconWrapper}>
-            {/* <Clock size={14} color={Colors.primaryTeal} /> */}
             <SvgXml xml={FilledTimeIcon} height={14} width={14} />
           </View>
-          <Text style={styles.timeText}>{ride.originTime}</Text>
+          <Text style={styles.timeText}>{ride.originTime}</Text> */}
         </View>
 
         <View style={styles.routeRow}>
           <View style={styles.iconWrapper}>
-            {/* <MapPin size={16} color={Colors.primaryTeal} /> */}
             <SvgXml xml={MapPinIcon} height={16} width={16} />
           </View>
           <Text style={styles.routeText}>{ride.destination}</Text>
-          <View style={styles.separatorWrapper}>
+          {/* <View style={styles.separatorWrapper}>
             <Text style={styles.separator}>•</Text>
           </View>
           <View style={styles.timeIconWrapper}>
-            {/* <Clock size={14} color={Colors.primaryTeal} /> */}
             <SvgXml xml={FilledTimeIcon} height={14} width={14} />
           </View>
-          <Text style={styles.timeText}>{ride.destinationTime}</Text>
+          <Text style={styles.timeText}>{ride.destinationTime}</Text> */}
         </View>
       </View>
 

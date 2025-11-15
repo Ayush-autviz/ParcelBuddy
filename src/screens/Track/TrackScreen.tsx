@@ -96,7 +96,7 @@ const TrackScreen: React.FC = () => {
             description="Failed to load your rides. Please try again."
           />
         </View>
-      ) : rides.length > 0 ? (
+      ) : rides && rides.length > 0 ? (
         <FlatList
           data={rides}
           renderItem={renderRideCard}

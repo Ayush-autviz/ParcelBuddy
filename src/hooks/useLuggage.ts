@@ -69,11 +69,12 @@ export interface CreateLuggageRequestData {
   item_description: string;
   special_instructions?: string;
   offered_price: number;
+  luggage_photos?: any[]; // Array of image files
 }
 
-export const useCreateLuggageRequest = (): UseMutationResult<any, Error, CreateLuggageRequestData, unknown> => {
+export const useCreateLuggageRequest = (): UseMutationResult<any, Error, FormData, unknown> => {
   return useMutation({
-    mutationFn: (data: CreateLuggageRequestData) => createLuggageRequest(data),
+    mutationFn: (data: FormData) => createLuggageRequest(data),
   });
 };
 

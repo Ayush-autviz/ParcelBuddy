@@ -133,11 +133,11 @@ const CreateScreen: React.FC = () => {
     // Prepare request data
     const requestData = {
       origin_name: origin,
-      origin_lat: originLatitude,
-      origin_lng: originLongitude,
+      origin_lat: parseFloat(originLatitude.toFixed(6)),
+      origin_lng: parseFloat(originLongitude.toFixed(6)),
       destination_name: destination,
-      destination_lat: destinationLatitude,
-      destination_lng: destinationLongitude,
+      destination_lat: parseFloat(destinationLatitude.toFixed(6)),
+      destination_lng: parseFloat(destinationLongitude.toFixed(6)),
       travel_date: formatDate(departureDate),
       // travel_time: formatTime(departureTime),
       destination_date: formatDate(arrivalDate),

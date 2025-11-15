@@ -7,7 +7,11 @@ export const getLuggageRequestsForRide = async (rideId: string) => {
 };
 
 // create a luggage request
-export const createLuggageRequest = async (data: any) => {
-    const response = await apiClient.post('/luggage-requests/', data);
+export const createLuggageRequest = async (data: FormData) => {
+    const response = await apiClient.post('/luggage-requests/', data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
     return response.data;
 };

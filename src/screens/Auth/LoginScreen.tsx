@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sm,
     color: Colors.textPrimary,
     textAlign: 'center',
-    lineHeight: 24,
+    // lineHeight: 24,
   },
   card: {
     backgroundColor: Colors.backgroundWhite,
