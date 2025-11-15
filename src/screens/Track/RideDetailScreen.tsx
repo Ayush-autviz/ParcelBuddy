@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderLight,
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 10,
   },
   deleteIcon: {
     marginRight: 8,

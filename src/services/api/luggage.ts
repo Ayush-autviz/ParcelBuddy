@@ -6,6 +6,12 @@ export const getLuggageRequests = async () => {
     return response.data;
 };
 
+// get luggage request by ID
+export const getLuggageRequestById = async (requestId: string) => {
+    const response = await apiClient.get(`/luggage-requests/${requestId}`);
+    return response.data;
+};
+
 // get luggage requests for a ride
 export const getLuggageRequestsForRide = async (rideId: string) => {
     const response = await apiClient.get(`/rides/${rideId}/requests/`);

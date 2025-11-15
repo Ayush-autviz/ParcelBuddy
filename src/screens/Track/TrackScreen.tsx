@@ -12,12 +12,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, RideCard, RideCardData, EmptyStateCard } from '../../components';
-import { TrackStackParamList } from '../../navigation/TrackNavigator';
+import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
 import { usePublishedRides } from '../../hooks/useRides';
-import { useBookedRides } from '../../hooks/useLuggage';
+import { useBookedRides, BookedRideCardData } from '../../hooks/useLuggage';
 
 type TabType = 'Booked' | 'Published';
-type TrackScreenNavigationProp = StackNavigationProp<TrackStackParamList, 'TrackList'>;
+type TrackScreenNavigationProp = StackNavigationProp<ExtendedTrackStackParamList, 'TrackList'>;
 
 const TrackScreen: React.FC = () => {
   const navigation = useNavigation<TrackScreenNavigationProp>();
@@ -54,11 +54,21 @@ const TrackScreen: React.FC = () => {
   const isError = activeTab === 'Booked' ? isErrorBooked : isErrorPublished;
   const refetch = activeTab === 'Booked' ? refetchBooked : refetchPublished;
 
-  const handleRidePress = (ride: RideCardData) => {
-    // Format date for display (convert from "Oct 03" to "Tue, 23 Apr" format)
-    // For now, using a simple conversion - you may want to enhance this
-    const formattedDate = ride.date; // You can enhance this date formatting
+  const handleRidePress = (ride: RideCardData | BookedRideCardData) => {
+    // If it's a booked ride, navigate to booking request detail screen
+    if (activeTab === 'Booked' && 'bookingRequest' in ride && ride.bookingRequest) {
+      const bookedRide = ride as BookedRideCardData;
+      // Pass the request ID to fetch the full details
+      if (bookedRide.bookingRequest?.id) {
+        navigation.navigate('BookingRequestDetail', {
+          requestId: bookedRide.bookingRequest.id,
+        });
+      }
+      return;
+    }
     
+    // For published rides, navigate to ride detail screen
+    const formattedDate = ride.date;
     navigation.navigate('RideDetail', {
       rideId: ride.id,
       date: formattedDate,

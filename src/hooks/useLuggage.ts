@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests } from '../services/api/luggage';
+import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests, getLuggageRequestById } from '../services/api/luggage';
 import { LuggageRequestItemData } from '../components/track/LuggageRequestItem';
 import { RideCardData, StatusType } from '../components/track';
 
@@ -79,55 +79,114 @@ export const useCreateLuggageRequest = (): UseMutationResult<any, Error, FormDat
   });
 };
 
-// Interface for booked ride response (direct ride object)
-export interface BookedRideResponse {
+// Interface for luggage request detail response
+export interface LuggageRequestDetailResponse {
   id: string;
-  traveler: {
+  ride: {
     id: string;
-    first_name: string;
-    last_name: string;
-    phone: string;
-    email: string | null;
-    profile?: {
-      profile_photo?: string | null;
-      bio?: string;
-      average_rating?: number;
-    };
+    traveler: any;
+    origin_name: string;
+    origin_lat: string;
+    origin_lng: string;
+    destination_name: string;
+    destination_lat: string;
+    destination_lng: string;
+    travel_date: string;
+    travel_time: string | null;
+    destination_date: string;
+    destination_time: string | null;
+    [key: string]: any;
   };
-  origin_name: string;
-  origin_lat: string;
-  origin_lng: string;
-  destination_name: string;
-  destination_lat: string;
-  destination_lng: string;
-  travel_date: string;
-  travel_time: string | null;
-  destination_date: string;
-  destination_time: string | null;
-  available_weight_kg: string;
-  price_per_kg: string;
+  sender: any;
+  weight_kg: string;
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
+  luggage_photo: Array<{
+    id: string;
+    luggage_image: string;
+  }>;
+  item_description: string;
+  special_instructions: string;
+  offered_price: string;
+  negotiated_price: string | null;
   status: string;
-  views_count: number;
+  rejection_reason: string;
   created_on: string;
+  responded_at: string | null;
   [key: string]: any;
 }
 
+// Hook to get luggage request detail by ID
+export const useLuggageRequestDetail = (
+  requestId: string | undefined
+): UseQueryResult<LuggageRequestDetailResponse, Error> => {
+  return useQuery({
+    queryKey: ['luggageRequestDetail', requestId],
+    queryFn: async () => {
+      if (!requestId) {
+        throw new Error('Request ID is required');
+      }
+      const response = await getLuggageRequestById(requestId);
+      return response;
+    },
+    enabled: !!requestId, // Only fetch if requestId is provided
+    staleTime: 30000, // Cache for 30 seconds
+    retry: 1,
+  });
+};
+
+// Interface for booked ride response (luggage request with ride_info)
+export interface BookedRideResponse {
+  id: string;
+  ride_info: {
+    id: string;
+    origin_name?: string;
+    origin?: string;
+    destination_name?: string;
+    destination?: string;
+    travel_date: string;
+    travel_time?: string | null;
+    destination_date?: string;
+    destination_time?: string | null;
+    traveler?: any;
+    [key: string]: any;
+  };
+  travel_time?: string | null;
+  destination_time?: string | null;
+  weight_kg?: number;
+  height_cm?: number;
+  width_cm?: number;
+  length_cm?: number;
+  item_description?: string;
+  special_instructions?: string;
+  luggage_photos?: any[];
+  status?: string;
+  created_on?: string;
+  [key: string]: any;
+}
+
+// Extended RideCardData with booking request info
+export interface BookedRideCardData extends RideCardData {
+  bookingRequest?: BookedRideResponse; // Store original booking request data
+}
+
 // Hook to get booked rides (luggage requests made by the user)
-export const useBookedRides = (): UseQueryResult<RideCardData[], Error> => {
+export const useBookedRides = (): UseQueryResult<BookedRideCardData[], Error> => {
   return useQuery({
     queryKey: ['bookedRides'],
     queryFn: async () => {
       const response = await getLuggageRequests();
       
       // Handle case where response might be wrapped in an object
-      const ridesArray = Array.isArray(response) ? response : (response?.data || response?.results || []);
+      const requestsArray = Array.isArray(response) ? response : (response?.data || response?.results || []);
       
-      if (!Array.isArray(ridesArray)) {
+      if (!Array.isArray(requestsArray)) {
         console.warn('getLuggageRequests: Expected array but got:', typeof response, response);
         return [];
       }
 
-      return ridesArray.map((ride: BookedRideResponse) => {
+      return requestsArray.map((request: BookedRideResponse) => {
         // Format date: "2025-11-07" -> "Nov 07"
         const formatDate = (dateString: string): string => {
           if (!dateString) {
@@ -144,7 +203,7 @@ export const useBookedRides = (): UseQueryResult<RideCardData[], Error> => {
         };
 
         // Format time: "16:45:03" -> "4:45 PM"
-        const formatTime = (timeString: string | null): string => {
+        const formatTime = (timeString: string | null | undefined): string => {
           if (!timeString) {
             return '12:00 AM';
           }
@@ -158,17 +217,20 @@ export const useBookedRides = (): UseQueryResult<RideCardData[], Error> => {
           return `${displayHour}:${displayMinutes} ${ampm}`;
         };
 
+
+
         return {
-          id: ride.id,
-          status: ride.status,
-          date: formatDate(ride.ride_info.travel_date),
-          origin: ride.ride_info.origin || 'Unknown Origin',
-          originTime: formatTime(ride.travel_time),
-          destination: ride.ride_info.destination|| 'Unknown Destination',
-          destinationTime: formatTime(ride.destination_time),
-          passengers: 0, // Not available in ride data
+          id: request.ride_info?.id || request.id,
+          status: request.status,
+          date: formatDate(request.ride_info?.travel_date || ''),
+          origin: request.ride_info?.origin || request.ride_info?.origin_name || 'Unknown Origin',
+          originTime: formatTime(request.travel_time || request.ride_info?.travel_time),
+          destination: request.ride_info?.destination || request.ride_info?.destination_name || 'Unknown Destination',
+          destinationTime: formatTime(request.destination_time || request.ride_info?.destination_time),
+          passengers: 0,
           // showRateButton: showRate,
-        } as RideCardData;
+          bookingRequest: request, // Store original booking request for detail screen
+        } as BookedRideCardData;
       });
     },
     staleTime: 30000, // Cache for 30 seconds

@@ -39,15 +39,17 @@ const BookingStatusScreen: React.FC = () => {
   };
 
   const handleSeeBookingRequest = () => {
-    // TODO: Navigate to booking request details screen
-    console.log('See booking request:', bookingRequest);
-    // For now, navigate back to track screen to see the booking
-    navigation.navigate('SearchList');
+    // Navigate to booking request details screen with request ID
+    if (bookingRequest?.id) {
+      navigation.navigate('BookingRequestDetail', {
+        requestId: bookingRequest.id,
+      });
+    }
   };
 
   const handleBackToSearch = () => {
     // Navigate back to search screen
-    navigation.navigate('SearchList');
+    navigation.navigate('SearchList', {});
   };
 
   return (
