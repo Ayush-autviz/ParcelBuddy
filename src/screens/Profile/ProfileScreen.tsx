@@ -86,8 +86,7 @@ const ProfileScreen: React.FC = () => {
       subtitle: 'Verified',
       icon: Shield,
       onPress: () => {
-        // TODO: Navigate to KYC
-        console.log('KYC Status');
+        navigation.navigate('KYCVerification');
       },
     },
     {
@@ -95,8 +94,7 @@ const ProfileScreen: React.FC = () => {
       title: 'Ratings',
       icon: Star,
       onPress: () => {
-        // TODO: Navigate to ratings
-        console.log('Ratings');
+        navigation.navigate('Ratings');
       },
     },
     {
@@ -105,8 +103,7 @@ const ProfileScreen: React.FC = () => {
       subtitle: 'Silver',
       icon: Crown,
       onPress: () => {
-        // TODO: Navigate to subscription
-        console.log('Subscription');
+        navigation.navigate('Subscription');
       },
     },
     {
@@ -114,8 +111,7 @@ const ProfileScreen: React.FC = () => {
       title: 'Payment History',
       icon: Clock,
       onPress: () => {
-        // TODO: Navigate to payment history
-        console.log('Payment History');
+        navigation.navigate('PaymentHistory');
       },
     },
     {
@@ -123,8 +119,7 @@ const ProfileScreen: React.FC = () => {
       title: 'Terms & Privacy Policy',
       icon: FileText,
       onPress: () => {
-        // TODO: Navigate to terms
-        console.log('Terms & Privacy');
+        navigation.navigate('TermsAndPolicy');
       },
     },
     {
@@ -132,8 +127,7 @@ const ProfileScreen: React.FC = () => {
       title: 'Support',
       icon: HelpCircle,
       onPress: () => {
-        // TODO: Navigate to support
-        console.log('Support');
+        navigation.navigate('Support');
       },
     },
   ];
