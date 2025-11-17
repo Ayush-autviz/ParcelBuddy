@@ -13,6 +13,8 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, Card, GradientButton } from '../../components';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
+import { TimeIcon } from '../../assets/icons/svg/main';
+import { SvgXml } from 'react-native-svg';
 
 type BookingStatusScreenRouteProp = RouteProp<SearchStackParamList, 'BookingStatus'>;
 type BookingStatusScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'BookingStatus'>;
@@ -61,7 +63,8 @@ const BookingStatusScreen: React.FC = () => {
         <Card style={styles.statusCard} padding={20}>
           <View style={styles.statusContent}>
             <View style={styles.iconContainer}>
-              <RefreshCw size={32} color={Colors.primaryCyan} />
+              {/* <RefreshCw size={32} color={Colors.primaryCyan} /> */}
+              <SvgXml xml={TimeIcon} height={24} width={24} />
             </View>
             <View style={styles.textContainer}>
               <Text style={styles.primaryMessage}>
@@ -114,12 +117,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: Colors.primaryCyan,
-    backgroundColor: Colors.primaryCyan + '10',
+    // width: 64,
+    // height: 64,
+    // borderRadius: 32,
+    // borderWidth: 2,
+    // borderColor: Colors.primaryCyan,
+    // backgroundColor: Colors.primaryCyan + '10',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -132,12 +135,12 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
     marginBottom: 8,
-    lineHeight: 24,
+    // lineHeight: 24,
   },
   secondaryMessage: {
     fontSize: Fonts.base,
     color: Colors.textSecondary,
-    lineHeight: 20,
+    // lineHeight: 20,
   },
   buttonsContainer: {
     gap: 16,

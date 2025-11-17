@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,14 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, User } from 'lucide-react-native';
+import { Search, User, MessageCircle } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card, SearchInput } from '../../components';
+import { Header, Card, SearchInput, EmptyStateCard } from '../../components';
+import { useChatList, ChatRoom } from '../../hooks/useChat';
 
 // Message data interface
 interface MessageItem {
@@ -26,54 +28,67 @@ interface MessageItem {
   hasUnread?: boolean;
 }
 
-// Mock data - replace with actual API data
-const mockMessages: MessageItem[] = [
-  {
-    id: '1',
-    name: 'Liam Carter',
-    origin: 'New York, NY',
-    destination: 'Los Angeles, CA',
-    lastMessage: 'Hey, just checking in on the delivery...',
-    timestamp: '10m',
-    unreadCount: 2,
-  },
-  {
-    id: '2',
-    name: 'Sophia Bennete',
-    origin: 'Chicago, IL',
-    destination: 'Miami, FL',
-    lastMessage: 'Perfect, thanks for the update!',
-    timestamp: '2h',
-    hasUnread: true,
-  },
-  {
-    id: '3',
-    name: 'Ethan Harper',
-    origin: 'San Fransisco, CA',
-    destination: 'Seattle, WA',
-    lastMessage: 'You: Sounds good, I\'ll let you know.',
-    timestamp: '1d',
-  },
-  {
-    id: '4',
-    name: 'Olivia Reed',
-    origin: 'Boston, MA',
-    destination: 'Austin, TX',
-    lastMessage: 'Got it, Thanks!',
-    timestamp: '2d',
-  },
-];
-
 const ChatScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [messages] = useState<MessageItem[]>(mockMessages);
+  
+  // Fetch chat list from API
+  const { data: chatListResponse, isLoading, isError, error } = useChatList();
+  
+  // Transform API response to MessageItem format
+  const messages: MessageItem[] = useMemo(() => {
+    if (!chatListResponse?.results || !Array.isArray(chatListResponse.results)) {
+      return [];
+    }
+
+    return chatListResponse.results.map((room: ChatRoom) => {
+      const otherUser = room.other_user;
+      const firstName = otherUser?.first_name || '';
+      const lastName = otherUser?.last_name || '';
+      const fullName = `${firstName} ${lastName}`.trim() || 'Unknown User';
+      
+      // Format timestamp
+      const formatTimestamp = (dateString: string | undefined): string => {
+        if (!dateString) return '';
+        try {
+          const date = new Date(dateString);
+          const now = new Date();
+          const diffMs = now.getTime() - date.getTime();
+          const diffMinutes = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
+
+          if (diffMinutes < 1) return 'Just now';
+          if (diffMinutes < 60) return `${diffMinutes}m`;
+          if (diffHours < 24) return `${diffHours}h`;
+          if (diffDays < 7) return `${diffDays}d`;
+          return date.toLocaleDateString();
+        } catch {
+          return '';
+        }
+      };
+
+      return {
+        id: room.id || '',
+        name: fullName,
+        avatar: otherUser?.profile?.profile_photo,
+        origin: room.ride?.origin_name || 'Unknown Origin',
+        destination: room.ride?.destination_name || 'Unknown Destination',
+        lastMessage: room.last_message?.content || 'No messages yet',
+        timestamp: formatTimestamp(room.last_message?.created_at),
+        unreadCount: room.unread_count && room.unread_count > 0 ? room.unread_count : undefined,
+        hasUnread: room.unread_count === 0 ? false : (room.unread_count && room.unread_count > 0 ? false : true),
+      };
+    });
+  }, [chatListResponse]);
 
   // Filter messages based on search query
-  const filteredMessages = messages.filter((message) =>
-    message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    message.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    message.destination.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMessages = useMemo(() => {
+    return messages.filter((message) =>
+      message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      message.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      message.destination.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [messages, searchQuery]);
 
   const handleMessagePress = (message: MessageItem) => {
     // TODO: Navigate to chat detail screen
@@ -117,13 +132,40 @@ const ChatScreen: React.FC = () => {
             <View style={styles.unreadBadge}>
               <Text style={styles.unreadCount}>{item.unreadCount}</Text>
             </View>
-          ) : item.hasUnread ? (
-            <View style={styles.unreadDot} />
           ) : null}
         </View>
       </Card>
     </TouchableOpacity>
   );
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title="Messages" variant="centered" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primaryCyan} />
+          <Text style={styles.loadingText}>Loading messages...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title="Messages" variant="centered" />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load messages</Text>
+          <Text style={styles.errorSubText}>{error?.message || 'Please try again'}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show empty state
+  const isEmpty = !messages || messages.length === 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -131,7 +173,7 @@ const ChatScreen: React.FC = () => {
       <Header title="Messages" variant="centered" />
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      {/* <View style={styles.searchContainer}>
         <SearchInput
           lucideIcon={Search}
           placeholder="Search"
@@ -139,16 +181,37 @@ const ChatScreen: React.FC = () => {
           onChangeText={setSearchQuery}
           containerStyle={styles.searchInput}
         />
-      </View>
+      </View> */}
 
-      {/* Messages List */}
-      <FlatList
-        data={filteredMessages}
-        renderItem={renderMessageItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      <View style={{marginTop: 10}}></View>
+
+      {/* Messages List or Empty State */}
+      {isEmpty ? (
+        <View style={styles.emptyContainer}>
+          <EmptyStateCard
+            icon={MessageCircle}
+            title="No Messages"
+            description="You don't have any messages yet. Start a conversation by sending a request to a traveler."
+          />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredMessages}
+          renderItem={renderMessageItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <EmptyStateCard
+                icon={Search}
+                title="No Results"
+                description="No messages match your search."
+              />
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -251,6 +314,42 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: Colors.primaryCyan,
     marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    marginTop: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorSubText: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 100,
   },
 });
 

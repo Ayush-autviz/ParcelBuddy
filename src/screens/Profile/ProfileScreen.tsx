@@ -68,7 +68,10 @@ const ProfileScreen: React.FC = () => {
   const handleLogout = async () => {
     await logout();
     showSuccess('Logged out successfully');
-    // Navigation will be handled by RootNavigator based on auth state
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Auth' }],
+    });
   };
 
   const menuItems: MenuItem[] = [
