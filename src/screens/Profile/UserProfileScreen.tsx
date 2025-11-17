@@ -6,6 +6,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,6 +17,7 @@ import { Fonts } from '../../constants/fonts';
 import { Header, Card, GradientButton } from '../../components';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
+import { useProfileById } from '../../hooks/useProfile';
 
 type UserProfileScreenRouteProp = RouteProp<SearchStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'UserProfile'>;
@@ -23,23 +25,56 @@ type UserProfileScreenNavigationProp = StackNavigationProp<SearchStackParamList,
 const UserProfileScreen: React.FC = () => {
   const route = useRoute<UserProfileScreenRouteProp>();
   const navigation = useNavigation<UserProfileScreenNavigationProp>();
-  const { traveler } = route.params;
+  const { traveler, profileId: routeProfileId } = route.params;
 
-  const firstName = traveler?.first_name || '';
-  const lastName = traveler?.last_name || '';
+  // Use profileId from route params if available, otherwise fallback to traveler.profile.id
+  const profileId = routeProfileId || (traveler as any)?.profile?.id;
+  const { data: profileDataResponse, isLoading, isError, error } = useProfileById(profileId);
+
+  // Extract the actual profile data from the API response
+  // API response structure: { message: "...", profile: { ... profile: { ... } } }
+  const profileData = profileDataResponse?.profile || profileDataResponse;
+  const currentProfile: any = profileData || traveler;
+
+  const firstName = currentProfile?.first_name || '';
+  const lastName = currentProfile?.last_name || '';
   const fullName = `${firstName} ${lastName}`.trim() || 'Traveler';
-  const profilePhoto = traveler?.profile?.profile_photo;
-  const age = traveler?.profile?.age || 28; // Default age if not available
-  const rating = traveler?.profile?.rating || 4.8;
-  const reviewCount = traveler?.profile?.review_count || 127;
-  const ridesPublished = traveler?.profile?.rides_published || 24;
-  const ridesCompleted = traveler?.profile?.rides_completed || 89;
-  const about = traveler?.profile?.about || 'Experienced rideshare traveler who loves meeting new people and exploring different cities. Always punctual and friendly. Non-smoker with a clean, comfortable vehicle.';
-  const isVerified = traveler?.profile?.is_verified || true;
+  
+  // Profile photo is nested: profileData.profile.profile.profile_photo
+  const profilePhoto = currentProfile?.profile?.profile_photo;
+  
+  // Calculate age from date_of_birth
+  const calculateAge = (dateOfBirth: string | null | undefined): number => {
+    if (!dateOfBirth) return 28; // Default age
+    try {
+      const birthDate = new Date(dateOfBirth);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    } catch {
+      return 28;
+    }
+  };
+  
+  // Date of birth can be at profileData.date_of_birth or profileData.profile.date_of_birth
+  const age = calculateAge(currentProfile?.date_of_birth || currentProfile?.profile?.date_of_birth);
+  
+  // Get data from API response - handle nested structure
+  // API structure: { profile: { profile: { average_rating, bio, ... } } }
+  const nestedProfile = currentProfile?.profile;
+  const rating = nestedProfile?.average_rating || currentProfile?.average_rating || 0;
+  const reviewCount = nestedProfile?.review_count || currentProfile?.review_count || nestedProfile?.total_reviews || 0;
+  const ridesPublished = nestedProfile?.rides_published || currentProfile?.rides_published || nestedProfile?.total_rides_published || 0;
+  const ridesCompleted = nestedProfile?.rides_completed || currentProfile?.rides_completed || nestedProfile?.total_rides_completed || 0;
+  const about = nestedProfile?.bio || currentProfile?.bio || 'No bio available.';
+  const isVerified = nestedProfile?.is_verified || currentProfile?.is_verified || nestedProfile?.verified || false;
 
   const handleChat = () => {
     // TODO: Navigate to chat screen
-    console.log('Chat with traveler:', fullName);
   };
 
   const renderStars = (rating: number) => {
@@ -68,6 +103,24 @@ const UserProfileScreen: React.FC = () => {
     }
     return stars;
   };
+
+  // Show loading state
+  if (isLoading && profileId) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title="Profile" showBackButton />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primaryCyan} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state (but still show fallback data)
+  if (isError && profileId) {
+    // Failed to load profile from API, using fallback data
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -104,12 +157,12 @@ const UserProfileScreen: React.FC = () => {
         </View>
 
         {/* Chat Button */}
-        <GradientButton
+        {/* <GradientButton
           title="Chat with Traveller"
           onPress={handleChat}
           style={styles.chatButton}
           icon={<MessageCircle size={20} color={Colors.textWhite} style={styles.chatIcon} />}
-        />
+        /> */}
 
         {/* Statistics Card */}
         <Card style={styles.statsCard} padding={20}>
@@ -132,16 +185,18 @@ const UserProfileScreen: React.FC = () => {
           <Text style={styles.aboutText}>{about}</Text>
         </Card>
 
-        {/* Verification Section */}
-        <Card style={styles.verificationCard} padding={20}>
-          <Text style={styles.sectionTitle}>Verification</Text>
-          <View style={styles.verificationRow}>
-            <View style={styles.checkIconContainer}>
-              <Check size={20} color={Colors.primaryCyan} />
+        {/* Verification Section - Only show if verified */}
+        {isVerified && (
+          <Card style={styles.verificationCard} padding={20}>
+            <Text style={styles.sectionTitle}>Verification</Text>
+            <View style={styles.verificationRow}>
+              <View style={styles.checkIconContainer}>
+                <Check size={20} color={Colors.primaryCyan} />
+              </View>
+              <Text style={styles.verificationText}>Government ID Verified</Text>
             </View>
-            <Text style={styles.verificationText}>Government ID Verified</Text>
-          </View>
-        </Card>
+          </Card>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -288,6 +343,17 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     color: Colors.textPrimary,
     fontWeight: Fonts.weightMedium,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    marginTop: 16,
   },
 });
 

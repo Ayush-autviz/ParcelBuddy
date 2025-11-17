@@ -13,8 +13,10 @@ export interface AvailableRideData {
     last_name: string;
     profile?: {
       profile_photo?: string;
+      id?: string;
     };
   };
+  profileId?: string; // Profile ID from traveler.profile.id
   travel_date: string;
   origin_name: string;
   destination_name: string;
@@ -105,7 +107,7 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
         {/* Send Request Button */}
         <GradientButton
           title="Send Request"
-          onPress={onSendRequest || onPress}
+          onPress={onSendRequest || onPress || (() => {})}
           style={styles.requestButton}
           textStyle={styles.requestButtonText}
         />

@@ -15,6 +15,7 @@ export type ExtendedTrackStackParamList = TrackStackParamList & {
   };
   UserProfile: {
     traveler: AvailableRideData['traveler'];
+    profileId?: string;
   };
 };
 

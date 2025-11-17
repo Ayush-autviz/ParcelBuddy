@@ -143,28 +143,40 @@ const SearchScreen: React.FC = () => {
     // Call search API
     searchRidesMutation.mutate(searchParams, {
       onSuccess: (response) => {
-        console.log('Search rides response:', response);
+        console.log('🔍 [SEARCH SCREEN] Search rides response:', JSON.stringify(response, null, 2));
         
         // Transform API response to AvailableRideData format
-        const transformedRides = (response || []).map((ride: any) => ({
-          id: ride.id,
-          traveler: {
-            first_name: ride.traveler?.first_name || '',
-            last_name: ride.traveler?.last_name || '',
-            profile: {
-              profile_photo: ride.traveler?.profile?.profile_photo,
-              rating: ride.traveler?.profile?.average_rating,
+        const transformedRides = (response || []).map((ride: any) => {
+          const profileId = ride.traveler?.profile?.id;
+          console.log('🔍 [SEARCH SCREEN] Processing ride:', ride.id);
+          console.log('🔍 [SEARCH SCREEN] Traveler:', ride.traveler?.first_name, ride.traveler?.last_name);
+          console.log('🔍 [SEARCH SCREEN] Profile object:', JSON.stringify(ride.traveler?.profile, null, 2));
+          console.log('🔍 [SEARCH SCREEN] Extracted profileId:', profileId);
+          
+          return {
+            id: ride.id,
+            traveler: {
+              first_name: ride.traveler?.first_name || '',
+              last_name: ride.traveler?.last_name || '',
+              profile: {
+                profile_photo: ride.traveler?.profile?.profile_photo,
+                rating: ride.traveler?.profile?.average_rating,
+                id: ride.traveler?.profile?.id,
+              },
             },
-          },
-          travel_date: ride.travel_date,
-          origin_name: ride.origin_name,
-          destination_name: ride.destination_name,
-          available_weight_kg: ride.available_weight_kg,
-          price_per_kg: ride.price_per_kg,
-          // Rating and review_count would come from traveler profile if available
-          rating: ride.traveler?.profile?.rating || 0,
-          review_count: ride.traveler?.profile?.review_count || 128,
-        }));
+            profileId: profileId, // Extract profile ID separately for getProfileById API
+            travel_date: ride.travel_date,
+            origin_name: ride.origin_name,
+            destination_name: ride.destination_name,
+            available_weight_kg: ride.available_weight_kg,
+            price_per_kg: ride.price_per_kg,
+            // Rating and review_count would come from traveler profile if available
+            rating: ride.traveler?.profile?.rating || 0,
+            review_count: ride.traveler?.profile?.review_count || 128,
+          };
+        });
+        
+        console.log('🔍 [SEARCH SCREEN] Transformed rides:', JSON.stringify(transformedRides.map((r: any) => ({ id: r.id, profileId: r.profileId })), null, 2));
         
         // Set flag to clear form when screen comes back into focus
         // This ensures clearing happens when screen is active, not before navigation
@@ -213,26 +225,38 @@ const SearchScreen: React.FC = () => {
       
       searchRidesMutation.mutate(searchParams, {
         onSuccess: (response) => {
-          console.log('Search rides response:', response);
+          console.log('🔍 [SEARCH SCREEN - HISTORY] Search rides response:', JSON.stringify(response, null, 2));
           
           // Transform API response to AvailableRideData format
-          const transformedRides = (response || []).map((ride: any) => ({
-            id: ride.id,
-            traveler: {
-              first_name: ride.traveler?.first_name || '',
-              last_name: ride.traveler?.last_name || '',
-              profile: {
-                profile_photo: ride.traveler?.profile?.profile_photo,
+          const transformedRides = (response || []).map((ride: any) => {
+            const profileId = ride.traveler?.profile?.id;
+            console.log('🔍 [SEARCH SCREEN - HISTORY] Processing ride:', ride.id);
+            console.log('🔍 [SEARCH SCREEN - HISTORY] Profile object:', JSON.stringify(ride.traveler?.profile, null, 2));
+            console.log('🔍 [SEARCH SCREEN - HISTORY] Extracted profileId:', profileId);
+            
+            return {
+              id: ride.id,
+              traveler: {
+                first_name: ride.traveler?.first_name || '',
+                last_name: ride.traveler?.last_name || '',
+                profile: {
+                  profile_photo: ride.traveler?.profile?.profile_photo,
+                  rating: ride.traveler?.profile?.average_rating,
+                  id: ride.traveler?.profile?.id,
+                },
               },
-            },
-            travel_date: ride.travel_date,
-            origin_name: ride.origin_name,
-            destination_name: ride.destination_name,
-            available_weight_kg: ride.available_weight_kg,
-            price_per_kg: ride.price_per_kg,
-            rating: ride.traveler?.profile?.rating || 4.8,
-            review_count: ride.traveler?.profile?.review_count || 128,
-          }));
+              profileId: profileId, // Extract profile ID separately for getProfileById API
+              travel_date: ride.travel_date,
+              origin_name: ride.origin_name,
+              destination_name: ride.destination_name,
+              available_weight_kg: ride.available_weight_kg,
+              price_per_kg: ride.price_per_kg,
+              rating: ride.traveler?.profile?.rating || 4.8,
+              review_count: ride.traveler?.profile?.review_count || 128,
+            };
+          });
+          
+          console.log('🔍 [SEARCH SCREEN - HISTORY] Transformed rides:', JSON.stringify(transformedRides.map((r: any) => ({ id: r.id, profileId: r.profileId })), null, 2));
           
           // Set flag to clear form when screen comes back into focus
           shouldClearOnFocus.current = true;

@@ -41,6 +41,7 @@ export type SearchStackParamList = {
   };
   UserProfile: {
     traveler: AvailableRideData['traveler'];
+    profileId?: string;
   };
 };
 

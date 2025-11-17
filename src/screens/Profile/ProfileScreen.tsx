@@ -145,7 +145,7 @@ const ProfileScreen: React.FC = () => {
             )}
           </View>
           <Text style={styles.userName}>{user?.first_name} {user?.last_name}</Text>
-          {/* <Text style={styles.userAge}>{age} years old</Text> */}
+          <Text style={styles.userAge}>{user?.date_of_birth ? new Date().getFullYear() - new Date(user?.date_of_birth).getFullYear(): ''} years old</Text>
         </View>
 
         {/* Menu Items */}

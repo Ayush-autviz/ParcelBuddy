@@ -118,6 +118,7 @@ const SubscriptionScreen: React.FC = () => {
                   end={{ x: 1, y: 0 }}
                   style={styles.planCardGradient}
                 >
+                  <View style={{ padding: 20 }}>
                   <View style={styles.planHeader}>
                     <Text style={styles.planNameActive}>{plan.name}</Text>
                     <Text style={styles.planPriceActive}>{plan.price}</Text>
@@ -136,6 +137,7 @@ const SubscriptionScreen: React.FC = () => {
                   >
                     <Text style={styles.currentPlanButtonText}>Current Plan</Text>
                   </TouchableOpacity>
+                  </View>
                 </LinearGradient>
               ) : (
                 <View style={styles.planCard}>
@@ -252,7 +254,8 @@ const styles = StyleSheet.create({
   },
   planCardGradient: {
     borderRadius: 12,
-    padding: 20,
+    // padding: 20,
+    // paddingVertical: 20,
     shadowColor: Colors.textPrimary,
     shadowOffset: {
       width: 0,

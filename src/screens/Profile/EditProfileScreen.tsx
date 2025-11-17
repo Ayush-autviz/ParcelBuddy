@@ -8,6 +8,7 @@ import {
   Image,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,6 +22,8 @@ import { Header, GradientButton, DatePickerInput, TextArea } from '../../compone
 import { useAuthStore } from '../../services/store';
 import { useToast } from '../../components/Toast';
 import { useMyProfile } from '../../hooks/useProfile';
+import { useProfileSetup } from '../../hooks/useAuthMutations';
+import { useQueryClient } from '@tanstack/react-query';
 
 type ProfileStackParamList = {
   ProfileList: undefined;
@@ -31,12 +34,19 @@ type EditProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList
 
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { showSuccess, showError } = useToast();
   const phoneInputRef = useRef<any>(null);
+  const queryClient = useQueryClient();
 
   // Fetch profile data from API
   const { data: profileData, isLoading, isError, error } = useMyProfile();
+  
+  // Profile update mutation
+  const profileSetupMutation = useProfileSetup();
+  
+  // Confirmation modal state
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Log the profile data and update form fields when profile data loads
   React.useEffect(() => {
@@ -151,6 +161,13 @@ const EditProfileScreen: React.FC = () => {
       return;
     }
 
+    // Show confirmation modal
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSave = () => {
+    setShowConfirmModal(false);
+
     // Get full phone number from PhoneInput
     let fullPhoneNumber: string;
     if (phoneInputRef.current?.getPhoneNumber) {
@@ -165,17 +182,62 @@ const EditProfileScreen: React.FC = () => {
       fullPhoneNumber = `+${fullPhoneNumber}`;
     }
 
-    // TODO: Implement save API call
-    console.log('Saving profile:', {
-      fullName,
-      dateOfBirth,
-      bio,
+    // Split full name into first and last name
+    const nameParts = fullName.trim().split(' ');
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.slice(1).join(' ') || '';
+
+    // Create FormData for API call
+    const formData = new FormData();
+    formData.append('first_name', first_name);
+    formData.append('last_name', last_name);
+    formData.append('email', email.trim());
+    formData.append('phone', fullPhoneNumber);
+    
+    if (dateOfBirth) {
+      formData.append('date_of_birth', dateOfBirth.toISOString().split('T')[0]);
+    }
+    
+    if (bio.trim()) {
+      formData.append('profile.bio', bio.trim());
+    }
+
+    // Note: Profile photo upload would go here if image picker is implemented
+    // if (profileImageAsset && profileImageAsset.uri) {
+    //   formData.append('profile.profile_photo', {
+    //     uri: profileImageAsset.uri,
+    //     type: profileImageAsset.type || 'image/jpeg',
+    //     name: profileImageAsset.fileName || 'profile_photo.jpg',
+    //   } as any);
+    // }
+
+    console.log('📝 [EDIT PROFILE] Saving profile with FormData:', {
+      first_name,
+      last_name,
+      email: email.trim(),
       phone: fullPhoneNumber,
-      email,
+      date_of_birth: dateOfBirth?.toISOString().split('T')[0],
+      bio: bio.trim(),
     });
 
-    showSuccess('Profile updated successfully');
-    navigation.goBack();
+    profileSetupMutation.mutate(formData, {
+      onSuccess: (response) => {
+        console.log('✅ [EDIT PROFILE] Profile updated successfully:', response);
+        showSuccess('Profile updated successfully');
+
+        setUser(response.user);
+        // Invalidate and refetch profile data
+        queryClient.invalidateQueries({ queryKey: ['myProfile'] });
+        // Navigate back after a short delay
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      },
+      onError: (error: any) => {
+        console.error('❌ [EDIT PROFILE] Error updating profile:', error);
+        showError(error?.response?.data?.message || error?.message || 'Failed to update profile. Please try again.');
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -365,9 +427,42 @@ const EditProfileScreen: React.FC = () => {
             title="Save"
             onPress={handleSave}
             style={styles.saveButton}
+            loading={profileSetupMutation.isPending}
+            disabled={profileSetupMutation.isPending}
           />
         </View>
       </ScrollView>
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={showConfirmModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowConfirmModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Confirm Changes</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to save these changes to your profile?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowConfirmModal(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <GradientButton
+                title="Confirm"
+                onPress={handleConfirmSave}
+                style={styles.modalConfirmButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -501,6 +596,57 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 2,
+    marginTop: 0,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundWhite,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelButtonText: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+  },
+  modalConfirmButton: {
+    flex: 1,
     marginTop: 0,
   },
 });

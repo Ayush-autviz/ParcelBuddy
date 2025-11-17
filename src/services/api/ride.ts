@@ -42,7 +42,7 @@ export const getRideSearchHistory = async () => {
     return response.data;
 };
 
-// search rides - using fetch with POST request
+// search rides - POST request with JSON body
 export const searchRides = async (params: {
     origin?: string;
     destination?: string;
@@ -54,10 +54,6 @@ export const searchRides = async (params: {
     max_price?: number;
     ordering?: string;
 }) => {
-    // Get token from store
-    const { useAuthStore } = await import('../store');
-    const token = useAuthStore.getState().token?.access_token;
-    
     // Prepare request body
     const requestBody: any = {
         type: 'month',
@@ -73,35 +69,7 @@ export const searchRides = async (params: {
     if (params.max_price !== undefined) requestBody.max_price = params.max_price;
     if (params.ordering) requestBody.ordering = params.ordering;
     
-    const baseUrl = 'http://13.233.74.72:8000';
-    const url = `${baseUrl}/ride/search/`;
     
-    console.log('🔍 [SEARCH RIDES] Fetch URL:', url);
-    console.log('🔍 [SEARCH RIDES] Request body:', JSON.stringify(requestBody, null, 2));
-    console.log('🔍 [SEARCH RIDES] Token present:', !!token);
-    
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-        body: JSON.stringify(requestBody),
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('🔍 [SEARCH RIDES] Fetch error:', response.status, errorData);
-        throw {
-            response: {
-                status: response.status,
-                data: errorData,
-            },
-            message: `Request failed with status ${response.status}`,
-        };
-    }
-    
-    const data = await response.json();
-    console.log('🔍 [SEARCH RIDES] Fetch success, data:', data);
-    return data;
+    const response = await apiClient.post('/ride/search/', requestBody);
+    return response.data;
 };

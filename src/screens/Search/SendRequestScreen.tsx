@@ -261,8 +261,20 @@ const SendRequestScreen: React.FC = () => {
             style={styles.driverRow} 
             activeOpacity={0.7}
             onPress={() => {
+              // Use profileId from ride if available, otherwise fallback to traveler.profile.id
+              const profileIdFromRide = ride.profileId;
+              const profileIdFromTraveler = (ride.traveler as any)?.profile?.id;
+              const profileId = profileIdFromRide || profileIdFromTraveler;
+              
+              console.log('👤 [SEND REQUEST] Clicked on traveler');
+              console.log('👤 [SEND REQUEST] ride.profileId:', profileIdFromRide);
+              console.log('👤 [SEND REQUEST] ride.traveler.profile.id:', profileIdFromTraveler);
+              console.log('👤 [SEND REQUEST] Final profileId being used:', profileId);
+              console.log('👤 [SEND REQUEST] Full ride object:', JSON.stringify(ride, null, 2));
+              
               navigation.navigate('UserProfile', {
                 traveler: ride.traveler,
+                profileId: profileId,
               });
             }}
           >

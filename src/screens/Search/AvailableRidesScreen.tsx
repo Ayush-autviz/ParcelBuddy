@@ -28,6 +28,7 @@ const AvailableRidesScreen: React.FC = () => {
   const { rides, from, to, date } = route.params;
   const [searchQuery, setSearchQuery] = React.useState(`${from} to ${to}`);
 
+
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
