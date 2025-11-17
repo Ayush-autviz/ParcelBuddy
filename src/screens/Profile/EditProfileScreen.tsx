@@ -20,6 +20,7 @@ import { Fonts } from '../../constants/fonts';
 import { Header, GradientButton, DatePickerInput, TextArea } from '../../components';
 import { useAuthStore } from '../../services/store';
 import { useToast } from '../../components/Toast';
+import { useMyProfile } from '../../hooks/useProfile';
 
 type ProfileStackParamList = {
   ProfileList: undefined;
@@ -34,6 +35,43 @@ const EditProfileScreen: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const phoneInputRef = useRef<any>(null);
 
+  // Fetch profile data from API
+  const { data: profileData, isLoading, isError, error } = useMyProfile();
+
+  // Log the profile data and update form fields when profile data loads
+  React.useEffect(() => {
+    if (profileData) {
+      console.log('📱 [EDIT PROFILE] Profile data from API:', JSON.stringify(profileData, null, 2));
+      
+      // Update form fields with API data
+      const firstName = profileData.first_name || '';
+      const lastName = profileData.last_name || '';
+      setFullName(`${firstName} ${lastName}`.trim() || '');
+      
+      // Handle null date_of_birth
+      setDateOfBirth(
+        profileData.date_of_birth && profileData.date_of_birth !== null
+          ? new Date(profileData.date_of_birth)
+          : null
+      );
+      
+      setBio(profileData.profile?.bio || '');
+      setEmail(profileData.email || '');
+      setProfilePhoto(profileData.profile?.profile_photo || null);
+      
+      // Parse and set phone number
+      const parsed = parsePhoneNumber(profileData.phone);
+      setPhoneNumber(parsed.number);
+      setSelectedCountry(parsed.country);
+    }
+    if (isError) {
+      console.error('❌ [EDIT PROFILE] Error fetching profile:', error);
+    }
+    if (isLoading) {
+      console.log('⏳ [EDIT PROFILE] Loading profile data...');
+    }
+  }, [profileData, isError, error, isLoading]);
+
   // Parse phone number from user data
   const parsePhoneNumber = (phone: string | undefined) => {
     if (!phone) return { number: '', country: 'US' };
@@ -41,29 +79,35 @@ const EditProfileScreen: React.FC = () => {
     if (phone.startsWith('+1')) {
       return { number: phone.replace(/^\+1/, ''), country: 'US' };
     }
+    if (phone.startsWith('+91')) {
+      return { number: phone.replace(/^\+91/, ''), country: 'IN' };
+    }
     // Try to detect other country codes (simplified - can be enhanced)
     const usMatch = phone.match(/^\+1(.+)/);
     if (usMatch) {
-      return { number: usMatch[1], country: 'US' };
+      return { number: usMatch[1], country: 'CA' };
     }
     // Default to US
-    return { number: phone.replace(/^\+\d+/, ''), country: 'US' };
+    return { number: phone.replace(/^\+\d+/, ''), country: 'CA' };
   };
 
-  const parsedPhone = parsePhoneNumber(user?.phone);
+  // Use profile data from API if available, otherwise fallback to user from store
+  const currentProfile = profileData || user;
+  const parsedPhone = parsePhoneNumber(currentProfile?.phone);
 
-  // Form state
+  // Form state - initialize from API data or store
   const [fullName, setFullName] = useState(
-    `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || ''
+    `${currentProfile?.first_name || ''} ${currentProfile?.last_name || ''}`.trim() || ''
   );
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(
-    user?.date_of_birth ? new Date(user.date_of_birth) : null
+    currentProfile?.date_of_birth ? new Date(currentProfile.date_of_birth) : null
   );
-  const [bio, setBio] = useState(user?.profile?.bio || '');
+  const [bio, setBio] = useState(currentProfile?.profile?.bio || '');
   const [phoneNumber, setPhoneNumber] = useState(parsedPhone.number);
+  const [selectedCountry, setSelectedCountry] = useState<string>(parsedPhone.country);
   const [countryCode, setCountryCode] = useState('');
-  const [email, setEmail] = useState(user?.email || '');
-  const [profilePhoto, setProfilePhoto] = useState(user?.profile?.profile_photo || null);
+  const [email, setEmail] = useState(currentProfile?.email || '');
+  const [profilePhoto, setProfilePhoto] = useState(currentProfile?.profile?.profile_photo || null);
 
   // Validation
   const [fullNameError, setFullNameError] = useState('');
@@ -229,8 +273,9 @@ const EditProfileScreen: React.FC = () => {
               <PhoneInput
                 ref={phoneInputRef}
                 defaultValue={phoneNumber}
+                disabled={true}
                 value={phoneNumber}
-                defaultCountry={parsedPhone.country}
+                defaultCountry={selectedCountry as any}
                 onChangePhoneNumber={(number) => {
                   setPhoneNumber(number);
                 }}
@@ -445,7 +490,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
     borderRadius: 12,
     backgroundColor: Colors.backgroundWhite,
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },

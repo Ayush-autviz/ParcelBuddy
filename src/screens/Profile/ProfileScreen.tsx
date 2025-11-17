@@ -46,24 +46,8 @@ interface MenuItem {
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { logout, user } = useAuthStore();
-  const { showSuccess } = useToast();
+  const { showSuccess } = useToast();  console.log('user', user);
 
-  console.log('user', user);
-  
-
-  // const { data: profile } = useQuery({
-  //   queryKey: ['profile'],
-  //   queryFn: () => getProfile(),
-  // });
-
-  // const profileData = profile?.[0] || user;
-  // const firstName = profileData?.first_name || profileData?.user?.first_name || 'User';
-  // const lastName = profileData?.last_name || profileData?.user?.last_name || '';
-  // const fullName = `${firstName} ${lastName}`.trim() || 'User Name';
-  // const profilePhoto = profileData?.profile?.profile_photo;
-  // const age = profileData?.profile?.age || 28; // Default age if not available
-
-  // log
 
   const handleLogout = async () => {
     await logout();

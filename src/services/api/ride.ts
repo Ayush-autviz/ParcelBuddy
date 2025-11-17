@@ -42,7 +42,7 @@ export const getRideSearchHistory = async () => {
     return response.data;
 };
 
-// search rides
+// search rides - using fetch with POST request
 export const searchRides = async (params: {
     origin?: string;
     destination?: string;
@@ -54,18 +54,54 @@ export const searchRides = async (params: {
     max_price?: number;
     ordering?: string;
 }) => {
-    const queryParams = new URLSearchParams();
+    // Get token from store
+    const { useAuthStore } = await import('../store');
+    const token = useAuthStore.getState().token?.access_token;
     
-    if (params.origin) queryParams.append('origin', params.origin);
-    if (params.destination) queryParams.append('destination', params.destination);
-    if (params.origin_lat !== undefined) queryParams.append('origin_lat', params.origin_lat.toString());
-    if (params.origin_lng !== undefined) queryParams.append('origin_lng', params.origin_lng.toString());
-    if (params.destination_lat !== undefined) queryParams.append('destination_lat', params.destination_lat.toString());
-    if (params.destination_lng !== undefined) queryParams.append('destination_lng', params.destination_lng.toString());
-    if (params.date_from) queryParams.append('date_from', params.date_from);
-    if (params.max_price !== undefined) queryParams.append('max_price', params.max_price.toString());
-    if (params.ordering) queryParams.append('ordering', params.ordering);
+    // Prepare request body
+    const requestBody: any = {
+        type: 'month',
+    };
     
-    const response = await apiClient.get(`/rides?${queryParams.toString()}&type=month`);
-    return response.data;
+    if (params.origin) requestBody.origin = params.origin;
+    if (params.destination) requestBody.destination = params.destination;
+    if (params.origin_lat !== undefined) requestBody.origin_lat = params.origin_lat;
+    if (params.origin_lng !== undefined) requestBody.origin_lng = params.origin_lng;
+    if (params.destination_lat !== undefined) requestBody.destination_lat = params.destination_lat;
+    if (params.destination_lng !== undefined) requestBody.destination_lng = params.destination_lng;
+    if (params.date_from) requestBody.date_from = params.date_from;
+    if (params.max_price !== undefined) requestBody.max_price = params.max_price;
+    if (params.ordering) requestBody.ordering = params.ordering;
+    
+    const baseUrl = 'http://13.233.74.72:8000';
+    const url = `${baseUrl}/ride/search/`;
+    
+    console.log('🔍 [SEARCH RIDES] Fetch URL:', url);
+    console.log('🔍 [SEARCH RIDES] Request body:', JSON.stringify(requestBody, null, 2));
+    console.log('🔍 [SEARCH RIDES] Token present:', !!token);
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify(requestBody),
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('🔍 [SEARCH RIDES] Fetch error:', response.status, errorData);
+        throw {
+            response: {
+                status: response.status,
+                data: errorData,
+            },
+            message: `Request failed with status ${response.status}`,
+        };
+    }
+    
+    const data = await response.json();
+    console.log('🔍 [SEARCH RIDES] Fetch success, data:', data);
+    return data;
 };
