@@ -230,9 +230,6 @@ const SearchScreen: React.FC = () => {
           // Transform API response to AvailableRideData format
           const transformedRides = (response || []).map((ride: any) => {
             const profileId = ride.traveler?.profile?.id;
-            console.log('🔍 [SEARCH SCREEN - HISTORY] Processing ride:', ride.id);
-            console.log('🔍 [SEARCH SCREEN - HISTORY] Profile object:', JSON.stringify(ride.traveler?.profile, null, 2));
-            console.log('🔍 [SEARCH SCREEN - HISTORY] Extracted profileId:', profileId);
             
             return {
               id: ride.id,

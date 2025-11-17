@@ -32,6 +32,8 @@ import { getProfile } from '../../services/api/profile';
 import { useToast } from '../../components/Toast';
 
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
+import { SvgXml } from 'react-native-svg';
+import { ProfileKycIcon, ProfileRatingsIcon, ProfileSubscriptionIcon, ProfileUserIcon, ProfilePaymentHistoryIcon, ProfileTermsIcon, ProfileSupportIcon } from '../../assets/icons/svg/profileIcon';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileList'>;
 
@@ -39,7 +41,7 @@ interface MenuItem {
   id: string;
   title: string;
   subtitle?: string;
-  icon: React.ComponentType<any>;
+  icon: any;
   onPress: () => void;
 }
 
@@ -62,7 +64,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'edit',
       title: 'Edit Profile',
-      icon: User,
+      icon: ProfileUserIcon,
       onPress: () => {
         navigation.navigate('EditProfile');
       },
@@ -71,7 +73,7 @@ const ProfileScreen: React.FC = () => {
       id: 'kyc',
       title: 'KYC Status',
       subtitle: 'Verified',
-      icon: Shield,
+      icon: ProfileKycIcon,
       onPress: () => {
         navigation.navigate('KYCVerification');
       },
@@ -79,7 +81,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'ratings',
       title: 'Ratings',
-      icon: Star,
+      icon: ProfileRatingsIcon,
       onPress: () => {
         navigation.navigate('Ratings');
       },
@@ -88,7 +90,7 @@ const ProfileScreen: React.FC = () => {
       id: 'subscription',
       title: 'Current Subscription',
       subtitle: 'Silver',
-      icon: Crown,
+      icon: ProfileSubscriptionIcon,
       onPress: () => {
         navigation.navigate('Subscription');
       },
@@ -96,7 +98,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'payment',
       title: 'Payment History',
-      icon: Clock,
+      icon: ProfilePaymentHistoryIcon,
       onPress: () => {
         navigation.navigate('PaymentHistory');
       },
@@ -104,7 +106,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'terms',
       title: 'Terms & Privacy Policy',
-      icon: FileText,
+      icon: ProfileTermsIcon,
       onPress: () => {
         navigation.navigate('TermsAndPolicy');
       },
@@ -112,7 +114,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'support',
       title: 'Support',
-      icon: HelpCircle,
+      icon: ProfileSupportIcon,
       onPress: () => {
         navigation.navigate('Support');
       },
@@ -160,21 +162,8 @@ const ProfileScreen: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuItemLeft}>
-                  <View style={styles.iconContainer}>
-                    {item.id === 'kyc' ? (
-                      <View style={styles.shieldContainer}>
-                        <Shield size={20} color={Colors.primaryCyan} />
-                        <View style={styles.checkBadge}>
-                          <Check size={10} color={Colors.textWhite} />
-                        </View>
-                      </View>
-                    ) : item.id === 'support' ? (
-                      <View style={styles.supportContainer}>
-                        <HelpCircle size={20} color={Colors.primaryCyan} />
-                      </View>
-                    ) : (
-                      <Icon size={20} color={Colors.primaryCyan} />
-                    )}
+                  <View style={styles.iconContainer}>   
+                     <SvgXml xml={Icon} width={20} height={20} />
                   </View>
                   <View style={styles.menuItemText}>
                     <Text style={styles.menuItemTitle}>{item.title}</Text>

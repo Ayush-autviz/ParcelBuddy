@@ -2,7 +2,7 @@ import apiClient from "../apiClient";
 
 // get luggage request 
 export const getLuggageRequests = async () => {
-    const response = await apiClient.get(`/luggage-requests/`);
+    const response = await apiClient.get(`/luggage-requests/?ordering=-created_on`);
     return response.data;
 };
 
