@@ -8,12 +8,13 @@ import { Search, PlusCircle, ShoppingCart, MessageCircle, User, MessageSquare } 
 import SearchNavigator from './SearchNavigator';
 import CreateScreen from '../screens/Create/CreateScreen';
 import TrackNavigator from './TrackNavigator';
-import ChatScreen from '../screens/Chat/ChatScreen';
+import ChatNavigator from './ChatNavigator';
 import ProfileNavigator from './ProfileNavigator';
 import { Colors } from '../constants/colors';
 import { Fonts } from '../constants/fonts';
 
 import { SearchStackParamList } from './SearchNavigator';
+import { ChatStackParamList } from './ChatNavigator';
 import { FocusedChatIcon, FocusedCreateIcon, FocusedProfileIcon, FocusedSearchIcon, FocusedTrackIcon, SearchIcon } from '../assets/icons/svg/bottomTabs';
 import { SvgXml } from 'react-native-svg';
 import { CreateIcon } from '../assets/icons/svg/bottomTabs';
@@ -26,7 +27,7 @@ export type BottomTabParamList = {
   Search: NavigatorScreenParams<SearchStackParamList> | undefined;
   Create: undefined;
   Track: undefined;
-  Chat: undefined;
+  Chat: NavigatorScreenParams<ChatStackParamList> | undefined;
   Profile: undefined;
 };
 
@@ -104,7 +105,7 @@ const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Chat"
-        component={ChatScreen}
+        component={ChatNavigator}
         options={{
           title: 'Chat',
         }}

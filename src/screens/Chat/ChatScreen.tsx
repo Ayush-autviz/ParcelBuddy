@@ -10,10 +10,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, User, MessageCircle } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, Card, SearchInput, EmptyStateCard } from '../../components';
 import { useChatList, ChatRoom } from '../../hooks/useChat';
+import { SvgXml } from 'react-native-svg';
+import { FilledUserIcon } from '../../assets/icons/svg/main';
+import { ChatStackParamList } from '../../navigation/ChatNavigator';
 
 // Message data interface
 interface MessageItem {
@@ -28,14 +33,19 @@ interface MessageItem {
   hasUnread?: boolean;
 }
 
+type ChatScreenNavigationProp = StackNavigationProp<ChatStackParamList, 'ChatList'>;
+
 const ChatScreen: React.FC = () => {
+  const navigation = useNavigation<ChatScreenNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   
   // Fetch chat list from API
   const { data: chatListResponse, isLoading, isError, error } = useChatList();
+
+  console.log('chatListResponse', chatListResponse);
   
   // Transform API response to MessageItem format
-  const messages: MessageItem[] = useMemo(() => {
+  const messages: any = useMemo(() => {
     if (!chatListResponse?.results || !Array.isArray(chatListResponse.results)) {
       return [];
     }
@@ -70,20 +80,20 @@ const ChatScreen: React.FC = () => {
       return {
         id: room.id || '',
         name: fullName,
-        avatar: otherUser?.profile?.profile_photo,
-        origin: room.ride?.origin_name || 'Unknown Origin',
-        destination: room.ride?.destination_name || 'Unknown Destination',
-        lastMessage: room.last_message?.content || 'No messages yet',
-        timestamp: formatTimestamp(room.last_message?.created_at),
+        avatar: otherUser?.profile?.profile_photo || undefined,
+        origin: room.location_info?.origin || room.ride?.origin_name || 'Unknown Origin',
+        destination: room.location_info?.destination || room.ride?.destination_name || 'Unknown Destination',
+        lastMessage: room.last_message,
+        timestamp: formatTimestamp(room.last_message_at || undefined),
         unreadCount: room.unread_count && room.unread_count > 0 ? room.unread_count : undefined,
-        hasUnread: room.unread_count === 0 ? false : (room.unread_count && room.unread_count > 0 ? false : true),
+        hasUnread: (room.unread_count || 0) > 0,
       };
     });
   }, [chatListResponse]);
 
   // Filter messages based on search query
   const filteredMessages = useMemo(() => {
-    return messages.filter((message) =>
+    return messages.filter((message: any) =>
       message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       message.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
       message.destination.toLowerCase().includes(searchQuery.toLowerCase())
@@ -91,8 +101,18 @@ const ChatScreen: React.FC = () => {
   }, [messages, searchQuery]);
 
   const handleMessagePress = (message: MessageItem) => {
-    // TODO: Navigate to chat detail screen
-    console.log('Open chat with:', message.name);
+    // Find the original room data to get user info
+    const room = chatListResponse?.results?.find((r: ChatRoom) => r.id === message.id);
+    const otherUser = room?.other_user;
+    const firstName = otherUser?.first_name || '';
+    const lastName = otherUser?.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim() || 'Unknown User';
+    
+    navigation.navigate('ChatDetail', {
+      roomId: message.id,
+      userName: fullName,
+      userAvatar: otherUser?.profile?.profile_photo || undefined,
+    });
   };
 
   const renderMessageItem = ({ item }: { item: MessageItem }) => (
@@ -108,7 +128,8 @@ const ChatScreen: React.FC = () => {
               <Image source={{ uri: item.avatar }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <User size={24} color={Colors.primaryCyan} />
+                {/* <User size={24} color={Colors.primaryCyan} /> */}
+                <SvgXml xml={FilledUserIcon} height={24} width={24} />
               </View>
             )}
           </View>
@@ -122,9 +143,15 @@ const ChatScreen: React.FC = () => {
             <Text style={styles.messageRoute}>
               From: {item.origin} to {item.destination}
             </Text>
-            <Text style={styles.messageText} numberOfLines={1}>
-              {item.lastMessage}
-            </Text>
+            {item.lastMessage ? (
+              <Text style={styles.messageText} numberOfLines={1}>
+                {item.lastMessage}
+              </Text>
+            ) : (
+              <Text style={{fontSize: Fonts.sm, color: Colors.textLight, fontStyle: 'italic' }} numberOfLines={1}>
+                start the conversation
+              </Text>
+            )}
           </View>
 
           {/* Unread Badge */}
@@ -249,21 +276,29 @@ const styles = StyleSheet.create({
   },
   messageContent: {
     flexDirection: 'row',
-    alignItems: 'center',
+    // alignItems: 'center',
   },
   avatarContainer: {
     marginRight: 12,
   },
   avatarImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    // width: 50,
+    // height: 50,
+    // borderRadius: 25,
   },
   avatarPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: Colors.primaryCyan + '20',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.backgroundWhite,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -278,7 +313,7 @@ const styles = StyleSheet.create({
   },
   messageName: {
     fontSize: Fonts.base,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightMedium,
     color: Colors.textPrimary,
   },
   messageTimestamp: {
@@ -286,12 +321,12 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
   },
   messageRoute: {
-    fontSize: Fonts.sm,
+    fontSize: Fonts.xs,
     color: Colors.textTertiary,
     marginBottom: 4,
   },
   messageText: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     color: Colors.textPrimary,
   },
   unreadBadge: {

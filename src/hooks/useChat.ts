@@ -9,22 +9,47 @@ export interface ChatListResponse {
 
 export interface ChatRoom {
   id: string;
+  created_on?: string;
+  is_active?: boolean;
+  last_message?: string;
+  last_message_at?: string | null;
+  luggage_request_id?: string;
   other_user?: {
     id: string;
     first_name?: string;
     last_name?: string;
+    email?: string;
+    phone?: string;
+    date_of_birth?: string;
+    user_type?: string;
     profile?: {
-      profile_photo?: string;
+      id?: string;
+      profile_photo?: string | null;
+      bio?: string;
+      average_rating?: number;
+      address_line1?: string;
+      address_line2?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      pin_code?: string;
+      preferred_language?: string;
+      user?: string;
+      date_of_birth?: string;
+      [key: string]: any;
     };
-  };
-  last_message?: {
-    content?: string;
-    created_at?: string;
+    [key: string]: any;
   };
   unread_count?: number;
+  location_info?: {
+    origin?: string;
+    destination?: string;
+    [key: string]: any;
+  };
   ride?: {
     origin_name?: string;
     destination_name?: string;
+    [key: string]: any;
   };
   [key: string]: any;
 }
