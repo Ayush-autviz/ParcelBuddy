@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests, getLuggageRequestById, cancelLuggageRequest } from '../services/api/luggage';
+import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests, getLuggageRequestById, cancelLuggageRequest, respondToLuggageRequest } from '../services/api/luggage';
 import { LuggageRequestItemData } from '../components/track/LuggageRequestItem';
 import { RideCardData, StatusType } from '../components/track';
 
@@ -10,9 +10,14 @@ export interface LuggageRequestResponse {
     last_name?: string;
     email?: string;
     phone?: string;
+    profile?: {
+      profile_photo?: string;
+    };
   };
   sender_name?: string;
+  status?: string;
   item_count?: number;
+  senderProfilePhoto?: string;
   items?: any[];
   [key: string]: any;
 }
@@ -47,11 +52,15 @@ export const useLuggageRequestsForRide = (
 
         // Extract item count
         const itemCount = request.item_count || (request.items && request.items.length) || 0;
+        const status = request.status;
+        const senderProfilePhoto = request.sender?.profile?.profile_photo;
 
         return {
           id: request.id,
           senderName,
           itemCount,
+          status,
+          senderProfilePhoto,
         } as LuggageRequestItemData;
       });
     },
@@ -76,6 +85,13 @@ export interface CreateLuggageRequestData {
 export const useCreateLuggageRequest = (): UseMutationResult<any, Error, FormData, unknown> => {
   return useMutation({
     mutationFn: (data: FormData) => createLuggageRequest(data),
+  });
+};
+
+// Hook to respond to a luggage request (approve or reject)
+export const useRespondToLuggageRequest = (): UseMutationResult<any, Error, { requestId: string; status: 'approved' | 'rejected' }, unknown> => {
+  return useMutation({
+    mutationFn: ({ requestId, status }) => respondToLuggageRequest(requestId, { status }),
   });
 };
 

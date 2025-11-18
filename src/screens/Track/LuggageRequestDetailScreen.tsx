@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,14 @@ import { User, ChevronRight, MessageCircle, Package } from 'lucide-react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card, GradientButton, SectionCard, SearchInput } from '../../components';
+import { Header, Card, GradientButton, SectionCard, SearchInput, ConfirmationModal } from '../../components';
 import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
 import { SvgXml } from 'react-native-svg';
 import { MapPinIcon, WeightIcon } from '../../assets/icons/svg/main';
 import { useToast } from '../../components/Toast';
-import { useLuggageRequestDetail } from '../../hooks/useLuggage';
+import { useLuggageRequestDetail, useRespondToLuggageRequest } from '../../hooks/useLuggage';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCreateChatRoom } from '../../hooks/useChat';
 
 type LuggageRequestDetailParams = {
   LuggageRequestDetail: {
@@ -37,6 +38,13 @@ const LuggageRequestDetailScreen: React.FC = () => {
   const { requestId } = route.params;
   const { showSuccess, showError } = useToast();
   const queryClient = useQueryClient();
+  const [showRejectModal, setShowRejectModal] = useState(false);
+
+  // Respond to luggage request mutation
+  const respondToRequestMutation = useRespondToLuggageRequest();
+  
+  // Create chat room mutation
+  const createChatRoomMutation = useCreateChatRoom();
 
   // Fetch luggage request detail by ID
   const { 
@@ -48,9 +56,6 @@ const LuggageRequestDetailScreen: React.FC = () => {
   } = useLuggageRequestDetail(requestId);
 
   console.log('luggageRequestDetail', luggageRequestDetail);
-  console.log('isLoading', isLoading);
-  console.log('isError', isError);
-  console.log('error', error);
 
 
   // Format date: "2025-11-28" -> "Tue, 23 Apr"
@@ -66,27 +71,65 @@ const LuggageRequestDetailScreen: React.FC = () => {
     return `${day}, ${dayNum} ${month}`;
   };
 
-  // Format time: "18:00:00" -> "06:00 PM"
-  const formatTime = (timeString: string | null): string => {
-    if (!timeString) return '12:00 AM';
-    const timeParts = timeString.split(':');
-    const hours = timeParts[0] || '0';
-    const minutes = timeParts[1] || '0';
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    const displayMinutes = minutes.padStart(2, '0');
-    return `${displayHour}:${displayMinutes} ${ampm}`;
+
+  const handleReject = () => {
+    setShowRejectModal(true);
   };
 
-  const handleDecline = () => {
-    // TODO: Implement decline API call
-    showError('Decline functionality will be implemented');
+  const handleConfirmReject = () => {
+    setShowRejectModal(false);
+    respondToRequestMutation.mutate(
+      { requestId, status: 'rejected' },
+      {
+        onSuccess: () => {
+          showSuccess('Luggage request rejected successfully');
+          // Invalidate and refetch relevant queries
+          queryClient.invalidateQueries({ queryKey: ['luggageRequestDetail', requestId] });
+          queryClient.invalidateQueries({ queryKey: ['luggageRequests'] });
+          queryClient.invalidateQueries({ queryKey: ['luggageRequests', luggageRequestDetail?.ride?.id] });
+          // Refetch the detail to get updated status
+          refetchRequestDetail();
+        },
+        onError: (error: any) => {
+          showError(error?.response?.data?.message || error?.message || 'Failed to reject request. Please try again.');
+        },
+      }
+    );
+  };
+
+  const handleCancelReject = () => {
+    setShowRejectModal(false);
   };
 
   const handleChat = () => {
-    // TODO: Navigate to chat screen
-    console.log('Chat with sender');
+    if (!requestId) {
+      showError('Unable to start chat. Request information is missing.');
+      return;
+    }
+
+    createChatRoomMutation.mutate(
+      { 
+        luggage_request_id: requestId
+      },
+      {
+        onSuccess: () => {
+          showSuccess('Chat room created successfully');
+          // Navigate to Chat tab via parent navigator
+          const parent = navigation.getParent();
+          if (parent) {
+            parent.navigate('Chat');
+          } else {
+            // Fallback: try direct navigation
+            navigation.navigate('Chat' as any);
+          }
+          // Invalidate chat list to refresh with new room
+          queryClient.invalidateQueries({ queryKey: ['chatList'] });
+        },
+        onError: (error: any) => {
+          showError(error?.response?.data?.message || error?.message || 'Failed to create chat room. Please try again.');
+        },
+      }
+    );
   };
 
   const handleSenderPress = () => {
@@ -339,22 +382,45 @@ const LuggageRequestDetailScreen: React.FC = () => {
         )}
 
         {/* Action Buttons */}
+        {luggageRequestDetail?.status === 'pending' && (
         <View style={styles.actionButtonsContainer}>
           <TouchableOpacity
-            style={styles.declineButton}
-            onPress={handleDecline}
+            style={[
+              styles.declineButton,
+              respondToRequestMutation.isPending && styles.buttonDisabled,
+            ]}
+            onPress={handleReject}
             activeOpacity={0.7}
+            disabled={respondToRequestMutation.isPending}
           >
-            <Text style={styles.declineButtonText}>Decline</Text>
+            {respondToRequestMutation.isPending ? (
+              <ActivityIndicator size="small" color={Colors.primaryCyan} />
+            ) : (
+              <Text style={styles.declineButtonText}>Reject</Text>
+            )}
           </TouchableOpacity>
           <GradientButton
             title="Chat"
             onPress={handleChat}
             style={styles.chatButton}
             icon={<MessageCircle size={20} color={Colors.textWhite} style={styles.chatIcon} />}
+            disabled={respondToRequestMutation.isPending || createChatRoomMutation.isPending}
           />
         </View>
+        )}
       </ScrollView>
+
+      {/* Reject Confirmation Modal */}
+      <ConfirmationModal
+        visible={showRejectModal}
+        title="Reject Request"
+        message="Are you sure you want to reject this luggage request? This action cannot be undone."
+        confirmText="Reject"
+        cancelText="Cancel"
+        onConfirm={handleConfirmReject}
+        onCancel={handleCancelReject}
+        type="destructive"
+      />
     </SafeAreaView>
   );
 };
@@ -557,7 +623,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
     borderRadius: 12,
     backgroundColor: Colors.backgroundWhite,
-    paddingVertical: 16,
+    paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -565,6 +631,9 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.primaryCyan,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   chatButton: {
     flex: 1,

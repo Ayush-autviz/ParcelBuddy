@@ -34,3 +34,9 @@ export const cancelLuggageRequest = async (requestId: string) => {
     const response = await apiClient.delete(`/luggage-requests/${requestId}/`);
     return response.data;
 };
+
+// respond to a luggage request
+export const respondToLuggageRequest = async (requestId: string, data: any) => {
+    const response = await apiClient.post(`/luggage-requests/${requestId}/respond/`, data);
+    return response.data;
+};

@@ -9,6 +9,8 @@ export interface LuggageRequestItemData {
   id: string;
   senderName: string;
   itemCount: number;
+  status?: string;
+  senderProfilePhoto?: string | null;
 }
 
 interface LuggageRequestItemProps {
@@ -39,7 +41,14 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
 
           {/* Name and Items */}
           <View style={styles.textContainer}>
-            <Text style={styles.senderName}>{request.senderName}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.senderName}>{request.senderName}</Text>
+              {request.status === 'cancelled' && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>Cancelled</Text>
+                </View>
+              )}
+            </View>
             {/* <Text style={styles.itemCount}>
               {request.itemCount} {request.itemCount === 1 ? 'item' : 'items'}
             </Text> */}
@@ -75,11 +84,30 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
   senderName: {
     fontSize: Fonts.base,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     marginBottom: 4,
+    marginRight: 8,
+  },
+  badge: {
+    backgroundColor: '#FF3B30' + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  badgeText: {
+    fontSize: Fonts.xs,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+    textTransform: 'uppercase',
   },
   itemCount: {
     fontSize: Fonts.sm,

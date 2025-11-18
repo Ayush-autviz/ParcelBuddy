@@ -1,5 +1,5 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { getChatMessagesList } from '../services/api/chat';
+import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
+import { getChatMessagesList, createChatRoom } from '../services/api/chat';
 
 export interface ChatListResponse {
   count: number;
@@ -38,6 +38,15 @@ export const useChatList = (): UseQueryResult<ChatListResponse, Error> => {
     },
     staleTime: 30000, // Cache for 30 seconds
     retry: 1,
+  });
+};
+
+// Hook to create or get a chat room
+export const useCreateChatRoom = (): UseMutationResult<any, Error, { luggage_request_id: string }, unknown> => {
+  return useMutation({
+    mutationFn: ({ luggage_request_id }) => {
+      return createChatRoom({ luggage_request_id });
+    },
   });
 };
 

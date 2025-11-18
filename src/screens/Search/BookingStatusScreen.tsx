@@ -24,22 +24,6 @@ const BookingStatusScreen: React.FC = () => {
   const navigation = useNavigation<BookingStatusScreenNavigationProp>();
   const { bookingRequest } = route.params;
 
-  // Calculate response deadline (4:00 PM today as default, or use actual deadline if available)
-  const getResponseDeadline = (): string => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    
-    // If it's before 4 PM, show "before 4:00 today"
-    if (hours < 16) {
-      return '4:00 today';
-    }
-    // If it's after 4 PM, show "before 4:00 tomorrow"
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return '4:00 tomorrow';
-  };
-
   const handleSeeBookingRequest = () => {
     // Navigate to booking request details screen with request ID
     if (bookingRequest?.id) {
@@ -71,7 +55,7 @@ const BookingStatusScreen: React.FC = () => {
                 Your Booking is awaiting the traveller's approval.
               </Text>
               <Text style={styles.secondaryMessage}>
-                The traveller will respond before {getResponseDeadline()}
+                The traveller will respond soon.
               </Text>
             </View>
           </View>
