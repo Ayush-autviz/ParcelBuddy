@@ -3,15 +3,19 @@ import { createStackNavigator } from '@react-navigation/stack';
 import TrackScreen from '../screens/Track/TrackScreen';
 import RideDetailScreen, { TrackStackParamList } from '../screens/Track/RideDetailScreen';
 import BookingRequestDetailScreen from '../screens/Search/BookingRequestDetailScreen';
+import LuggageRequestDetailScreen from '../screens/Track/LuggageRequestDetailScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
 import { AvailableRideData } from '../components/search/AvailableRideCard';
 
-// Extend TrackStackParamList to include BookingRequestDetail and UserProfile
+// Extend TrackStackParamList to include BookingRequestDetail, LuggageRequestDetail and UserProfile
 export type ExtendedTrackStackParamList = TrackStackParamList & {
   BookingRequestDetail: {
     requestId?: string;
     bookingRequest?: any;
     ride?: any;
+  };
+  LuggageRequestDetail: {
+    requestId: string;
   };
   UserProfile: {
     traveler: AvailableRideData['traveler'];
@@ -32,6 +36,7 @@ const TrackNavigator: React.FC = () => {
       <Stack.Screen name="TrackList" component={TrackScreen} />
       <Stack.Screen name="RideDetail" component={RideDetailScreen} />
       <Stack.Screen name="BookingRequestDetail" component={BookingRequestDetailScreen} />
+      <Stack.Screen name="LuggageRequestDetail" component={LuggageRequestDetailScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
     </Stack.Navigator>
   );

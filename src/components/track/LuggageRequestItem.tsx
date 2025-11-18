@@ -40,9 +40,9 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
           {/* Name and Items */}
           <View style={styles.textContainer}>
             <Text style={styles.senderName}>{request.senderName}</Text>
-            <Text style={styles.itemCount}>
+            {/* <Text style={styles.itemCount}>
               {request.itemCount} {request.itemCount === 1 ? 'item' : 'items'}
-            </Text>
+            </Text> */}
           </View>
 
           {/* Arrow Icon */}

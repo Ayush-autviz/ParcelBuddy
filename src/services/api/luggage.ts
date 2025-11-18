@@ -8,7 +8,8 @@ export const getLuggageRequests = async () => {
 
 // get luggage request by ID
 export const getLuggageRequestById = async (requestId: string) => {
-    const response = await apiClient.get(`/luggage-requests/${requestId}`);
+    // const response = await apiClient.get(`/luggage-requests/${requestId}`);
+    const response = await apiClient.get(`/luggage-requests/get_by_id/?id=${requestId}`);
     return response.data;
 };
 

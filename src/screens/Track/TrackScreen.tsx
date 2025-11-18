@@ -43,6 +43,9 @@ const TrackScreen: React.FC = () => {
     failureReason: failureReasonBooked 
   } = useBookedRides();
 
+  console.log('bookedRides', bookedRides);
+  console.log('publishedRides', publishedRides);
+
 
   const rides = activeTab === 'Booked' ? bookedRides : publishedRides;
   const isLoading = activeTab === 'Booked' ? isLoadingBooked : isLoadingPublished;

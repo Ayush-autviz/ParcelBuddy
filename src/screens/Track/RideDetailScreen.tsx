@@ -24,6 +24,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SvgXml } from 'react-native-svg';
 import { MapPinIcon } from '../../assets/icons/svg/main';
 
+import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
+
 export type TrackStackParamList = {
   TrackList: undefined;
   RideDetail: {
@@ -37,7 +39,7 @@ export type TrackStackParamList = {
 };
 
 type RideDetailScreenRouteProp = RouteProp<TrackStackParamList, 'RideDetail'>;
-type RideDetailScreenNavigationProp = StackNavigationProp<TrackStackParamList, 'RideDetail'>;
+type RideDetailScreenNavigationProp = StackNavigationProp<ExtendedTrackStackParamList, 'RideDetail'>;
 
 const RideDetailScreen: React.FC = () => {
   const route = useRoute<RideDetailScreenRouteProp>();
@@ -49,6 +51,8 @@ const RideDetailScreen: React.FC = () => {
 
   // Fetch luggage requests from API
   const { data: luggageRequests = [], isLoading: isLoadingRequests, isError: isErrorRequests } = useLuggageRequestsForRide(rideId);
+
+  console.log('luggageRequests', luggageRequests);
 
   // Delete ride mutation
   const deleteRideMutation = useDeleteRide();
@@ -85,8 +89,10 @@ const RideDetailScreen: React.FC = () => {
   };
 
   const handleRequestPress = (request: LuggageRequestItemData) => {
-    // TODO: Implement request detail navigation
-    console.log('Request pressed:', request);
+    // Navigate to luggage request detail screen
+    navigation.navigate('LuggageRequestDetail', {
+      requestId: request.id,
+    });
   };
 
   return (
