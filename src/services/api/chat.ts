@@ -11,3 +11,9 @@ export const createChatRoom = async (data: any) => {
     const response = await apiClient.post('/api/chat-rooms/get_or_create/', data);
     return response.data;
 };
+
+//  get conversation messages
+export const getConversationMessages = async (conversation_id: string) => {
+    const response = await apiClient.get(`/api/chat-rooms/${conversation_id}/messages/`);
+    return response.data;
+};

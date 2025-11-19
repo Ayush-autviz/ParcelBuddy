@@ -9,6 +9,8 @@ export type ChatStackParamList = {
     roomId: string;
     userName: string;
     userAvatar?: string;
+    origin?: string;
+    destination?: string;
   };
 };
 

@@ -112,6 +112,8 @@ const ChatScreen: React.FC = () => {
       roomId: message.id,
       userName: fullName,
       userAvatar: otherUser?.profile?.profile_photo || undefined,
+      origin: message.origin,
+      destination: message.destination,
     });
   };
 
@@ -282,9 +284,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarImage: {
-    // width: 50,
-    // height: 50,
-    // borderRadius: 25,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   avatarPlaceholder: {
     width: 48,
@@ -330,8 +332,8 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   unreadBadge: {
-    width: 24,
-    height: 24,
+    width: 18,
+    height: 18,
     borderRadius: 12,
     backgroundColor: Colors.primaryCyan,
     alignItems: 'center',
