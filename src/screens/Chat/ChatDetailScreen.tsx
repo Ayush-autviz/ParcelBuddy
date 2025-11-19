@@ -63,12 +63,15 @@ const ChatDetailScreen: React.FC = () => {
 
   // Convert API message response to IMessage format
   const convertApiMessageToIMessage = useCallback((apiMessage: any): IMessage => {
+    // Use currentUserId for messages that are mine, so GiftedChat can properly identify them
+    const messageUserId = apiMessage.is_mine ? currentUserId : apiMessage.sender;
+    
     return {
       _id: apiMessage.id,
       text: apiMessage.content,
       createdAt: new Date(apiMessage.created_on),
       user: {
-        _id: apiMessage.sender,
+        _id: messageUserId,
         name: apiMessage.sender_name,
         avatar: apiMessage.sender_image || undefined,
       },
@@ -77,7 +80,7 @@ const ChatDetailScreen: React.FC = () => {
       pending: false,
       system: apiMessage.message_type === 'system',
     };
-  }, []);
+  }, [currentUserId]);
 
   // WebSocket connection - defined before handleNewMessage to use sendReadReceipt
   const {
@@ -275,29 +278,58 @@ const ChatDetailScreen: React.FC = () => {
         {...props}
         wrapperStyle={{
           right: {
-            backgroundColor: 'transparent',
+            backgroundColor: Colors.gradientStart,
             marginBottom: 5,
             marginRight: 0,
+            marginLeft: '20%',
+            borderRadius: 18,
+            borderTopRightRadius: 18,
+            borderTopLeftRadius: 18,
+            borderBottomRightRadius: 18,
+            borderBottomLeftRadius: 18,
           },
           left: {
-            backgroundColor: 'transparent',
+            backgroundColor: Colors.backgroundWhite,
             marginBottom: 5,
             marginLeft: 0,
+            marginRight: '20%',
+            borderRadius: 18,
+            borderTopRightRadius: 18,
+            borderTopLeftRadius: 18,
+            borderBottomRightRadius: 18,
+            borderBottomLeftRadius: 18,
           },
         }}
-        renderMessageText={(textProps: any) => {
-          if (isCurrentUser) {
-            return (
-              <View style={styles.blueBubble}>
-                <Text style={styles.blueBubbleText}>{textProps.currentMessage?.text}</Text>
-              </View>
-            );
-          }
-          return (
-            <View style={styles.whiteBubble}>
-              <Text style={styles.whiteBubbleText}>{textProps.currentMessage?.text}</Text>
-            </View>
-          );
+        textStyle={{
+          right: {
+            color: Colors.textWhite,
+            fontSize: 15,
+            lineHeight: 20,
+          },
+          left: {
+            color: Colors.textPrimary,
+            fontSize: 15,
+            lineHeight: 20,
+          },
+        }}
+        containerStyle={{
+          left: {
+            marginLeft: 0,
+            marginRight: 0,
+          },
+          right: {
+            marginLeft: 0,
+            marginRight: 0,
+          },
+        }}
+        tickStyle={{
+          left: { display: 'none' },
+          right: { display: 'none' },
+        }}
+        renderTicks={() => null}
+        bottomContainerStyle={{
+          left: { display: 'none' },
+          right: { display: 'none' },
         }}
       />
     );
@@ -392,7 +424,7 @@ const ChatDetailScreen: React.FC = () => {
           user={currentUser}
           placeholder="Type a message..."
           isLoadingEarlier={isLoading}
-          showUserAvatar={true}
+          showUserAvatar={false}
           renderAvatarOnTop={true}
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
@@ -402,25 +434,25 @@ const ChatDetailScreen: React.FC = () => {
           minInputToolbarHeight={60}
           onInputTextChanged={handleTyping}
           messagesContainerStyle={styles.messagesContainer}
-          renderAvatar={(props) => {
-            if (props.currentMessage?.user?._id === currentUserId) {
-              return null; // Don't show avatar for current user's messages
-            }
-            return (
-              <View style={styles.avatarContainer}>
-                {props.currentMessage?.user?.avatar && typeof props.currentMessage.user.avatar === 'string' ? (
-                  <Image 
-                    source={{ uri: props.currentMessage.user.avatar }} 
-                    style={styles.messageAvatar} 
-                  />
-                ) : (
-                  <View style={styles.messageAvatarPlaceholder}>
-                    <View style={styles.avatarPlaceholderInner} />
-                  </View>
-                )}
-              </View>
-            );
-          }}
+          // renderAvatar={(props) => {
+          //   if (props.currentMessage?.user?._id === currentUserId) {
+          //     return null; // Don't show avatar for current user's messages
+          //   }
+          //   return (
+          //     <View style={styles.avatarContainer}>
+          //       {props.currentMessage?.user?.avatar && typeof props.currentMessage.user.avatar === 'string' ? (
+          //         <Image 
+          //           source={{ uri: props.currentMessage.user.avatar }} 
+          //           style={styles.messageAvatar} 
+          //         />
+          //       ) : (
+          //         <View style={styles.messageAvatarPlaceholder}>
+          //           <View style={styles.avatarPlaceholderInner} />
+          //         </View>
+          //       )}
+          //     </View>
+          //   );
+          // }}
         />
       </KeyboardAvoidingView>
 
@@ -530,31 +562,6 @@ const styles = StyleSheet.create({
   messagesContainer: {
     paddingBottom: 20,
     paddingHorizontal: 16,
-  },
-  // Message Bubble Styles
-  blueBubble: {
-    backgroundColor: Colors.gradientStart,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 18,
-    maxWidth: '80%',
-  },
-  blueBubbleText: {
-    color: Colors.textWhite,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  whiteBubble: {
-    backgroundColor: Colors.backgroundWhite,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 18,
-    maxWidth: '80%',
-  },
-  whiteBubbleText: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    lineHeight: 20,
   },
   avatarContainer: {
     marginRight: 8,
