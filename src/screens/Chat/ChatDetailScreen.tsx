@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GiftedChat, IMessage, User } from 'react-native-gifted-chat';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Header } from '../../components';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
@@ -34,6 +34,46 @@ const ChatDetailScreen: React.FC = () => {
     name: (user as any)?.first_name || (user as any)?.username || 'You',
     avatar: (user as any)?.profile?.profile_photo || undefined,
   };
+
+  // Hide bottom tab bar when this screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.setOptions({
+          tabBarStyle: { display: 'none' },
+        });
+      }
+
+      // Show tab bar again when screen is unfocused
+      return () => {
+        if (parent) {
+          // Restore the original tab bar style
+          parent.setOptions({
+            tabBarStyle: {
+              backgroundColor: Colors.backgroundWhite,
+              borderTopWidth: 0,
+              height: Platform.OS === 'ios' ? 65 : 70,
+              paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+              paddingTop: Platform.OS === 'ios' ? 5 : 10,
+              borderRadius: 30,
+              marginHorizontal: 8,
+              marginBottom: Platform.OS === 'ios' ? 20 : 20,
+              position: 'absolute',
+              shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              elevation: 5,
+            },
+          });
+        }
+      };
+    }, [navigation])
+  );
 
   // Load initial messages
   useEffect(() => {
