@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   bannerPlaceholder: {
     width: '100%',
-    height: 315,
+    height: 300,
     resizeMode: 'cover',
   },
   searchCard: {

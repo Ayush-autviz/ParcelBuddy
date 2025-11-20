@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
-import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ArrowLeft, ChevronRight, Image as ImageIcon, Mic } from 'lucide-react-native';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
@@ -142,45 +142,6 @@ const ChatDetailScreen: React.FC = () => {
     },
   });
 
-  // Hide bottom tab bar when this screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      const parent = navigation.getParent();
-      if (parent) {
-        parent.setOptions({
-          tabBarStyle: { display: 'none' },
-        });
-      }
-
-      // Show tab bar again when screen is unfocused
-      return () => {
-        if (parent) {
-          // Restore the original tab bar style
-          parent.setOptions({
-            tabBarStyle: {
-              backgroundColor: Colors.backgroundWhite,
-              borderTopWidth: 0,
-              height: Platform.OS === 'ios' ? 65 : 70,
-              paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-              paddingTop: Platform.OS === 'ios' ? 5 : 10,
-              borderRadius: 30,
-              marginHorizontal: 8,
-              marginBottom: Platform.OS === 'ios' ? 20 : 20,
-              position: 'absolute',
-              shadowColor: '#000',
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 5,
-            },
-          });
-        }
-      };
-    }, [navigation])
-  );
 
   // Handle typing indicator with debounce
   const handleTyping = useCallback((text: string) => {
@@ -422,6 +383,7 @@ const ChatDetailScreen: React.FC = () => {
           messages={messages}
           onSend={onSend}
           user={currentUser}
+          bottomOffset={-100}
           placeholder="Type a message..."
           isLoadingEarlier={isLoading}
           showUserAvatar={false}
@@ -434,25 +396,6 @@ const ChatDetailScreen: React.FC = () => {
           minInputToolbarHeight={60}
           onInputTextChanged={handleTyping}
           messagesContainerStyle={styles.messagesContainer}
-          // renderAvatar={(props) => {
-          //   if (props.currentMessage?.user?._id === currentUserId) {
-          //     return null; // Don't show avatar for current user's messages
-          //   }
-          //   return (
-          //     <View style={styles.avatarContainer}>
-          //       {props.currentMessage?.user?.avatar && typeof props.currentMessage.user.avatar === 'string' ? (
-          //         <Image 
-          //           source={{ uri: props.currentMessage.user.avatar }} 
-          //           style={styles.messageAvatar} 
-          //         />
-          //       ) : (
-          //         <View style={styles.messageAvatarPlaceholder}>
-          //           <View style={styles.avatarPlaceholderInner} />
-          //         </View>
-          //       )}
-          //     </View>
-          //   );
-          // }}
         />
       </KeyboardAvoidingView>
 

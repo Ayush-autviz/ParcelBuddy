@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
+import { kycVerification } from '../../services/api/kyc';
+import { useToast } from '../../components/Toast';
 
 type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'KYCVerification'>;
 
@@ -89,10 +91,28 @@ const LiveSelfieIcon = `
 
 const KYCVerificationScreen: React.FC = () => {
   const navigation = useNavigation<KYCVerificationScreenNavigationProp>();
+  const { showError, showSuccess } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
-    // TODO: Navigate to document upload screen
-    console.log('Continue to KYC verification');
+  const handleContinue = async () => {
+    try {
+      setIsLoading(true);
+      const response = await kycVerification();
+      
+      if (response && response.url) {
+        // Navigate to WebView screen with the verification URL
+        navigation.navigate('KYCWebView', {
+          url: response.url,
+        });
+      } else {
+        showError('Failed to get verification URL. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('KYC verification error:', error);
+      showError(error?.response?.data?.message || error?.message || 'Failed to start verification. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -141,9 +161,11 @@ const KYCVerificationScreen: React.FC = () => {
       {/* Continue Button */}
       <View style={styles.buttonContainer}>
         <GradientButton
-          title="Continue"
+          title={isLoading ? 'Loading...' : 'Continue'}
           onPress={handleContinue}
           style={styles.continueButton}
+          disabled={isLoading}
+          loading={isLoading}
         />
       </View>
     </SafeAreaView>

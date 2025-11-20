@@ -76,7 +76,7 @@ const OTPScreen: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(150); 
   const phoneNumber = (route.params as { phoneNumber?: string })?.phoneNumber || '';
-  const { setToken } = useAuthStore();
+  const { setToken, setUser } = useAuthStore();
   
   const verifyOtpMutation = useVerifyOtp();
   const resendOtpMutation = useGetOtp();
@@ -124,6 +124,9 @@ const OTPScreen: React.FC = () => {
             access_token: response.tokens.access,
             refresh_token: response.tokens.refresh,
           });
+          if (response.profile) { 
+            setUser(response.profile);
+          }
           if (!response.profile_setup) {
             navigation.reset({
               index: 0,

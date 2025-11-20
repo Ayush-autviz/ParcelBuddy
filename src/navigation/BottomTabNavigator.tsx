@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigatorScreenParams } from '@react-navigation/native';
+import { NavigatorScreenParams, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Search, PlusCircle, ShoppingCart, MessageCircle, User, MessageSquare } from 'lucide-react-native';
 
@@ -64,23 +64,60 @@ const TabBarIcon: React.FC<{ focused: boolean; iconName: string }> = ({ focused,
 };
 
 const BottomTabNavigator: React.FC = () => {
+  // Main screen names where tabs should be visible
+  const mainScreens: { [key: string]: string } = {
+    Search: 'SearchList',
+    Track: 'TrackList',
+    Chat: 'ChatList',
+    Profile: 'ProfileList',
+  };
+
+  const getTabBarVisibility = (state: any) => {
+    if (!state) return true;
+    
+    const route = state.routes[state.index];
+    if (!route) return true;
+    
+    // For Create screen, always show tabs
+    if (route.name === 'Create') {
+      return true;
+    }
+    
+    // For navigators, check if we're on the main screen
+    const focusedRouteName = getFocusedRouteNameFromRoute(route);
+    const mainScreenName = mainScreens[route.name];
+    
+    // If we can't get the focused route name, assume we're on the main screen (initial route)
+    // If we can get it, check if it matches the main screen name
+    if (mainScreenName) {
+      return focusedRouteName === undefined || focusedRouteName === mainScreenName;
+    }
+    
+    return true;
+  };
+
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused }) => (
-          <TabBarIcon focused={focused} iconName={route.name} />
-        ),
-        tabBarLabel: ({ focused }) => (
-          <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
-            {route.name}
-          </Text>
-        ),
-        tabBarStyle: styles.tabBar,
-        tabBarItemStyle: styles.tabBarItem,
-        tabBarActiveTintColor: Colors.primaryCyan,
-        tabBarInactiveTintColor: Colors.textLight,
-        headerShown: false,
-      })}
+      screenOptions={({ route, navigation }) => {
+        const state = navigation.getState();
+        const shouldShowTabs = getTabBarVisibility(state);
+        
+        return {
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon focused={focused} iconName={route.name} />
+          ),
+          tabBarLabel: ({ focused }) => (
+            <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
+              {route.name}
+            </Text>
+          ),
+          tabBarStyle: shouldShowTabs ? styles.tabBar : { display: 'none' },
+          tabBarItemStyle: styles.tabBarItem,
+          tabBarActiveTintColor: Colors.primaryCyan,
+          tabBarInactiveTintColor: Colors.textLight,
+          headerShown: false,
+        };
+      }}
     >
       <Tab.Screen
         name="Search"
