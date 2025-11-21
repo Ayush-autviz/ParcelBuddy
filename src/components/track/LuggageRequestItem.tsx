@@ -11,17 +11,20 @@ export interface LuggageRequestItemData {
   itemCount: number;
   status?: string;
   senderProfilePhoto?: string | null;
+  sender?: any;
 }
 
 interface LuggageRequestItemProps {
   request: LuggageRequestItemData;
   onPress?: () => void;
+  onSenderPress?: () => void;
   style?: ViewStyle;
 }
 
 const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
   request,
   onPress,
+  onSenderPress,
   style,
 }) => {
   const getStatusBadgeStyle = (status: string) => {
@@ -58,22 +61,32 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
     >
       <Card style={styles.card} padding={16}>
         <View style={styles.content}>
-          {/* Avatar */}
-          <View style={styles.avatarContainer}>
+          {/* Avatar - Clickable for sender detail */}
+          <TouchableOpacity
+            onPress={onSenderPress}
+            activeOpacity={0.7}
+            disabled={!onSenderPress}
+            style={styles.avatarContainer}
+          >
             <View style={styles.avatar}>
               <User size={20} color={Colors.primaryCyan} />
             </View>
-          </View>
+          </TouchableOpacity>
 
-          {/* Name and Items */}
-          <View style={styles.textContainer}>
+          {/* Name and Items - Clickable for sender detail */}
+          <TouchableOpacity
+            onPress={onSenderPress}
+            activeOpacity={0.7}
+            disabled={!onSenderPress}
+            style={styles.textContainer}
+          >
             <View style={styles.nameRow}>
               <Text style={styles.senderName}>{request.senderName}</Text>
             </View>
             {/* <Text style={styles.itemCount}>
               {request.itemCount} {request.itemCount === 1 ? 'item' : 'items'}
             </Text> */}
-          </View>
+          </TouchableOpacity>
 
           {/* Status Badge */}
           {request.status && (

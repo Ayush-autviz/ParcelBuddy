@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TextInput,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -22,29 +23,32 @@ import { useBookedRides, BookedRideCardData } from '../../hooks/useLuggage';
 import GradientButton from '../../components/GradientButton';
 import { SvgXml } from 'react-native-svg';
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
+import { getLuggageRequestsForRide } from '../../services/api/luggage';
+import { useToast } from '../../components/Toast';
+import { ChevronRight } from 'lucide-react-native';
 
 type TabType = 'Booked' | 'Published';
 type TrackScreenNavigationProp = StackNavigationProp<ExtendedTrackStackParamList, 'TrackList'>;
 
-// Profile data type
-interface Profile {
+// Luggage Request data type
+interface LuggageRequest {
   id: string;
-  name: string;
+  senderName: string;
+  senderProfilePhoto: string | null;
+  status: string;
+  itemCount: number;
 }
-
-const profiles: Profile[] = [
-  { id: '1', name: 'Liam Carter' },
-  { id: '2', name: 'Sophia Bennete' },
-  { id: '3', name: 'Ethan Harper' },
-  { id: '4', name: 'Olivia Reed' },
-];
 
 const TrackScreen: React.FC = () => {
   const navigation = useNavigation<TrackScreenNavigationProp>();
+  const { showError } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('Published');
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [selectedLuggageRequest, setSelectedLuggageRequest] = useState<any | null>(null);
+  const [luggageRequests, setLuggageRequests] = useState<any>([]);
+  const [isLoadingLuggageRequests, setIsLoadingLuggageRequests] = useState(false);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
+  const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   
   // Define snap points for bottom sheet - larger for rating screen
@@ -106,16 +110,43 @@ const TrackScreen: React.FC = () => {
     });
   };
 
-  const handleRatePress = (ride: RideCardData) => {
+  const handleRatePress = async (ride: RideCardData) => {
     console.log('Rate pressed:', ride);
-    setSelectedProfile(null);
+    setSelectedLuggageRequest(null);
     setRating(0);
     setFeedback('');
-    bottomSheetModalRef.current?.present();
+    setSelectedRideId(ride.id);
+    setIsLoadingLuggageRequests(true);
+    
+    try {
+      const response = await getLuggageRequestsForRide(ride.id);
+      console.log('Luggage requests response:', response);
+      
+      let allRequests: LuggageRequest[] = [];
+      if (response && response.luggageRequests && Array.isArray(response.luggageRequests)) {
+        allRequests = response.luggageRequests;
+        console.log('allRequests', allRequests);  console.log('allRequests', allRequests);
+      } else if (Array.isArray(response)) {
+        allRequests = response;
+      }
+      
+      // Filter to show only approved requests
+      const approvedRequests = allRequests.filter(
+        (request) => request.status?.toLowerCase() === 'approved'
+      );
+      
+      setLuggageRequests(approvedRequests);
+      bottomSheetModalRef.current?.present();
+    } catch (error: any) {
+      console.error('Error fetching luggage requests:', error);
+      showError(error?.response?.data?.message || error?.message || 'Failed to load luggage requests');
+    } finally {
+      setIsLoadingLuggageRequests(false);
+    }
   };
 
-  const handleProfileSelect = (profile: Profile) => {
-    setSelectedProfile(profile);
+  const handleLuggageRequestSelect = (request: LuggageRequest) => {
+    setSelectedLuggageRequest(request);
     setRating(0);
     setFeedback('');
     // Snap to higher point for rating screen
@@ -123,17 +154,20 @@ const TrackScreen: React.FC = () => {
   };
 
   const handleSubmitRating = () => {
-    if (selectedProfile && rating > 0) {
+    if (selectedLuggageRequest && rating > 0) {
       console.log('Submit rating:', {
-        profile: selectedProfile.name,
+        luggageRequestId: selectedLuggageRequest.id,
+        senderName: selectedLuggageRequest.senderName,
         rating,
         feedback,
       });
       // Add your rating submission logic here
       bottomSheetModalRef.current?.dismiss();
-      setSelectedProfile(null);
+      setSelectedLuggageRequest(null);
       setRating(0);
       setFeedback('');
+      setLuggageRequests([]);
+      setSelectedRideId(null);
     }
   };
 
@@ -225,25 +259,45 @@ const TrackScreen: React.FC = () => {
         index={0}
       >
         <BottomSheetView style={styles.bottomSheetContent}>
-          {!selectedProfile ? (
-            // Profile Selection Screen
+          {!selectedLuggageRequest ? (
+            // Luggage Request Selection Screen
             <>
               <Text style={styles.bottomSheetTitle}>Select profile to rate</Text>
-              <View style={styles.profileList}>
-                {profiles.map((profile) => (
-                  <TouchableOpacity
-                    key={profile.id}
-                    style={styles.profileItem}
-                    onPress={() => handleProfileSelect(profile)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.profileIconContainer}>
-                      <SvgXml xml={ProfileUserIcon} height={24} width={24} />
-                    </View>
-                    <Text style={styles.profileName}>{profile.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {isLoadingLuggageRequests ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={Colors.primaryCyan} />
+                  <Text style={styles.loadingText}>Loading luggage requests...</Text>
+                </View>
+              ) : luggageRequests.length === 0 ? (
+                <View style={styles.emptyLuggageContainer}>
+                  <Text style={styles.emptyText}>No luggage requests found</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={luggageRequests}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.profileItem}
+                      onPress={() => handleLuggageRequestSelect(item)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.profileIconContainer}>
+                        {item.senderProfilePhoto ? (
+                          <Image source={{ uri: item.senderProfilePhoto }} style={styles.profileAvatar} />
+                        ) : (
+                          <SvgXml xml={ProfileUserIcon} height={24} width={24} />
+                        )}
+                      </View>
+                      <View style={styles.profileInfo}>
+                        <Text style={styles.profileName}>{item.sender?.first_name} {item.sender?.last_name}</Text>
+                      </View>
+                      <ChevronRight size={20} color={Colors.textTertiary} />
+                    </TouchableOpacity>
+                  )}
+                  contentContainerStyle={styles.profileList}
+                />
+              )}
             </>
           ) : (
             // Rating Screen
@@ -251,7 +305,7 @@ const TrackScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => {
-                  setSelectedProfile(null);
+                  setSelectedLuggageRequest(null);
                   bottomSheetModalRef.current?.snapToIndex(0);
                 }}
               >
@@ -260,9 +314,13 @@ const TrackScreen: React.FC = () => {
               <Text style={styles.ratingTitle}>How was your experience with</Text>
               <View style={styles.ratingProfileContainer}>
                 <View style={styles.ratingProfileIcon}>
-                  <SvgXml xml={ProfileUserIcon} height={32} width={32} />
+                  {selectedLuggageRequest.senderProfilePhoto ? (
+                    <Image source={{ uri: selectedLuggageRequest.senderProfilePhoto }} style={styles.ratingProfileAvatar} />
+                  ) : (
+                    <SvgXml xml={ProfileUserIcon} height={32} width={32} />
+                  )}
                 </View>
-                <Text style={styles.ratingProfileName}>{selectedProfile.name}</Text>
+                <Text style={styles.ratingProfileName}>{selectedLuggageRequest.sender?.first_name} {selectedLuggageRequest.sender?.last_name}</Text>
               </View>
               
               <View style={styles.starsContainer}>
@@ -340,6 +398,16 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     marginTop: 16,
   },
+  emptyText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  emptyLuggageContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   // Bottom Sheet Styles
   bottomSheetBackground: {
     backgroundColor: Colors.backgroundWhite,
@@ -389,12 +457,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  profileAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  profileInfo: {
+    flex: 1,
   },
   profileName: {
     fontSize: Fonts.base,
     fontWeight: Fonts.weightMedium,
     color: Colors.textPrimary,
-    flex: 1,
+    marginBottom: 4,
+  },
+  profileStatus: {
+    fontSize: Fonts.sm,
+    color: Colors.textSecondary,
+    textTransform: 'capitalize',
   },
   // Rating Screen Styles
   ratingTitle: {
@@ -416,6 +498,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  ratingProfileAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   ratingProfileName: {
     fontSize: Fonts.lg,

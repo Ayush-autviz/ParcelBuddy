@@ -61,6 +61,7 @@ export const useLuggageRequestsForRide = (
           itemCount,
           status,
           senderProfilePhoto,
+          sender: request.sender, // Include full sender object
         } as LuggageRequestItemData;
       });
     },

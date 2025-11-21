@@ -133,13 +133,14 @@ const LuggageRequestDetailScreen: React.FC = () => {
   };
 
   const handleSenderPress = () => {
-    // Navigate to sender profile
+    // Navigate to sender detail screen
     const sender = luggageRequestDetail?.sender;
     if (sender) {
       const profileId = sender?.profile?.id;
-      navigation.navigate('UserProfile', {
-        traveler: sender,
+      navigation.navigate('SenderDetail', {
+        sender: sender,
         profileId: profileId,
+        luggageRequestId: requestId,
       });
     }
   };

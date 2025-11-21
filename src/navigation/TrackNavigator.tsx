@@ -5,6 +5,7 @@ import RideDetailScreen, { TrackStackParamList } from '../screens/Track/RideDeta
 import BookingRequestDetailScreen from '../screens/Search/BookingRequestDetailScreen';
 import LuggageRequestDetailScreen from '../screens/Track/LuggageRequestDetailScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
+import SenderDetailScreen from '../screens/Track/SenderDetailScreen';
 import { AvailableRideData } from '../components/search/AvailableRideCard';
 
 // Extend TrackStackParamList to include BookingRequestDetail, LuggageRequestDetail and UserProfile
@@ -20,6 +21,11 @@ export type ExtendedTrackStackParamList = TrackStackParamList & {
   UserProfile: {
     traveler: AvailableRideData['traveler'];
     profileId?: string;
+  };
+  SenderDetail: {
+    sender: any;
+    profileId?: string;
+    luggageRequestId?: string;
   };
 };
 
@@ -38,6 +44,7 @@ const TrackNavigator: React.FC = () => {
       <Stack.Screen name="BookingRequestDetail" component={BookingRequestDetailScreen} />
       <Stack.Screen name="LuggageRequestDetail" component={LuggageRequestDetailScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+      <Stack.Screen name="SenderDetail" component={SenderDetailScreen} />
     </Stack.Navigator>
   );
 };

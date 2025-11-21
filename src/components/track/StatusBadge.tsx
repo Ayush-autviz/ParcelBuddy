@@ -4,8 +4,9 @@ import LinearGradient from 'react-native-linear-gradient';
 import { Bell } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
+import GradientButton from '../GradientButton';
 
-export type StatusType = 'new' | 'approved' | 'full' | 'completed' | 'pending' | 'active' | 'in_progress';
+export type StatusType = 'new' | 'approved' | 'full' | 'completed' | 'pending' | 'active' | 'in_progress' | 'cancelled';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -17,7 +18,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
     switch (status) {
       case 'new':
         return {
-          label: 'New Booking Request',
+          label: 'New Request',
           showIcon: true,
         };
       case 'approved':
@@ -39,9 +40,16 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
           showDot: true,
           dotColor: Colors.primaryTeal,
         };
+        case 'cancelled':
+        return {
+          label: 'Cancelled',
+          showIcon: false,
+          showDot: true,
+          dotColor: Colors.error,
+        };
       case 'pending':
         return {
-          label: 'Waiting for approval',
+          label: 'Pending',
           showIcon: false,
           showDot: true,
           dotColor: Colors.primaryTeal,
@@ -80,19 +88,26 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
       {config.showDot && (
         <View style={[styles.dot, { backgroundColor: config.dotColor }]} />
       )}
-      <LinearGradient
+      {/* <LinearGradient
         colors={[Colors.gradientStart, Colors.gradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.badge}
-      >
+      > */}
         {config.showIcon && (
           <Bell size={14} color={Colors.textWhite} style={styles.icon} />
         )}
-        <Text style={[styles.text, { color: Colors.textWhite }]}>
+        <GradientButton
+          title={config.label}
+          onPress={() => {}}
+          style={styles.button}
+          textStyle={styles.text}
+          
+        />
+        {/* <Text style={[styles.text, { color: Colors.textWhite }]}>
           {config.label}
-        </Text>
-      </LinearGradient>
+        </Text> */}
+      {/* </LinearGradient> */}
     </View>
   );
 };
@@ -116,13 +131,20 @@ const styles = StyleSheet.create({
   dot: {
     width: 9,
     height: 9,
-    borderRadius: 4,
+    borderRadius: 12,
     marginRight: 8,
   },
   text: {
     fontSize: Fonts.xs,
     fontWeight: Fonts.weightSemiBold,
   },
+  button: {
+    minWidth: 80,
+    justifyContent: 'center',
+    height: 20,
+    borderRadius: 10,
+  },
+
 });
 
 export default StatusBadge;

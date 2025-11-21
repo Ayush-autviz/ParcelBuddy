@@ -220,7 +220,7 @@ const BookingRequestDetailScreen: React.FC = () => {
                 Your Booking is awaiting the traveller's approval.
               </Text>
               <Text style={styles.statusSubMessage}>
-                The traveller will respond before {getResponseDeadline()}
+                The traveller will respond soon.
               </Text>
             </View>
           </View>
