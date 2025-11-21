@@ -293,9 +293,9 @@ const SendRequestScreen: React.FC = () => {
               </View>
               <View style={styles.driverInfo}>
                 <Text style={styles.driverName}>{driverName}</Text>
-                <Text style={styles.driverRating}>
+                {/* <Text style={styles.driverRating}>
                   {rating} ⭐ ({reviewCount})
-                </Text>
+                </Text> */}
               </View>
             </View>
             <ChevronRight size={20} color={Colors.textTertiary} />

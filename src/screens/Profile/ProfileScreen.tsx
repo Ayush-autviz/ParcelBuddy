@@ -73,7 +73,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'kyc',
       title: 'KYC Status',
-      subtitle: 'Verified',
+      subtitle: user?.is_kyc_verified ? 'Verified' : '',
       icon: ProfileKycIcon,
       onPress: () => {
         navigation.navigate('KYCVerification');

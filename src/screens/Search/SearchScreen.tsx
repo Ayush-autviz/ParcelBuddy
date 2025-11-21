@@ -248,7 +248,7 @@ const SearchScreen: React.FC = () => {
               destination_name: ride.destination_name,
               available_weight_kg: ride.available_weight_kg,
               price_per_kg: ride.price_per_kg,
-              rating: ride.traveler?.profile?.rating || 4.8,
+              rating: ride.traveler?.profile?.rating || 0,
               review_count: ride.traveler?.profile?.review_count || 128,
             };
           });

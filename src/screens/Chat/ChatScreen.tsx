@@ -115,6 +115,7 @@ const ChatScreen: React.FC = () => {
       userAvatar: otherUser?.profile?.profile_photo || undefined,
       origin: message.origin,
       destination: message.destination,
+      luggage_request_id: room?.luggage_request_id,
     });
   };
 

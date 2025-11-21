@@ -32,7 +32,15 @@ const ChatDetailScreen: React.FC = () => {
   const { showError } = useToast();
   const { user } = useAuthStore();
   
-  const { roomId, userName, userAvatar, origin, destination } = route.params;
+  const { roomId, userName, userAvatar, origin, destination, luggage_request_id } = route.params;
+  
+  // Log luggage_request_id for debugging
+  useEffect(() => {
+    if (luggage_request_id) {
+      console.log('📦 [ChatDetailScreen] luggage_request_id:', luggage_request_id);
+    }
+  }, [luggage_request_id]);
+  
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);

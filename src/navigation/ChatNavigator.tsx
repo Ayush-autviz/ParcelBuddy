@@ -11,6 +11,7 @@ export type ChatStackParamList = {
     userAvatar?: string;
     origin?: string;
     destination?: string;
+    luggage_request_id?: string;
   };
 };
 
