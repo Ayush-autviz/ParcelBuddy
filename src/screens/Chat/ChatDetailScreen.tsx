@@ -1,17 +1,18 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ArrowLeft, ChevronRight, Image as ImageIcon, Mic } from 'lucide-react-native';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { useAuthStore } from '../../services/store';
 import { useToast } from '../../components/Toast';
 import { useChatWebSocket, ChatMessage } from '../../hooks/useChatWebSocket';
-import { getConversationMessages } from '../../services/api/chat';
+import { getConversationMessages, markMessageAsRead } from '../../services/api/chat';
 import GradientButton from '../../components/GradientButton';
 import { SvgXml } from 'react-native-svg';
 import { FilledUserIcon } from '../../assets/icons/svg/main';
@@ -36,8 +37,13 @@ const ChatDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+  const [weight, setWeight] = useState('');
   const typingTimeoutRef = useRef<any>(null);
   const readMessageIdsRef = useRef<Set<string>>(new Set());
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  
+  // Define snap points for bottom sheet
+  const snapPoints = useMemo(() => ['25%'], []);
 
   // Get current user ID for Gifted Chat
   const currentUserId = (user as any)?.id || (user as any)?.user_id || 'current-user';
@@ -201,8 +207,18 @@ const ChatDetailScreen: React.FC = () => {
     }
   }, [isConnected, sendWebSocketMessage, sendWebSocketTyping, showError]);
 
-  // Fetch conversation messages on mount
+  // Mark chat as read and fetch conversation messages on mount
   useEffect(() => {
+    const markChatAsRead = async () => {
+      try {
+        await markMessageAsRead(roomId);
+        console.log('✅ Chat marked as read');
+      } catch (error: any) {
+        console.error('Error marking chat as read:', error);
+        // Don't show error to user, just log it
+      }
+    };
+
     const fetchMessages = async () => {
       try {
         setIsLoading(true);
@@ -221,6 +237,9 @@ const ChatDetailScreen: React.FC = () => {
       }
     };
 
+    // Mark chat as read when screen is opened
+    markChatAsRead();
+    // Fetch messages
     fetchMessages();
   }, [roomId, convertApiMessageToIMessage, showError]);
 
@@ -330,8 +349,21 @@ const ChatDetailScreen: React.FC = () => {
     );
   };
 
+  // Render backdrop for bottom sheet
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        {...props}
+      />
+    ),
+    []
+  );
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -419,12 +451,69 @@ const ChatDetailScreen: React.FC = () => {
         <GradientButton
           title="Approve"
           onPress={() => {
-            console.log('Approve pressed');
+            console.log('Approve button pressed');
+            console.log('BottomSheet ref:', bottomSheetRef.current);
+            try {
+              if (bottomSheetRef.current) {
+                bottomSheetRef.current.expand();
+                console.log('Called expand()');
+              } else {
+                console.log('BottomSheet ref is null');
+              }
+            } catch (error) {
+              console.error('Error expanding bottom sheet:', error);
+            }
           }}
           style={styles.approveButton}
         />
       </View>
-    </SafeAreaView>
+
+      {/* Bottom Sheet */}
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose={true}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={styles.bottomSheetBackground}
+        handleIndicatorStyle={styles.bottomSheetIndicator}
+      >
+        <BottomSheetView style={styles.bottomSheetContent}>
+          <Text style={styles.bottomSheetTitle}>Select Weight to Approve</Text>
+          
+          <View style={styles.bottomSheetInputContainer}>
+            <TouchableOpacity
+              style={styles.matchRequestButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.matchRequestText}>Match Request</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.weightInputContainer}>
+              <TextInput
+                style={styles.weightInput}
+                placeholder="Enter Weight"
+                placeholderTextColor={Colors.textSecondary}
+                value={weight}
+                onChangeText={setWeight}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+          
+          <GradientButton
+            title="Approve"
+            onPress={() => {
+              console.log('Approve pressed with weight:', weight);
+              bottomSheetRef.current?.close();
+              // Add your approval logic here
+            }}
+            style={styles.bottomSheetApproveButton}
+          />
+        </BottomSheetView>
+      </BottomSheet>
+      </SafeAreaView>
+    </View>
   );
 };
 
@@ -432,6 +521,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundLight,
+  },
+  safeArea: {
+    flex: 1,
   },
   // Header Styles
   header: {
@@ -659,6 +751,66 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Fonts.xs,
     fontStyle: 'italic',
+  },
+  // Bottom Sheet Styles
+  bottomSheetBackground: {
+    backgroundColor: Colors.backgroundWhite,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  bottomSheetIndicator: {
+    backgroundColor: Colors.borderLight,
+    width: 40,
+    height: 4,
+  },
+  bottomSheetContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  bottomSheetTitle: {
+    fontSize: Fonts.xl,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textPrimary,
+    marginBottom: 24,
+  },
+  bottomSheetInputContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  matchRequestButton: {
+    flex: 1,
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  matchRequestText: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightMedium,
+    color: Colors.textPrimary,
+  },
+  weightInputContainer: {
+    flex: 1,
+  },
+  weightInput: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  bottomSheetApproveButton: {
+    width: '100%',
+    marginTop: 'auto',
   },
 });
 

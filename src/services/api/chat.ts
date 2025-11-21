@@ -17,3 +17,9 @@ export const getConversationMessages = async (conversation_id: string) => {
     const response = await apiClient.get(`/api/chat-rooms/${conversation_id}/messages/`);
     return response.data;
 };
+
+// mark message as read
+export const markMessageAsRead = async (chat_id: string) => {
+    const response = await apiClient.post(`/api/chat-rooms/${chat_id}/mark_read/`);
+    return response.data;
+};

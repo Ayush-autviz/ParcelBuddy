@@ -24,6 +24,32 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
   onPress,
   style,
 }) => {
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return { backgroundColor: Colors.warning + '20', borderColor: Colors.warning };
+      case 'approved':
+        return { backgroundColor: Colors.primaryTeal + '20', borderColor: Colors.primaryTeal };
+      case 'cancelled':
+        return { backgroundColor: '#FF3B30' + '20', borderColor: '#FF3B30' };
+      default:
+        return { backgroundColor: Colors.borderLight, borderColor: Colors.borderLight };
+    }
+  };
+
+  const getStatusBadgeTextStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return { color: Colors.warning || '#FF9500' };
+      case 'approved':
+        return { color: Colors.primaryTeal };
+      case 'cancelled':
+        return { color: '#FF3B30' };
+      default:
+        return { color: Colors.textSecondary };
+    }
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -43,16 +69,20 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
           <View style={styles.textContainer}>
             <View style={styles.nameRow}>
               <Text style={styles.senderName}>{request.senderName}</Text>
-              {request.status === 'cancelled' && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>Cancelled</Text>
-                </View>
-              )}
             </View>
             {/* <Text style={styles.itemCount}>
               {request.itemCount} {request.itemCount === 1 ? 'item' : 'items'}
             </Text> */}
           </View>
+
+          {/* Status Badge */}
+          {request.status && (
+            <View style={[styles.statusBadge, getStatusBadgeStyle(request.status)]}>
+              <Text style={[styles.statusBadgeText, getStatusBadgeTextStyle(request.status)]}>
+                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+              </Text>
+            </View>
+          )}
 
           {/* Arrow Icon */}
           <ChevronRight size={20} color={Colors.textTertiary} />
@@ -94,20 +124,19 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     marginBottom: 4,
-    marginRight: 8,
   },
-  badge: {
-    backgroundColor: '#FF3B30' + '20',
-    paddingHorizontal: 8,
+  statusBadge: {
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    marginBottom: 4,
+    borderWidth: 1,
+    marginRight: 12,
+    alignSelf: 'center',
   },
-  badgeText: {
+  statusBadgeText: {
     fontSize: Fonts.xs,
     fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
-    textTransform: 'uppercase',
+    textTransform: 'capitalize',
   },
   itemCount: {
     fontSize: Fonts.sm,

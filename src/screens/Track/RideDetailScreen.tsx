@@ -35,6 +35,7 @@ export type TrackStackParamList = {
     originTime: string;
     destination: string;
     destinationTime: string;
+    status?: string;
   };
 };
 
@@ -44,7 +45,7 @@ type RideDetailScreenNavigationProp = StackNavigationProp<ExtendedTrackStackPara
 const RideDetailScreen: React.FC = () => {
   const route = useRoute<RideDetailScreenRouteProp>();
   const navigation = useNavigation<RideDetailScreenNavigationProp>();
-  const { rideId, date, origin, originTime, destination, destinationTime } = route.params;
+  const { rideId, date, origin, originTime, destination, destinationTime, status } = route.params;
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useToast();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -168,35 +169,37 @@ const RideDetailScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Manage Ride Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Manage Ride</Text>
-          <View style={styles.manageButtons}>
-            <GradientButton
-              title="Edit"
-              onPress={handleEdit}
-              style={styles.editButton}
-            />
-            <TouchableOpacity
-              style={[
-                styles.deleteButton,
-                deleteRideMutation.isPending && styles.deleteButtonDisabled,
-              ]}
-              onPress={handleDelete}
-              activeOpacity={0.7}
-              disabled={deleteRideMutation.isPending}
-            >
-              {deleteRideMutation.isPending ? (
-                <ActivityIndicator size="small" color={Colors.textPrimary} />
-              ) : (
-                <>
-                  <Trash2 size={20} color={Colors.textPrimary} style={styles.deleteIcon} />
-                  <Text style={styles.deleteButtonText}>Delete</Text>
-                </>
-              )}
-            </TouchableOpacity>
+        {/* Manage Ride Section - Hide if status is completed */}
+        {status !== 'completed' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Manage Ride</Text>
+            <View style={styles.manageButtons}>
+              <GradientButton
+                title="Edit"
+                onPress={handleEdit}
+                style={styles.editButton}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.deleteButton,
+                  deleteRideMutation.isPending && styles.deleteButtonDisabled,
+                ]}
+                onPress={handleDelete}
+                activeOpacity={0.7}
+                disabled={deleteRideMutation.isPending}
+              >
+                {deleteRideMutation.isPending ? (
+                  <ActivityIndicator size="small" color={Colors.textPrimary} />
+                ) : (
+                  <>
+                    <Trash2 size={20} color={Colors.textPrimary} style={styles.deleteIcon} />
+                    <Text style={styles.deleteButtonText}>Delete</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
 
       {/* Delete Confirmation Modal */}

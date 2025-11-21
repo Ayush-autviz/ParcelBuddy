@@ -69,6 +69,8 @@ export const usePublishedRides = (): UseQueryResult<RideCardData[], Error> => {
           return `${displayHour}:${displayMinutes} ${ampm}`;
         };
 
+        const showRate = ride.status === 'completed' ? true : false;
+
 
 
         return {
@@ -80,7 +82,7 @@ export const usePublishedRides = (): UseQueryResult<RideCardData[], Error> => {
           destination: ride.destination_name || 'Unknown Destination',
           destinationTime: formatTime(ride.destination_time),
           passengers: 0, // Not available in API, set to 0 or calculate if needed
-          // showRateButton: showRate,
+          showRateButton: showRate,
         } as RideCardData;
       });
     },
