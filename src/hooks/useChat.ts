@@ -11,6 +11,7 @@ export interface ChatRoom {
   id: string;
   created_on?: string;
   is_active?: boolean;
+  is_ride_created_by_me?: boolean;
   last_message?: string;
   last_message_at?: string | null;
   luggage_request_id?: string;

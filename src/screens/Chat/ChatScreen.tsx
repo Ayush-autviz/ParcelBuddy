@@ -118,6 +118,7 @@ const ChatScreen: React.FC = () => {
       luggage_request_id: room?.luggage_request_id,
       luggage_request_status: room?.luggage_request_status,
       luggage_request_weight: room?.luggage_request_weight,
+      is_ride_created_by_me: room?.is_ride_created_by_me,
     });
   };
 

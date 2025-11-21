@@ -15,7 +15,7 @@ export const getLuggageRequestById = async (requestId: string) => {
 
 // update luggage request
 export const updateLuggageRequest = async (requestId: string, data: any) => {
-    const response = await apiClient.put(`/luggage-requests/${requestId}/`, data);
+    const response = await apiClient.patch(`/luggage-requests/${requestId}/`, data);
     return response.data;
 };
 

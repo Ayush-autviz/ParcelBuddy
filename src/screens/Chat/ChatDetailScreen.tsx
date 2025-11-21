@@ -32,7 +32,7 @@ const ChatDetailScreen: React.FC = () => {
   const { showError } = useToast();
   const { user } = useAuthStore();
   
-  const { roomId, userName, userAvatar, origin, destination, luggage_request_id, luggage_request_status, luggage_request_weight } = route.params;
+  const { roomId, userName, userAvatar, origin, destination, luggage_request_id, luggage_request_status, luggage_request_weight, is_ride_created_by_me } = route.params;
   
   // Log luggage_request_id for debugging
   useEffect(() => {
@@ -375,7 +375,7 @@ const ChatDetailScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, !is_ride_created_by_me ? {marginBottom: 20} : {}]} edges={['top']}>
       {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -455,30 +455,32 @@ const ChatDetailScreen: React.FC = () => {
         />
       </KeyboardAvoidingView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.declineButton} activeOpacity={0.7}>
-          <Text style={styles.declineButtonText}>Decline</Text>
-        </TouchableOpacity>
-        <GradientButton
-          title="Approve"
-          onPress={() => {
-            console.log('Approve button pressed');
-            console.log('BottomSheet ref:', bottomSheetRef.current);
-            try {
-              if (bottomSheetRef.current) {
-                bottomSheetRef.current.expand();
-                console.log('Called expand()');
-              } else {
-                console.log('BottomSheet ref is null');
+      {/* Action Buttons - Only show if ride is created by me */}
+      {is_ride_created_by_me && (
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.declineButton} activeOpacity={0.7}>
+            <Text style={styles.declineButtonText}>Decline</Text>
+          </TouchableOpacity>
+          <GradientButton
+            title="Approve"
+            onPress={() => {
+              console.log('Approve button pressed');
+              console.log('BottomSheet ref:', bottomSheetRef.current);
+              try {
+                if (bottomSheetRef.current) {
+                  bottomSheetRef.current.expand();
+                  console.log('Called expand()');
+                } else {
+                  console.log('BottomSheet ref is null');
+                }
+              } catch (error) {
+                console.error('Error expanding bottom sheet:', error);
               }
-            } catch (error) {
-              console.error('Error expanding bottom sheet:', error);
-            }
-          }}
-          style={styles.approveButton}
-        />
-      </View>
+            }}
+            style={styles.approveButton}
+          />
+        </View>
+      )}
 
       {/* Bottom Sheet */}
       <BottomSheet
@@ -541,6 +543,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    // marginBottom: 20,
   },
   // Header Styles
   header: {

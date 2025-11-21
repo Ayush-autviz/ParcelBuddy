@@ -14,6 +14,7 @@ export type ChatStackParamList = {
     luggage_request_id?: string;
     luggage_request_status?: string;
     luggage_request_weight?: number;
+    is_ride_created_by_me?: boolean;
   };
 };
 
