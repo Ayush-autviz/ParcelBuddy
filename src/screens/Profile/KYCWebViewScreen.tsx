@@ -7,6 +7,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Header } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { Colors } from '../../constants/colors';
+import { useToast } from '../../components/Toast';
+import { useAuthStore } from '../../services/store';
 
 type KYCWebViewScreenRouteProp = {
   key: string;
@@ -20,13 +22,46 @@ const KYCWebViewScreen: React.FC = () => {
   const route = useRoute<KYCWebViewScreenRouteProp>();
   const navigation = useNavigation<KYCWebViewScreenNavigationProp>();
   const { url } = route.params;
+  const { showSuccess, showInfo } = useToast();
+  const { user, setUser } = useAuthStore();
 
   const [loading, setLoading] = React.useState(true);
+  const statusCheckedRef = React.useRef(false);
 
   // Log initial URL
   React.useEffect(() => {
     console.log('🌐 [KYC WebView] Initial URL:', url);
   }, [url]);
+
+  // Check URL for status parameters
+  const checkStatusInUrl = (urlToCheck: string) => {
+    if (!urlToCheck || statusCheckedRef.current) return;
+    
+    console.log('🔍 [KYC WebView] Checking URL for status:', urlToCheck);
+    
+    // Check for status=In+Review or status=In%20Review (URL encoded)
+    if (urlToCheck.includes('status=In+Review') || urlToCheck.includes('status=In%20Review')) {
+      console.log('✅ [KYC WebView] Status detected: In Review');
+      statusCheckedRef.current = true;
+      showInfo('Your KYC verification is under review. We will notify you once it\'s processed.');
+      setTimeout(() => {
+        navigation.goBack();
+      }, 2000);
+      return;
+    }
+    
+    // Check for status=Approved
+    if (urlToCheck.includes('status=Approved')) {
+      console.log('✅ [KYC WebView] Status detected: Approved');
+      statusCheckedRef.current = true;
+      setUser({ ...user, is_kyc_verified: true });
+      showSuccess('Your KYC verification has been approved!');
+      setTimeout(() => {
+        navigation.goBack();
+      }, 2000);
+      return;
+    }
+  };
 
   const handleNavigationStateChange = (navState: any) => {
     console.log('🔄 [KYC WebView] Navigation State Changed:', {
@@ -37,6 +72,11 @@ const KYCWebViewScreen: React.FC = () => {
       canGoForward: navState.canGoForward,
     });
     setLoading(navState.loading);
+    
+    // Check URL for status when navigation completes
+    if (!navState.loading && navState.url) {
+      checkStatusInUrl(navState.url);
+    }
   };
 
   const handleLoadStart = (syntheticEvent: any) => {
@@ -55,6 +95,11 @@ const KYCWebViewScreen: React.FC = () => {
       title: nativeEvent.title,
       loading: nativeEvent.loading,
     });
+    
+    // Check URL for status when page finishes loading
+    if (nativeEvent.url) {
+      checkStatusInUrl(nativeEvent.url);
+    }
   };
 
   const handleError = (syntheticEvent: any) => {
@@ -82,6 +127,17 @@ const KYCWebViewScreen: React.FC = () => {
       navigationType: request.navigationType,
       mainDocumentURL: request.mainDocumentURL,
     });
+    
+    // Check URL for status before allowing navigation
+    if (request.url) {
+      // If URL contains status parameter, block navigation and handle status
+      if (request.url.includes('status=')) {
+        console.log('🚫 [KYC WebView] URL contains status parameter, blocking navigation');
+        checkStatusInUrl(request.url);
+        return false; // Block navigation
+      }
+    }
+    
     return true; // Allow navigation
   };
 

@@ -48,7 +48,8 @@ interface MenuItem {
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { logout, user } = useAuthStore();
-  const { showSuccess } = useToast();  console.log('user', user);
+  const { showSuccess } = useToast(); 
+  console.log('user', user);
 
 
   const handleLogout = async () => {

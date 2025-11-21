@@ -13,6 +13,9 @@ import { useToast } from '../../components/Toast';
 import { useChatWebSocket, ChatMessage } from '../../hooks/useChatWebSocket';
 import { getConversationMessages } from '../../services/api/chat';
 import GradientButton from '../../components/GradientButton';
+import { SvgXml } from 'react-native-svg';
+import { FilledUserIcon } from '../../assets/icons/svg/main';
+import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
 
 type ChatDetailScreenRouteProp = {
   key: string;
@@ -319,6 +322,14 @@ const ChatDetailScreen: React.FC = () => {
     );
   };
 
+  const renderAvatar = (props: any) => {
+    return (
+      <View style={styles.avatarContainer}>
+        <SvgXml xml={ProfileUserIcon} height={24} width={24} />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Custom Header */}
@@ -332,14 +343,14 @@ const ChatDetailScreen: React.FC = () => {
             <Image source={{ uri: userAvatar }} style={styles.headerAvatar} />
           ) : (
             <View style={styles.headerAvatarPlaceholder}>
-              <View style={styles.avatarPlaceholderInner} />
+              <SvgXml xml={ProfileUserIcon} height={24} width={24} />
             </View>
           )}
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerName}>{userName}</Text>
-            <Text style={styles.headerStatus}>
+            {/* <Text style={styles.headerStatus}>
               {isOnline ? 'Online' : 'Offline'}
-            </Text>
+            </Text> */}
           </View>
         </View>
         
@@ -352,7 +363,7 @@ const ChatDetailScreen: React.FC = () => {
           <Text style={styles.contextText}>
             From: {origin || 'Unknown'} to {destination || 'Unknown'}
           </Text>
-          <ChevronRight size={20} color={Colors.textTertiary} />
+          {/* <ChevronRight size={20} color={Colors.textTertiary} /> */}
         </TouchableOpacity>
       )}
 
@@ -396,6 +407,7 @@ const ChatDetailScreen: React.FC = () => {
           minInputToolbarHeight={60}
           onInputTextChanged={handleTyping}
           messagesContainerStyle={styles.messagesContainer}
+          renderAvatar={renderAvatar}
         />
       </KeyboardAvoidingView>
 
@@ -454,7 +466,12 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
-    backgroundColor: Colors.borderLight,
+    backgroundColor: Colors.backgroundWhite,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -507,7 +524,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   avatarContainer: {
-    marginRight: 8,
+    marginRight: 4,
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 16,
+    padding: 4,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   messageAvatar: {
     width: 32,

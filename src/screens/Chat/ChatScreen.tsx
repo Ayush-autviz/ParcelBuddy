@@ -19,6 +19,7 @@ import { useChatList, ChatRoom } from '../../hooks/useChat';
 import { SvgXml } from 'react-native-svg';
 import { FilledUserIcon } from '../../assets/icons/svg/main';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
+import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
 
 // Message data interface
 interface MessageItem {
@@ -131,7 +132,7 @@ const ChatScreen: React.FC = () => {
             ) : (
               <View style={styles.avatarPlaceholder}>
                 {/* <User size={24} color={Colors.primaryCyan} /> */}
-                <SvgXml xml={FilledUserIcon} height={24} width={24} />
+                <SvgXml xml={ProfileUserIcon} height={24} width={24} />
               </View>
             )}
           </View>
@@ -339,6 +340,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
+    marginTop: 2,
   },
   unreadCount: {
     fontSize: Fonts.xs,

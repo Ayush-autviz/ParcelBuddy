@@ -16,7 +16,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { EllipseBottom, EllipseTop } from '../../constants/svg';
 import { useQuery } from '@tanstack/react-query';
-import { getProfile } from '../../services/api/profile';
+import { getMyProfile } from '../../services/api/profile';
 import { useAuthStore, useSearchFormStore, useCreateFormStore } from '../../services/store';
 
 const { width, height } = Dimensions.get('window');
@@ -34,16 +34,16 @@ const SplashScreen: React.FC = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.3);
-  const {token} = useAuthStore();
+  const {token, setUser} = useAuthStore();
   const { clearSearchForm } = useSearchFormStore();
   const { clearCreateForm } = useCreateFormStore();
 
   const {data: profile, isLoading} = useQuery({
     queryKey: ['profile'],
-    queryFn: () => getProfile(),
+    queryFn: () => getMyProfile(),
     enabled: !!token,
   });
-
+  console.log('profile', profile);
 
   useEffect(() => { 
 
@@ -85,6 +85,7 @@ const SplashScreen: React.FC = () => {
       });
     }
     else if (profile?.length !== 0) {
+      setUser(profile);
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainApp' }],
