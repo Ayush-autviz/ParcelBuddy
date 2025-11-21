@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests, getLuggageRequestById, cancelLuggageRequest, respondToLuggageRequest } from '../services/api/luggage';
+import { getLuggageRequestsForRide, createLuggageRequest, getLuggageRequests, getLuggageRequestById, cancelLuggageRequest, respondToLuggageRequest, updateLuggageRequestWeight } from '../services/api/luggage';
 import { LuggageRequestItemData } from '../components/track/LuggageRequestItem';
 import { RideCardData, StatusType } from '../components/track';
 
@@ -93,6 +93,13 @@ export const useCreateLuggageRequest = (): UseMutationResult<any, Error, FormDat
 export const useRespondToLuggageRequest = (): UseMutationResult<any, Error, { requestId: string; status: 'approved' | 'rejected' }, unknown> => {
   return useMutation({
     mutationFn: ({ requestId, status }) => respondToLuggageRequest(requestId, { status }),
+  });
+};
+
+// Hook to update luggage request weight
+export const useUpdateLuggageRequestWeight = (): UseMutationResult<any, Error, { requestId: string; weight_kg: number }, unknown> => {
+  return useMutation({
+    mutationFn: ({ requestId, weight_kg }) => updateLuggageRequestWeight(requestId, { weight_kg }),
   });
 };
 

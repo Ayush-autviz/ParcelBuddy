@@ -13,6 +13,7 @@ import { useAuthStore } from '../../services/store';
 import { useToast } from '../../components/Toast';
 import { useChatWebSocket, ChatMessage } from '../../hooks/useChatWebSocket';
 import { getConversationMessages, markMessageAsRead } from '../../services/api/chat';
+import { useRespondToLuggageRequest, useUpdateLuggageRequestWeight } from '../../hooks/useLuggage';
 import GradientButton from '../../components/GradientButton';
 import { SvgXml } from 'react-native-svg';
 import { FilledUserIcon } from '../../assets/icons/svg/main';
@@ -29,8 +30,10 @@ type ChatDetailScreenNavigationProp = StackNavigationProp<ChatStackParamList, 'C
 const ChatDetailScreen: React.FC = () => {
   const route = useRoute<ChatDetailScreenRouteProp>();
   const navigation = useNavigation<ChatDetailScreenNavigationProp>();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const { user } = useAuthStore();
+  const respondToLuggageRequestMutation = useRespondToLuggageRequest();
+  const updateLuggageRequestWeightMutation = useUpdateLuggageRequestWeight();
   
   const { roomId, userName, userAvatar, origin, destination, luggage_request_id, luggage_request_status, luggage_request_weight, is_ride_created_by_me } = route.params;
   
@@ -111,8 +114,65 @@ const ChatDetailScreen: React.FC = () => {
   } = useChatWebSocket({
     roomId,
     onMessage: (chatMessage: ChatMessage) => {
-      const iMessage = convertToIMessage(chatMessage);
-      setMessages((previousMessages) => GiftedChat.append(previousMessages, [iMessage]));
+      // Check if message already exists to prevent duplicates
+      // This handles the case where we optimistically added a message and it comes back via WebSocket
+      setMessages((previousMessages) => {
+        // Check by message ID first
+        const messageExistsById = previousMessages.some(
+          (msg) => msg._id === chatMessage.id
+        );
+        
+        if (messageExistsById) {
+          console.log('⚠️ [ChatDetailScreen] Duplicate message detected by ID, skipping:', chatMessage.id);
+          return previousMessages;
+        }
+        
+        // Also check if it's a message from current user with same content and recent timestamp
+        // This handles optimistic messages that might have different IDs
+        if (chatMessage.sender_id === currentUserId) {
+          const messageTime = new Date(chatMessage.created_on).getTime();
+          const now = Date.now();
+          const timeDiff = Math.abs(now - messageTime);
+          
+          // Check if there's a recent message with same content from current user
+          const duplicateByContent = previousMessages.some((msg) => {
+            if (msg.user?._id === currentUserId && msg.text === chatMessage.content) {
+              const msgTime = msg.createdAt instanceof Date 
+                ? msg.createdAt.getTime() 
+                : typeof msg.createdAt === 'number' 
+                  ? msg.createdAt 
+                  : 0;
+              const msgTimeDiff = Math.abs(now - msgTime);
+              // If messages are within 2 seconds and have same content, consider it duplicate
+              return msgTimeDiff < 2000 && timeDiff < 2000;
+            }
+            return false;
+          });
+          
+          if (duplicateByContent) {
+            console.log('⚠️ [ChatDetailScreen] Duplicate message detected by content, replacing optimistic message:', chatMessage.id);
+            // Replace the optimistic message with the real one from server
+            const iMessage = convertToIMessage(chatMessage);
+            return previousMessages.map((msg) => {
+              if (msg.user?._id === currentUserId && msg.text === chatMessage.content) {
+                const msgTime = msg.createdAt instanceof Date 
+                  ? msg.createdAt.getTime() 
+                  : typeof msg.createdAt === 'number' 
+                    ? msg.createdAt 
+                    : 0;
+                const msgTimeDiff = Math.abs(Date.now() - msgTime);
+                if (msgTimeDiff < 2000) {
+                  return iMessage; // Replace optimistic message with real one
+                }
+              }
+              return msg;
+            });
+          }
+        }
+        
+        const iMessage = convertToIMessage(chatMessage);
+        return GiftedChat.append(previousMessages, [iMessage]);
+      });
       
       // Mark message as read if it's from the other user
       if (chatMessage.sender_id !== currentUserId && !chatMessage.is_read) {
@@ -458,8 +518,36 @@ const ChatDetailScreen: React.FC = () => {
       {/* Action Buttons - Only show if ride is created by me */}
       {is_ride_created_by_me && (
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.declineButton} activeOpacity={0.7}>
-            <Text style={styles.declineButtonText}>Decline</Text>
+          <TouchableOpacity 
+            style={styles.declineButton} 
+            activeOpacity={0.7}
+            onPress={() => {
+              if (!luggage_request_id) {
+                showError('Luggage request ID is missing');
+                return;
+              }
+              
+              respondToLuggageRequestMutation.mutate(
+                {
+                  requestId: luggage_request_id,
+                  status: 'rejected',
+                },
+                {
+                  onSuccess: () => {
+                    showSuccess('Luggage request declined successfully');
+                  },
+                  onError: (error: any) => {
+                    console.error('Decline luggage request error:', error);
+                    showError(error?.response?.data?.message || error?.message || 'Failed to decline request. Please try again.');
+                  },
+                }
+              );
+            }}
+            disabled={respondToLuggageRequestMutation.isPending}
+          >
+            <Text style={styles.declineButtonText}>
+              {respondToLuggageRequestMutation.isPending ? 'Declining...' : 'Decline'}
+            </Text>
           </TouchableOpacity>
           <GradientButton
             title="Approve"
@@ -523,11 +611,91 @@ const ChatDetailScreen: React.FC = () => {
           <GradientButton
             title="Approve"
             onPress={() => {
-              console.log('Approve pressed with weight:', weight);
-              bottomSheetRef.current?.close();
-              // Add your approval logic here
+              // Validate weight
+              if (!weight || weight.trim() === '') {
+                showError('Please enter weight or click "Match Request" to use the request weight');
+                return;
+              }
+
+              // Validate weight is a number
+              if (isNaN(Number(weight))) {
+                showError('Please enter a valid weight');
+                return;
+              }
+              
+              // Validate weight is greater than 0
+              if (Number(weight) <= 0) {
+                showError('Please enter a weight greater than 0');
+                return;
+              }
+              
+              if (!luggage_request_id) {
+                showError('Luggage request ID is missing');
+                return;
+              }
+
+              const inputWeight = Number(weight);
+              const requestWeight = luggage_request_weight ? Number(luggage_request_weight) : null;
+
+              // Check if weight matches the luggage request weight
+              if (requestWeight !== null && inputWeight === requestWeight) {
+                // Weight matches, directly call respondToLuggageRequest
+                respondToLuggageRequestMutation.mutate(
+                  {
+                    requestId: luggage_request_id,
+                    status: 'approved',
+                  },
+                  {
+                    onSuccess: () => {
+                      showSuccess('Luggage request approved successfully');
+                      bottomSheetRef.current?.close();
+                      setWeight(''); // Reset weight
+                    },
+                    onError: (error: any) => {
+                      console.error('Approve luggage request error:', error);
+                      showError(error?.response?.data?.message || error?.message || 'Failed to approve request. Please try again.');
+                    },
+                  }
+                );
+              } else {
+                // Weight is different, first update weight, then approve
+                updateLuggageRequestWeightMutation.mutate(
+                  {
+                    requestId: luggage_request_id,
+                    weight_kg: inputWeight,
+                  },
+                  {
+                    onSuccess: () => {
+                      // After updating weight, approve the request
+                      respondToLuggageRequestMutation.mutate(
+                        {
+                          requestId: luggage_request_id,
+                          status: 'approved',
+                        },
+                        {
+                          onSuccess: () => {
+                            showSuccess('Luggage request approved successfully');
+                            bottomSheetRef.current?.close();
+                            setWeight(''); // Reset weight
+                          },
+                          onError: (error: any) => {
+                            console.error('Approve luggage request error:', error);
+                            showError(error?.response?.data?.message || error?.message || 'Failed to approve request. Please try again.');
+                          },
+                        }
+                      );
+                    },
+                    onError: (error: any) => {
+                      console.error('Update luggage request weight error:', error);
+                      showError(error?.response?.data?.message || error?.message || 'Failed to update weight. Please try again.');
+                    },
+                  }
+                );
+              }
             }}
             style={styles.bottomSheetApproveButton}
+            loading={respondToLuggageRequestMutation.isPending || updateLuggageRequestWeightMutation.isPending}
+            disabled={respondToLuggageRequestMutation.isPending || updateLuggageRequestWeightMutation.isPending}
           />
         </BottomSheetView>
       </BottomSheet>

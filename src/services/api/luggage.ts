@@ -46,3 +46,10 @@ export const respondToLuggageRequest = async (requestId: string, data: any) => {
     const response = await apiClient.post(`/luggage-requests/${requestId}/respond/`, data);
     return response.data;
 };
+
+
+// update luggage request weight
+export const updateLuggageRequestWeight = async (requestId: string, data: any) => {
+    const response = await apiClient.patch(`/luggage/${requestId}/update-weight/`, data);
+    return response.data;
+};
