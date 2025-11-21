@@ -5,7 +5,7 @@ import { Bell } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 
-export type StatusType = 'new' | 'full' | 'completed' | 'pending';
+export type StatusType = 'new' | 'approved' | 'full' | 'completed' | 'pending' | 'active' | 'in_progress';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -18,6 +18,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
       case 'new':
         return {
           label: 'New Booking Request',
+          showIcon: true,
+        };
+      case 'approved':
+        return {
+          label: 'Approved',
           showIcon: true,
         };
       case 'full':
@@ -41,6 +46,20 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
           showDot: true,
           dotColor: Colors.primaryTeal,
         };
+        case 'active':
+        return {
+          label: 'Active',
+          showIcon: false,
+          showDot: true,
+          dotColor: Colors.primaryTeal,
+        };
+        case 'in_progress':
+        return {
+          label: 'In Progress',
+          showIcon: false,
+          showDot: true,
+          dotColor: Colors.primaryTeal,
+        };
       default:
         return {
           label: '',
@@ -51,6 +70,10 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
   };
 
   const config = getStatusConfig();
+
+  if (config.label === '') {
+    return null;
+  }
 
   return (
     <View style={[styles.container, style]}>

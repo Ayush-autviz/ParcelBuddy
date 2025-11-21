@@ -174,11 +174,11 @@ const RideDetailScreen: React.FC = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Manage Ride</Text>
             <View style={styles.manageButtons}>
-              <GradientButton
+              {/* <GradientButton
                 title="Edit"
                 onPress={handleEdit}
                 style={styles.editButton}
-              />
+              /> */}
               <TouchableOpacity
                 style={[
                   styles.deleteButton,

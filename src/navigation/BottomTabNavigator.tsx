@@ -15,6 +15,7 @@ import { Fonts } from '../constants/fonts';
 
 import { SearchStackParamList } from './SearchNavigator';
 import { ChatStackParamList } from './ChatNavigator';
+import { ProfileStackParamList } from './ProfileNavigator';
 import { FocusedChatIcon, FocusedCreateIcon, FocusedProfileIcon, FocusedSearchIcon, FocusedTrackIcon, SearchIcon } from '../assets/icons/svg/bottomTabs';
 import { SvgXml } from 'react-native-svg';
 import { CreateIcon } from '../assets/icons/svg/bottomTabs';
@@ -28,7 +29,7 @@ export type BottomTabParamList = {
   Create: undefined;
   Track: undefined;
   Chat: NavigatorScreenParams<ChatStackParamList> | undefined;
-  Profile: undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();

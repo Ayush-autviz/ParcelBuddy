@@ -11,7 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card } from '../../components';
+import { ProfileHeader, Card } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 
 type PaymentHistoryScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'PaymentHistory'>;
@@ -58,7 +58,7 @@ const PaymentHistoryScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Payment History" showBackButton />
+      <ProfileHeader title="Payment History" />
 
       <ScrollView
         style={styles.scrollView}

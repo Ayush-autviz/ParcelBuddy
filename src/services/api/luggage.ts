@@ -13,6 +13,12 @@ export const getLuggageRequestById = async (requestId: string) => {
     return response.data;
 };
 
+// update luggage request
+export const updateLuggageRequest = async (requestId: string, data: any) => {
+    const response = await apiClient.put(`/luggage-requests/${requestId}/`, data);
+    return response.data;
+};
+
 // get luggage requests for a ride
 export const getLuggageRequestsForRide = async (rideId: string) => {
     const response = await apiClient.get(`/rides/${rideId}/requests/`);

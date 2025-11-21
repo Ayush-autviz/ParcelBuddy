@@ -6,6 +6,7 @@ export { default as ConfirmationModal } from './Modal/ConfirmationModal';
 export { default as KYCVerificationModal } from './Modal/KYCVerificationModal';
 export { default as SubscriptionModal } from './Modal/SubscriptionModal';
 export { default as Header } from './Header';
+export { default as ProfileHeader } from './ProfileHeader';
 
 // Export search components
 export * from './search';

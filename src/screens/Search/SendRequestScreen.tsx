@@ -14,11 +14,11 @@ import { ChevronRight, Upload, Calendar, Package } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card, GradientButton } from '../../components';
+import { Header, Card, GradientButton, SectionCard, SearchInput } from '../../components';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
 import { SvgXml } from 'react-native-svg';
-import { MapPinIcon } from '../../assets/icons/svg/main';
+import { MapPinIcon, WeightIcon } from '../../assets/icons/svg/main';
 import * as ImagePicker from 'react-native-image-picker';
 import { User } from 'lucide-react-native';
 import { useCreateLuggageRequest } from '../../hooks/useLuggage';
@@ -303,55 +303,57 @@ const SendRequestScreen: React.FC = () => {
         </Card>
 
         {/* Luggage Details Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Luggage Details</Text>
-          <View style={styles.dimensionsRow}>
-            <View style={styles.dimensionItem}>
-              <Text style={styles.inputLabel}>Weight (KG)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 2.5"
-                placeholderTextColor={Colors.textLight}
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="decimal-pad"
-              />
-            </View>
-            <View style={styles.dimensionItem}>
-              <Text style={styles.inputLabel}>Length (cm)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 50"
-                placeholderTextColor={Colors.textLight}
-                value={length}
-                onChangeText={setLength}
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={styles.dimensionItem}>
-              <Text style={styles.inputLabel}>Width (cm)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 35"
-                placeholderTextColor={Colors.textLight}
-                value={width}
-                onChangeText={setWidth}
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={styles.dimensionItem}>
-              <Text style={styles.inputLabel}>Height (cm)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 25"
-                placeholderTextColor={Colors.textLight}
-                value={height}
-                onChangeText={setHeight}
-                keyboardType="numeric"
-              />
+        <SectionCard title="Luggage">
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Weight (kg)</Text>
+            <SearchInput
+              icon={WeightIcon}
+              placeholder="Enter weight"
+              value={weight}
+              onChangeText={setWeight}
+              keyboardType="decimal-pad"
+              containerStyle={styles.input}
+            />
+          </View>
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Dimensions (cm)</Text>
+            <View style={styles.dimensionsRow}>
+              <View style={styles.dimensionItem}>
+                <SearchInput
+                  lucideIcon={Package}
+                  placeholder="Height"
+                  inputStyle={{fontSize: Fonts.sm}}
+                  value={height}
+                  onChangeText={setHeight}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
+              </View>
+              <View style={styles.dimensionItem}>
+                <SearchInput
+                  lucideIcon={Package}
+                  placeholder="Width"
+                  inputStyle={{fontSize: Fonts.sm}}
+                  value={width}
+                  onChangeText={setWidth}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
+              </View>
+              <View style={styles.dimensionItem}>
+                <SearchInput
+                  lucideIcon={Package}
+                  placeholder="Length"
+                  inputStyle={{fontSize: Fonts.sm}}
+                  value={length}
+                  onChangeText={setLength}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
+              </View>
             </View>
           </View>
-        </View>
+        </SectionCard>
 
         {/* Item Description Section */}
         <View style={styles.section}>
@@ -585,29 +587,24 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: 16,
   },
-  dimensionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+  fieldContainer: {
+    marginBottom: 16,
   },
-  dimensionItem: {
-    flex: 1,
-  },
-  inputLabel: {
+  label: {
     fontSize: Fonts.sm,
     fontWeight: Fonts.weightMedium,
     color: Colors.textSecondary,
     marginBottom: 8,
   },
+  dimensionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  dimensionItem: {
+    flex: 1,
+  },
   input: {
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: 12,
-    backgroundColor: Colors.backgroundWhite,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: Fonts.base,
-    color: Colors.textPrimary,
+    marginTop: 0,
   },
   uploadArea: {
     borderWidth: 2,

@@ -12,7 +12,7 @@ import { Star } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card, GradientButton } from '../../components';
+import { ProfileHeader, Card, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 
 type RatingsScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Ratings'>;
@@ -156,7 +156,7 @@ const RatingsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Ratings" showBackButton />
+      <ProfileHeader title="Ratings" />
 
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>

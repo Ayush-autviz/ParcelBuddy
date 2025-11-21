@@ -13,7 +13,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, GradientButton } from '../../components';
+import { ProfileHeader, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 
 type SubscriptionScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Subscription'>;
@@ -80,7 +80,7 @@ const SubscriptionScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Subscription" showBackButton />
+      <ProfileHeader title="Subscription" />
 
       <ScrollView
         style={styles.scrollView}

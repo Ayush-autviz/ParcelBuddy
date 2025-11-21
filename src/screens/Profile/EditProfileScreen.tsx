@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import PhoneInput from 'react-native-international-phone-number';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, GradientButton, DatePickerInput, TextArea } from '../../components';
+import { ProfileHeader, GradientButton, DatePickerInput, TextArea } from '../../components';
 import { useAuthStore } from '../../services/store';
 import { useToast } from '../../components/Toast';
 import { useMyProfile } from '../../hooks/useProfile';
@@ -246,7 +246,7 @@ const EditProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Edit Profile" showBackButton />
+      <ProfileHeader title="Edit Profile" />
 
       <ScrollView
         style={styles.scrollView}

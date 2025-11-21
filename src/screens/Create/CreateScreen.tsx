@@ -8,11 +8,11 @@ import {
 import {  Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast } from '../../components';
+import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast, KYCVerificationModal } from '../../components';
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCreateFormStore } from '../../services/store';
+import { useCreateFormStore, useAuthStore } from '../../services/store';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
@@ -28,6 +28,7 @@ type CreateScreenNavigationProp = BottomTabNavigationProp<BottomTabParamList, 'C
 const CreateScreen: React.FC = () => {
   const navigation = useNavigation<CreateScreenNavigationProp>();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('Domestic');
   const [departureDate, setDepartureDate] = useState<Date | null>(null);
   const [departureTime, setDepartureTime] = useState<Date | null>(null);
@@ -38,6 +39,7 @@ const CreateScreen: React.FC = () => {
   const [width, setWidth] = useState('');
   const [length, setLength] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
+  const [showKYCModal, setShowKYCModal] = useState(false);
   const { showWarning, showSuccess } = useToast();
 
   // Use Zustand store for origin/destination
@@ -99,6 +101,12 @@ const CreateScreen: React.FC = () => {
   };
 
   const handlePublish = () => {
+    // Check KYC verification first
+    if (user && !(user as any)?.is_kyc_verified) {
+      setShowKYCModal(true);
+      return;
+    }
+
     // Validation
     if (!origin || !destination) {
       // Alert.alert('Error', 'Please select origin and destination');
@@ -363,6 +371,22 @@ const CreateScreen: React.FC = () => {
                 disabled={createRideMutation.isPending}
               />
       </KeyboardAwareScrollView>
+
+      {/* KYC Verification Modal */}
+      <KYCVerificationModal
+        visible={showKYCModal}
+        title="KYC Verification Required"
+        description="Please complete your KYC verification to create a ride. This helps us ensure the safety and security of our platform."
+        buttonText="Verify Now"
+        onButtonPress={() => {
+          setShowKYCModal(false);
+          // Navigate to Profile tab and then to KYC Verification screen
+          navigation.navigate('Profile', {
+            screen: 'KYCVerification',
+          });
+        }}
+        onClose={() => setShowKYCModal(false)}
+      />
     </SafeAreaView>
   );
 };
