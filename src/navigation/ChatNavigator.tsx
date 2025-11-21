@@ -12,6 +12,8 @@ export type ChatStackParamList = {
     origin?: string;
     destination?: string;
     luggage_request_id?: string;
+    luggage_request_status?: string;
+    luggage_request_weight?: number;
   };
 };
 

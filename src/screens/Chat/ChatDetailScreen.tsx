@@ -32,14 +32,16 @@ const ChatDetailScreen: React.FC = () => {
   const { showError } = useToast();
   const { user } = useAuthStore();
   
-  const { roomId, userName, userAvatar, origin, destination, luggage_request_id } = route.params;
+  const { roomId, userName, userAvatar, origin, destination, luggage_request_id, luggage_request_status, luggage_request_weight } = route.params;
   
   // Log luggage_request_id for debugging
   useEffect(() => {
     if (luggage_request_id) {
       console.log('📦 [ChatDetailScreen] luggage_request_id:', luggage_request_id);
+      console.log('📦 [ChatDetailScreen] luggage_request_status:', luggage_request_status);
+      console.log('📦 [ChatDetailScreen] luggage_request_weight:', luggage_request_weight);
     }
-  }, [luggage_request_id]);
+  }, [luggage_request_id, luggage_request_status, luggage_request_weight]);
   
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -495,6 +497,11 @@ const ChatDetailScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.matchRequestButton}
               activeOpacity={0.7}
+              onPress={() => {
+                if (luggage_request_weight !== undefined && luggage_request_weight !== null) {
+                  setWeight(String(luggage_request_weight));
+                }
+              }}
             >
               <Text style={styles.matchRequestText}>Match Request</Text>
             </TouchableOpacity>

@@ -14,6 +14,8 @@ export interface ChatRoom {
   last_message?: string;
   last_message_at?: string | null;
   luggage_request_id?: string;
+  luggage_request_status?: string;
+  luggage_request_weight?: number;
   other_user?: {
     id: string;
     first_name?: string;

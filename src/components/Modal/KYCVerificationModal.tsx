@@ -11,6 +11,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { SvgXml } from 'react-native-svg';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
+import GradientButton from '../GradientButton';
 
 // Diamond/Gem Icon SVG (similar to subscription modal)
 const DiamondIcon = `
@@ -86,7 +87,7 @@ const KYCVerificationModal: React.FC<KYCVerificationModalProps> = ({
               <Text style={styles.description}>{description}</Text>
 
               {/* Gradient Button */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={onButtonPress}
                 disabled={loading}
@@ -102,7 +103,14 @@ const KYCVerificationModal: React.FC<KYCVerificationModalProps> = ({
                     {loading ? 'Loading...' : buttonText}
                   </Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
+              <GradientButton
+                title={buttonText}
+                onPress={onButtonPress}
+                loading={loading}
+                style={styles.buttonContainer}
+                textStyle={styles.buttonText}
+              />
             </View>
           </TouchableWithoutFeedback>
         </View>

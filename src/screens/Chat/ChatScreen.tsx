@@ -116,6 +116,8 @@ const ChatScreen: React.FC = () => {
       origin: message.origin,
       destination: message.destination,
       luggage_request_id: room?.luggage_request_id,
+      luggage_request_status: room?.luggage_request_status,
+      luggage_request_weight: room?.luggage_request_weight,
     });
   };
 
@@ -204,7 +206,7 @@ const ChatScreen: React.FC = () => {
       <Header title="Messages" variant="centered" />
 
       {/* Search Bar */}
-      {/* <View style={styles.searchContainer}>
+      <View style={styles.searchContainer}>
         <SearchInput
           lucideIcon={Search}
           placeholder="Search"
@@ -212,9 +214,9 @@ const ChatScreen: React.FC = () => {
           onChangeText={setSearchQuery}
           containerStyle={styles.searchInput}
         />
-      </View> */}
+      </View>
 
-      <View style={{marginTop: 10}}></View>
+      {/* <View style={{marginTop: 10}}></View> */}
 
       {/* Messages List or Empty State */}
       {isEmpty ? (
