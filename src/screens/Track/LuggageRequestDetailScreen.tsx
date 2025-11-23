@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 30,
   },
   dateCard: {
     marginBottom: 16,

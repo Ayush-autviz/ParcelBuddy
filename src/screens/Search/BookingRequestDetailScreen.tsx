@@ -178,7 +178,7 @@ const BookingRequestDetailScreen: React.FC = () => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Header title="Booking Request Detail" showBackButton />
+        <Header title="Booking Detail" showBackButton />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primaryCyan} />
           <Text style={styles.loadingText}>Loading booking details...</Text>
@@ -191,7 +191,7 @@ const BookingRequestDetailScreen: React.FC = () => {
   if (isError) {
     return (
       <SafeAreaView style={styles.container}>
-        <Header title="Booking Request Detail" showBackButton />
+        <Header title="Booking Detail" showBackButton />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Failed to load booking details</Text>
           <Text style={styles.errorSubText}>{error?.message || 'Please try again'}</Text>
@@ -202,7 +202,7 @@ const BookingRequestDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Booking Request Detail" showBackButton />
+      <Header title="Booking Detail" showBackButton />
 
       <ScrollView
         style={styles.scrollView}
@@ -307,7 +307,7 @@ const BookingRequestDetailScreen: React.FC = () => {
               <Text style={styles.label}>Height (cm)</Text>
               <SearchInput
                 lucideIcon={Package}
-                placeholder="Height"
+                placeholder="eg: 10"
                 inputStyle={{fontSize: Fonts.sm}}
                 value={height || ''}
                 editable={false}
@@ -318,7 +318,7 @@ const BookingRequestDetailScreen: React.FC = () => {
               <Text style={styles.label}>Width (cm)</Text>
               <SearchInput
                 lucideIcon={Package}
-                placeholder="Width"
+                placeholder="eg: 10"
                 inputStyle={{fontSize: Fonts.sm}}
                 value={width || ''}
                 editable={false}
@@ -329,7 +329,7 @@ const BookingRequestDetailScreen: React.FC = () => {
               <Text style={styles.label}>Length (cm)</Text>
               <SearchInput
                 lucideIcon={Package}
-                placeholder="Length"
+                placeholder="eg: 10"
                 inputStyle={{fontSize: Fonts.sm}}
                 value={length || ''}
                 editable={false}
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 30,
   },
   statusCard: {
     marginBottom: 16,

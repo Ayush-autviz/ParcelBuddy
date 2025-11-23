@@ -349,13 +349,13 @@ const EditProfileScreen: React.FC = () => {
                   container: {
                     borderWidth: 0,
                     borderRadius: 12,
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: Colors.backgroundGray,
                     height: 50,
                   },
                   flagContainer: {
                     borderWidth: 0,
                     borderRadius: 12,
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: Colors.backgroundGray,
                   },
                   divider: {
                     display: 'none',
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 30,
   },
   profilePictureSection: {
     alignItems: 'center',

@@ -265,12 +265,7 @@ const SendRequestScreen: React.FC = () => {
               const profileIdFromRide = ride.profileId;
               const profileIdFromTraveler = (ride.traveler as any)?.profile?.id;
               const profileId = profileIdFromRide || profileIdFromTraveler;
-              
-              console.log('👤 [SEND REQUEST] Clicked on traveler');
-              console.log('👤 [SEND REQUEST] ride.profileId:', profileIdFromRide);
-              console.log('👤 [SEND REQUEST] ride.traveler.profile.id:', profileIdFromTraveler);
-              console.log('👤 [SEND REQUEST] Final profileId being used:', profileId);
-              console.log('👤 [SEND REQUEST] Full ride object:', JSON.stringify(ride, null, 2));
+            
               
               navigation.navigate('UserProfile', {
                 traveler: ride.traveler,
@@ -315,42 +310,42 @@ const SendRequestScreen: React.FC = () => {
               containerStyle={styles.input}
             />
           </View>
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Dimensions (cm)</Text>
-            <View style={styles.dimensionsRow}>
-              <View style={styles.dimensionItem}>
-                <SearchInput
-                  lucideIcon={Package}
-                  placeholder="Height"
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={height}
-                  onChangeText={setHeight}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
-              </View>
-              <View style={styles.dimensionItem}>
-                <SearchInput
-                  lucideIcon={Package}
-                  placeholder="Width"
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={width}
-                  onChangeText={setWidth}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
-              </View>
-              <View style={styles.dimensionItem}>
-                <SearchInput
-                  lucideIcon={Package}
-                  placeholder="Length"
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={length}
-                  onChangeText={setLength}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
-              </View>
+          <View style={styles.dimensionsRow}>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Height (cm)</Text>
+              <SearchInput
+                lucideIcon={Package}
+                placeholder="eg: 10"
+                inputStyle={{fontSize: Fonts.sm}}
+                value={height}
+                onChangeText={setHeight}
+                keyboardType="numeric"
+                containerStyle={styles.input}
+              />
+            </View>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Width (cm)</Text>
+              <SearchInput
+                lucideIcon={Package}
+                placeholder="eg: 10"
+                inputStyle={{fontSize: Fonts.sm}}
+                value={width}
+                onChangeText={setWidth}
+                keyboardType="numeric"
+                containerStyle={styles.input}
+              />
+            </View>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Length (cm)</Text>
+              <SearchInput
+                lucideIcon={Package}
+                placeholder="eg: 10"
+                inputStyle={{fontSize: Fonts.sm}}
+                value={length}
+                onChangeText={setLength}
+                keyboardType="numeric"
+                containerStyle={styles.input}
+              />
             </View>
           </View>
         </SectionCard>
@@ -468,7 +463,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 30,
   },
   dateCard: {
     marginBottom: 16,

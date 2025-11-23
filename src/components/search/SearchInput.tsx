@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
     borderRadius: 12,
     backgroundColor: Colors.backgroundWhite,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     minHeight: 50,
   },
   iconContainer: {
