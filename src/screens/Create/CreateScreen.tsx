@@ -218,6 +218,8 @@ const CreateScreen: React.FC = () => {
           />
         </View>
 
+        <Text style={styles.infoText}>Currently we operate for india and canada only</Text>
+
         {/* Route Details Section */}
         <SectionCard title="Route Details">
           <View style={styles.fieldContainer}>
@@ -447,6 +449,14 @@ const styles = StyleSheet.create({
   publishButton: {
     marginTop: 8,
     marginBottom: 24,
+  },
+  infoText: {
+    fontSize: Fonts.xs,
+    fontWeight: Fonts.weightMedium,
+    color: Colors.textTertiary,
+    marginBottom: 16,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
 

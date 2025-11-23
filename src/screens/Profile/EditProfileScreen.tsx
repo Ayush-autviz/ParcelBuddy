@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   saveButton: {
-    flex: 2,
+    flex: 1,
     marginTop: 0,
   },
   modalOverlay: {

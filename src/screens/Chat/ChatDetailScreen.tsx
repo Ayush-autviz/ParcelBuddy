@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ArrowLeft, ChevronRight, Image as ImageIcon, Mic } from 'lucide-react-native';
+import { ArrowLeft, ChevronRight, Image as ImageIcon, Mic, SendIcon } from 'lucide-react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
 import { Colors } from '../../constants/colors';
@@ -336,11 +336,11 @@ const ChatDetailScreen: React.FC = () => {
             marginRight: 0,
             marginLeft: '20%',
             borderRadius: 10,
-            borderTopRightRadius: 10,
-            borderTopLeftRadius: 10,
-            borderBottomRightRadius: 10,
-            borderBottomLeftRadius: 10,
-            paddingVertical: 10,
+            borderTopRightRadius: 0,
+            borderTopLeftRadius: 12,
+            borderBottomRightRadius: 12,
+            borderBottomLeftRadius: 12,
+            padding: 4
           },
           left: {
             backgroundColor: Colors.backgroundWhite,
@@ -348,11 +348,17 @@ const ChatDetailScreen: React.FC = () => {
             marginLeft: 0,
             marginRight: '20%',
             borderRadius: 10,
-            borderTopRightRadius: 10,
-            borderTopLeftRadius: 10,
-            borderBottomRightRadius: 10,
-            borderBottomLeftRadius: 10,
-            paddingVertical: 10,
+            borderTopRightRadius: 12,
+            borderTopLeftRadius: 0,
+            borderBottomRightRadius: 12,
+            borderBottomLeftRadius: 12,
+            padding: 4,
+            shadowColor: Colors.textPrimary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+
           },
         }}
         textStyle={{
@@ -407,7 +413,8 @@ const ChatDetailScreen: React.FC = () => {
     return (
       <Send {...props} containerStyle={styles.sendContainer}>
         <View style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Send</Text>
+          {/* <Text style={styles.sendButtonText}>Send</Text> */}
+          <SendIcon size={22} color={Colors.textWhite} style={{marginTop: 1}} />
         </View>
       </Send>
     );
@@ -856,15 +863,16 @@ const styles = StyleSheet.create({
   sendContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 4,
-    marginBottom: 0,
+    // marginRight: 4,
+    // marginBottom: 0,
   },
   sendButton: {
     backgroundColor: Colors.gradientStart,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    minWidth: 60,
+    // paddingHorizontal: 12,
+    // paddingVertical: 10,
+    padding: 10,
+    borderRadius: 200,
+    // minWidth: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -901,7 +909,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundWhite,
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
