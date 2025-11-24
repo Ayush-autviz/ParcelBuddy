@@ -57,11 +57,8 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
   console.log('rating', rating);
 
   return (
-    <TouchableOpacity
-      style={[styles.container, style]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+ 
+    <View style={[styles.container, style]}>
       <Card style={styles.card} padding={16}>
         <View style={styles.content}>
           {/* Left Side - Driver Info */}
@@ -112,7 +109,7 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
           textStyle={styles.requestButtonText}
         />
       </Card>
-    </TouchableOpacity>
+    </View>
   );
 };
 

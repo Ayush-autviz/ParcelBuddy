@@ -340,7 +340,12 @@ const ChatDetailScreen: React.FC = () => {
             borderTopLeftRadius: 12,
             borderBottomRightRadius: 12,
             borderBottomLeftRadius: 12,
-            padding: 4
+            padding: 4,
+            shadowColor: Colors.textPrimary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
           },
           left: {
             backgroundColor: Colors.backgroundWhite,
@@ -523,7 +528,7 @@ const ChatDetailScreen: React.FC = () => {
       </KeyboardAvoidingView>
 
       {/* Action Buttons - Only show if ride is created by me */}
-      {is_ride_created_by_me && (
+      {is_ride_created_by_me && luggage_request_status === 'pending' && (
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={styles.declineButton} 
@@ -838,20 +843,21 @@ const styles = StyleSheet.create({
   },
   // Input Toolbar Styles
   inputToolbarContainer: {
-    backgroundColor: Colors.backgroundWhite,
+    backgroundColor: Colors.backgroundLight,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
     position: 'relative',
+    paddingBottom: Platform.OS === 'ios' ? 10 : 0,
   },
   inputToolbar: {
-    backgroundColor: Colors.backgroundWhite,
+    backgroundColor: Colors.backgroundLight,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    paddingBottom: 10,
+    paddingBottom: Platform.OS === 'ios' ? 10 : 0,
     paddingRight: 8,
   },
   textInput: {
-    backgroundColor: Colors.backgroundGray,
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: 20,
     paddingHorizontal: 16,
     // paddingVertical: 10,

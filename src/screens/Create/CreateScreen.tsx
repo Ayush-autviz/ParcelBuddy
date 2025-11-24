@@ -218,7 +218,7 @@ const CreateScreen: React.FC = () => {
           />
         </View>
 
-        <Text style={styles.infoText}>Currently we operate for india and canada only</Text>
+        <Text style={styles.infoText}>Currently we operate for India and Canada only</Text>
 
         {/* Route Details Section */}
         <SectionCard title="Route Details">

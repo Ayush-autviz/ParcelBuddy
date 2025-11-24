@@ -313,11 +313,12 @@ const TrackScreen: React.FC = () => {
               </TouchableOpacity>
               <Text style={styles.ratingTitle}>How was your experience with</Text>
               <View style={styles.ratingProfileContainer}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <View style={styles.ratingProfileIcon}>
                   {selectedLuggageRequest.senderProfilePhoto ? (
                     <Image source={{ uri: selectedLuggageRequest.senderProfilePhoto }} style={styles.ratingProfileAvatar} />
                   ) : (
-                    <SvgXml xml={ProfileUserIcon} height={32} width={32} />
+                    <SvgXml xml={ProfileUserIcon} height={24} width={24} />
                   )}
                 </View>
                 <Text style={styles.ratingProfileName}>{selectedLuggageRequest.sender?.first_name} {selectedLuggageRequest.sender?.last_name}</Text>
@@ -331,12 +332,13 @@ const TrackScreen: React.FC = () => {
                     activeOpacity={0.7}
                   >
                     <Star
-                      size={32}
+                      size={24}
                       color={star <= rating ? '#FFD700' : '#E0E0E0'}
                       fill={star <= rating ? '#FFD700' : 'transparent'}
                     />
                   </TouchableOpacity>
                 ))}
+              </View>
               </View>
               
               <TextInput
@@ -431,7 +433,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   bottomSheetTitle: {
-    fontSize: Fonts.xl,
+    fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     marginBottom: 24,
@@ -480,7 +482,7 @@ const styles = StyleSheet.create({
   },
   // Rating Screen Styles
   ratingTitle: {
-    fontSize: Fonts.xl,
+    fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     marginBottom: 16,
@@ -488,6 +490,7 @@ const styles = StyleSheet.create({
   ratingProfileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 24,
   },
   ratingProfileIcon: {
@@ -513,8 +516,8 @@ const styles = StyleSheet.create({
   starsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 24,
+    gap: 4,
+    // marginBottom: 24,
   },
   feedbackInput: {
     backgroundColor: Colors.backgroundWhite,

@@ -107,7 +107,8 @@ const RideDetailScreen: React.FC = () => {
       >
         {/* Ride Information Card */}
         <Card style={styles.rideCard} padding={20}>
-          {/* <Text style={styles.date}>{date}</Text> */}
+          <Text style={styles.date}>{date}</Text>
+
 
           {/* Pickup Location */}
           <View style={[styles.locationRow, { marginBottom: 20 }]}>
@@ -120,7 +121,7 @@ const RideDetailScreen: React.FC = () => {
                 <Text style={styles.locationAddress}>{origin}</Text>
               </View>
             </View>
-            <Text style={styles.time}>{originTime}</Text>
+            {/* <Text style={styles.time}>{originTime}</Text> */}
           </View>
 
           {/* Destination Location */}
@@ -134,7 +135,7 @@ const RideDetailScreen: React.FC = () => {
                 <Text style={styles.locationAddress}>{destination}</Text>
               </View>
             </View>
-            <Text style={styles.time}>{destinationTime}</Text>
+            {/* <Text style={styles.time}>{destinationTime}</Text> */}
           </View>
         </Card>
 
@@ -192,7 +193,7 @@ const RideDetailScreen: React.FC = () => {
                   <ActivityIndicator size="small" color={Colors.textPrimary} />
                 ) : (
                   <>
-                    <Trash2 size={20} color={Colors.textPrimary} style={styles.deleteIcon} />
+                    <Trash2 size={20} color={Colors.primaryCyan} style={styles.deleteIcon} />
                     <Text style={styles.deleteButtonText}>Delete</Text>
                   </>
                 )}
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
+    color: Colors.primaryCyan,
   },
   deleteButtonDisabled: {
     opacity: 0.6,

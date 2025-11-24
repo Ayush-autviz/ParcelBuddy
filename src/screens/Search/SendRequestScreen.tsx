@@ -14,7 +14,7 @@ import { ChevronRight, Upload, Calendar, Package } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card, GradientButton, SectionCard, SearchInput } from '../../components';
+import { Header, Card, GradientButton, SectionCard, SearchInput, KYCVerificationModal } from '../../components';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
 import { SvgXml } from 'react-native-svg';
@@ -23,6 +23,8 @@ import * as ImagePicker from 'react-native-image-picker';
 import { User } from 'lucide-react-native';
 import { useCreateLuggageRequest } from '../../hooks/useLuggage';
 import { useToast } from '../../components/Toast';
+import { useAuthStore } from '../../services/store';
+
 
 type SendRequestScreenRouteProp = RouteProp<SearchStackParamList, 'SendRequest'>;
 type SendRequestScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'SendRequest'>;
@@ -33,7 +35,8 @@ const SendRequestScreen: React.FC = () => {
   const { ride } = route.params;
   const { showWarning, showError, showSuccess } = useToast();
   const createLuggageRequestMutation = useCreateLuggageRequest();
-
+  const { user } = useAuthStore();
+  const [showKYCModal, setShowKYCModal] = useState(false);
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
   const [height, setHeight] = useState('');
@@ -82,6 +85,13 @@ const SendRequestScreen: React.FC = () => {
   };
 
   const handleBookNow = () => {
+
+     // Check KYC verification first
+     if (user && !(user as any)?.is_kyc_verified) {
+      setShowKYCModal(true);
+      return;
+    }
+
     // Validation
     if (!weight || !weight.trim()) {
       showWarning('Please enter weight');
@@ -448,6 +458,22 @@ const SendRequestScreen: React.FC = () => {
           </View>
         </Card>
       </ScrollView>
+
+{/* KYC Verification Modal */}
+<KYCVerificationModal
+        visible={showKYCModal}
+        title="KYC Verification Required"
+        description="Please complete your KYC verification to create a ride. This helps us ensure the safety and security of our platform."
+        buttonText="Verify Now"
+        onButtonPress={() => {
+          setShowKYCModal(false);
+          navigation.navigate('Profile', {
+            screen: 'KYCVerification',
+          });
+        }}
+        onClose={() => setShowKYCModal(false)}
+      />
+
     </SafeAreaView>
   );
 };

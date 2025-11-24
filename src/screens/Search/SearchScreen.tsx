@@ -368,7 +368,7 @@ const SearchScreen: React.FC = () => {
           ) : searchHistory.length === 0 ? (
             <Text style={styles.emptyText}>No search history available</Text>
           ) : (
-            searchHistory.map((item) => (
+            searchHistory.slice(0, 5).map((item) => (
               <SearchHistoryItem
                 key={item.id}
                 from={item.from}
