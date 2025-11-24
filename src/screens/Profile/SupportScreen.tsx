@@ -35,7 +35,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: 'How do I verify my account (KYC)?',
-    answer: 'Go to Settings → Verification → Upload your ID and address proof. Once approved, you\'ll receive a verified badge.',
+    answer: 'Go to Profile → KYC Status → Upload your ID and take a selfie. Once approved, you\'ll receive a verified badge.',
   },
 ];
 
@@ -113,10 +113,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   helpSection: {
-    marginBottom: 32,
+    marginBottom: 4,
   },
   sectionTitle: {
-    fontSize: Fonts.xxl,
+    fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     marginBottom: 20,
@@ -136,25 +136,23 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: Fonts.base,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightRegular,
     color: Colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   answer: {
-    fontSize: Fonts.base,
-    color: Colors.textSecondary,
-    lineHeight: 22,
+    fontSize: Fonts.sm,
+    color: Colors.textLight,
+    // lineHeight: 22,
   },
   contactSection: {
-    marginTop: 8,
+    // marginTop: 8,
   },
   contactCard: {
-    backgroundColor: Colors.primaryCyan + '20',
+    backgroundColor: '#DFF1F2',
     borderRadius: 12,
     padding: 20,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: Colors.primaryCyan + '30',
+    // marginTop: 12,
   },
   contactContent: {
     flexDirection: 'row',

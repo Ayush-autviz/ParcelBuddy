@@ -21,6 +21,8 @@ import { useProfileById } from '../../hooks/useProfile';
 import { useCreateChatRoom } from '../../hooks/useChat';
 import { useToast } from '../../components/Toast';
 import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
+import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
+import { SvgXml } from 'react-native-svg';
 
 type SenderDetailScreenRouteProp = RouteProp<ExtendedTrackStackParamList, 'SenderDetail'>;
 type SenderDetailScreenNavigationProp = StackNavigationProp<ExtendedTrackStackParamList, 'SenderDetail'>;
@@ -120,23 +122,23 @@ const SenderDetailScreen: React.FC = () => {
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    // const hasHalfStar = rating % 1 >= 0.5;
 
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(
           <Star key={i} size={20} color="#FFD700" fill="#FFD700" />
         );
-      } else if (i === fullStars && hasHalfStar) {
-        stars.push(
-          <View key={i} style={styles.halfStarContainer}>
-            <Star size={20} color="#FFD700" fill="#FFD700" />
-            <View style={styles.halfStarOverlay} />
-          </View>
-        );
+      // } else if (i === fullStars && hasHalfStar) {
+      //   stars.push(
+      //     <View key={i} style={styles.halfStarContainer}>
+      //       <Star size={20} color="#FFD700" fill="#FFD700" />
+      //       <View style={styles.halfStarOverlay} />
+      //     </View>
+      //   );
       } else {
         stars.push(
-          <Star key={i} size={20} color="#E0E0E0" />
+          <Star key={i} size={20} color="#E0E0E0" fill="#E0E0E0" />
         );
       }
     }
@@ -172,7 +174,8 @@ const SenderDetailScreen: React.FC = () => {
               <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <User size={60} color={Colors.primaryCyan} />
+                {/* <User size={60} color={Colors.primaryCyan} /> */}
+                <SvgXml xml={ProfileUserIcon} width={60} height={60} />
               </View>
             )}
           </View>
@@ -206,17 +209,16 @@ const SenderDetailScreen: React.FC = () => {
         </Card>
 
         {/* Verification Section - Only show if verified */}
-        {isVerified && (
-          <Card style={styles.verificationCard} padding={20}>
+  
+        <Card style={styles.verificationCard} padding={20}>
             <Text style={styles.sectionTitle}>Verification</Text>
             <View style={styles.verificationRow}>
               <View style={styles.checkIconContainer}>
-                <Check size={20} color={Colors.primaryCyan} />
+                <Check size={14} color={Colors.backgroundWhite} strokeWidth={3} />
               </View>
               <Text style={styles.verificationText}>Government ID Verified</Text>
             </View>
           </Card>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -252,17 +254,23 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: Colors.primaryCyan + '20',
+    backgroundColor: Colors.backgroundWhite,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: Colors.primaryCyan,
+    shadowColor: Colors.textLight,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
   },
   userName: {
     fontSize: Fonts.xxl,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightMedium,
     color: Colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   userAge: {
     fontSize: Fonts.base,
@@ -270,12 +278,15 @@ const styles = StyleSheet.create({
   },
   ratingSection: {
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
     marginBottom: 24,
   },
   starsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    // marginBottom: 8,
     gap: 4,
   },
   halfStarContainer: {
@@ -293,7 +304,7 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: Fonts.base,
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
     fontWeight: Fonts.weightMedium,
   },
   chatButton: {
@@ -311,7 +322,7 @@ const styles = StyleSheet.create({
   aboutText: {
     fontSize: Fonts.base,
     color: Colors.textSecondary,
-    lineHeight: 24,
+    // lineHeight: 24,
   },
   verificationCard: {
     marginBottom: 16,
@@ -321,10 +332,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkIconContainer: {
-    width: 32,
-    height: 32,
+    width: 24,
+    height: 24,
     borderRadius: 16,
-    backgroundColor: Colors.primaryCyan + '20',
+    backgroundColor: Colors.gradientStart,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -332,7 +343,7 @@ const styles = StyleSheet.create({
   verificationText: {
     fontSize: Fonts.base,
     color: Colors.textPrimary,
-    fontWeight: Fonts.weightMedium,
+    // fontWeight: Fonts.weightMedium,
   },
   loadingContainer: {
     flex: 1,

@@ -95,23 +95,23 @@ const RatingsScreen: React.FC = () => {
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    // const hasHalfStar = rating % 1 >= 0.5;
 
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(
           <Star key={i} size={16} color="#FFD700" fill="#FFD700" />
         );
-      } else if (i === fullStars && hasHalfStar) {
-        stars.push(
-          <View key={i} style={styles.halfStarContainer}>
-            <Star size={16} color="#FFD700" fill="#FFD700" />
-            <View style={styles.halfStarOverlay} />
-          </View>
-        );
+      // } else if (i === fullStars && hasHalfStar) {
+      //   stars.push(
+      //     <View key={i} style={styles.halfStarContainer}>
+      //       <Star size={16} color="#FFD700" fill="#FFD700" />
+      //       <View style={styles.halfStarOverlay} />
+      //     </View>
+      //   );
       } else {
         stars.push(
-          <Star key={i} size={16} color="#E0E0E0" fill="#E0E0E0" />
+          <Star key={i} size={16} color="#fff" fill="#fff" />
         );
       }
     }
@@ -241,10 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 8,
     backgroundColor: Colors.backgroundLight,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
   },
   tab: {
     flex: 1,
@@ -259,7 +256,7 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
   },
   activeTabText: {
-    color: Colors.primaryCyan,
+    color: Colors.primaryTeal,
     fontWeight: Fonts.weightSemiBold,
   },
   tabUnderline: {
@@ -268,7 +265,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: Colors.primaryCyan,
+    backgroundColor: Colors.primaryTeal,
   },
   scrollView: {
     flex: 1,
@@ -280,6 +277,9 @@ const styles = StyleSheet.create({
   },
   ratingSummary: {
     marginBottom: 24,
+    backgroundColor: '#DFF1F2',
+    borderRadius: 12,
+    padding: 12
   },
   ratingHeader: {
     flexDirection: 'row',
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   ratingNumber: {
-    fontSize: 48,
+    fontSize: Fonts.xxxl,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     marginBottom: 8,
