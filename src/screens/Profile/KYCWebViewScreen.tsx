@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ProfileHeader } from '../../components';
+import { Header, ProfileHeader } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { Colors } from '../../constants/colors';
 import { useToast } from '../../components/Toast';
@@ -150,7 +150,8 @@ const KYCWebViewScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ProfileHeader title="KYC Verification" />
+      {/* <ProfileHeader title="KYC Verification" /> */}
+      <Header title="KYC Verification" showBackButton />
       <View style={styles.webViewContainer}>
         {loading && (
           <View style={styles.loadingContainer}>

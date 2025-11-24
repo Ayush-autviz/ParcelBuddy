@@ -40,7 +40,7 @@ const CreateScreen: React.FC = () => {
   const [length, setLength] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [showKYCModal, setShowKYCModal] = useState(false);
-  const { showWarning, showSuccess } = useToast();
+  const { showWarning, showSuccess, showError } = useToast();
 
   // Use Zustand store for origin/destination
   const { 
@@ -138,6 +138,11 @@ const CreateScreen: React.FC = () => {
       return;
     }
 
+    if (additionalNotes.trim() === '') {
+      showWarning('Please enter additional notes');
+      return;
+    }
+
     // Prepare request data
     const requestData = {
       origin_name: origin,
@@ -182,9 +187,8 @@ const CreateScreen: React.FC = () => {
         navigation.navigate('Track');
       },
       onError: (error: any) => {
-        const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create ride';
         console.log('Create ride error:', error.response.data.error);
-        Alert.alert('Error', errorMessage);
+        showError(error.response.data.error);
       },
     });
   };

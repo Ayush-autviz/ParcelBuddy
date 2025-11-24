@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, User, MessageCircle } from 'lucide-react-native';
@@ -41,7 +42,7 @@ const ChatScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
   // Fetch chat list from API
-  const { data: chatListResponse, isLoading, isError, error } = useChatList();
+  const { data: chatListResponse, isLoading, isError, error, refetch, isRefetching } = useChatList();
 
   console.log('chatListResponse', chatListResponse);
   
@@ -235,6 +236,14 @@ const ChatScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              colors={[Colors.primaryCyan]}
+              tintColor={Colors.primaryCyan}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <EmptyStateCard

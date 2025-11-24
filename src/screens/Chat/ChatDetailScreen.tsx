@@ -365,6 +365,7 @@ const ChatDetailScreen: React.FC = () => {
             elevation: 5,
 
           },
+          
         }}
         textStyle={{
           right: {
@@ -514,7 +515,7 @@ const ChatDetailScreen: React.FC = () => {
           placeholder="Type a message..."
           isLoadingEarlier={isLoading}
           showUserAvatar={false}
-          renderAvatarOnTop={true}
+          renderAvatarOnTop={false}
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           renderSend={renderSend}
@@ -523,7 +524,8 @@ const ChatDetailScreen: React.FC = () => {
           minInputToolbarHeight={60}
           onInputTextChanged={handleTyping}
           messagesContainerStyle={styles.messagesContainer}
-          renderAvatar={renderAvatar}
+          // renderAvatar={renderAvatar}
+          renderAvatar={null}
         />
       </KeyboardAvoidingView>
 
@@ -812,7 +814,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   messagesContainer: {
-    paddingBottom: 20,
+    // paddingBottom: 20,
     paddingHorizontal: 16,
   },
   avatarContainer: {
