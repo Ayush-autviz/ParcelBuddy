@@ -26,6 +26,8 @@ import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
 import { getLuggageRequestsForRide } from '../../services/api/luggage';
 import { useToast } from '../../components/Toast';
 import { ChevronRight } from 'lucide-react-native';
+import { useCreateRating } from '../../hooks/useRating';
+import { useQueryClient } from '@tanstack/react-query';
 
 type TabType = 'Booked' | 'Published';
 type TrackScreenNavigationProp = StackNavigationProp<ExtendedTrackStackParamList, 'TrackList'>;
@@ -37,11 +39,27 @@ interface LuggageRequest {
   senderProfilePhoto: string | null;
   status: string;
   itemCount: number;
+  sender?: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    profile?: {
+      profile_photo?: string | null;
+    };
+  };
+  ride?: {
+    traveler?: {
+      id: string;
+    };
+  };
+  // Store full request data for API calls
+  fullData?: any;
 }
 
 const TrackScreen: React.FC = () => {
   const navigation = useNavigation<TrackScreenNavigationProp>();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('Published');
   const [selectedLuggageRequest, setSelectedLuggageRequest] = useState<any | null>(null);
   const [luggageRequests, setLuggageRequests] = useState<any>([]);
@@ -50,6 +68,9 @@ const TrackScreen: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  
+  // Rating mutation
+  const createRatingMutation = useCreateRating();
   
   // Define snap points for bottom sheet - larger for rating screen
   const snapPoints = useMemo(() => ['50%', '75%'], []);
@@ -120,7 +141,7 @@ const TrackScreen: React.FC = () => {
     
     try {
       const response = await getLuggageRequestsForRide(ride.id);
-      console.log('Luggage requests response:', response);
+      console.log('Luggage requests response hehehehe:', response);
       
       let allRequests: LuggageRequest[] = [];
       if (response && response.luggageRequests && Array.isArray(response.luggageRequests)) {
@@ -130,10 +151,26 @@ const TrackScreen: React.FC = () => {
         allRequests = response;
       }
       
-      // Filter to show only approved requests
-      const approvedRequests = allRequests.filter(
-        (request) => request.status?.toLowerCase() === 'approved'
-      );
+      // Filter to show only approved requests and map to include full data
+      const approvedRequests = allRequests
+        .filter((request) => request.status?.toLowerCase() === 'approved')
+        .map((request: any) => {
+          const firstName = request.sender?.first_name || '';
+          const lastName = request.sender?.last_name || '';
+          const senderName = `${firstName} ${lastName}`.trim() || 'Unknown';
+          const senderProfilePhoto = request.sender?.profile?.profile_photo || null;
+          
+          return {
+            id: request.id,
+            senderName,
+            senderProfilePhoto,
+            status: request.status,
+            itemCount: request.luggage_photo?.length || 1,
+            sender: request.sender,
+            ride: request.ride,
+            fullData: request, // Store full request data for API calls
+          };
+        });
       
       setLuggageRequests(approvedRequests);
       bottomSheetModalRef.current?.present();
@@ -154,21 +191,65 @@ const TrackScreen: React.FC = () => {
   };
 
   const handleSubmitRating = () => {
-    if (selectedLuggageRequest && rating > 0) {
-      console.log('Submit rating:', {
-        luggageRequestId: selectedLuggageRequest.id,
-        senderName: selectedLuggageRequest.senderName,
-        rating,
-        feedback,
-      });
-      // Add your rating submission logic here
-      bottomSheetModalRef.current?.dismiss();
-      setSelectedLuggageRequest(null);
-      setRating(0);
-      setFeedback('');
-      setLuggageRequests([]);
-      setSelectedRideId(null);
+    if (!selectedLuggageRequest || rating <= 0) {
+      showError('Please select a rating');
+      return;
     }
+
+    // Determine rating type based on active tab
+    const ratingType = activeTab === 'Published' ? 'traveler' : 'sender';
+    
+    // Get the user ID to rate
+    let ratedToId: string | undefined;
+    if (ratingType === 'traveler') {
+      // For published rides, rate the sender
+      ratedToId = selectedLuggageRequest.sender?.id || selectedLuggageRequest.fullData?.sender?.id;
+    } else {
+      // For booked rides, rate the traveler
+      ratedToId = selectedLuggageRequest.ride?.traveler?.id || selectedLuggageRequest.fullData?.ride?.traveler?.id;
+    }
+
+    if (!ratedToId) {
+      showError('Unable to find user to rate. Please try again.');
+      return;
+    }
+
+    const luggageRequestId = selectedLuggageRequest.id || selectedLuggageRequest.fullData?.id;
+    if (!luggageRequestId) {
+      showError('Luggage request ID is missing');
+      return;
+    }
+
+    // Submit rating
+    createRatingMutation.mutate(
+      {
+        rating_type: ratingType,
+        rated_to: ratedToId,
+        luggage_request: luggageRequestId,
+        rating: rating,
+        review: feedback || '',
+      },
+      {
+        onSuccess: () => {
+          showSuccess('Rating submitted successfully!');
+          bottomSheetModalRef.current?.dismiss();
+          setSelectedLuggageRequest(null);
+          setRating(0);
+          setFeedback('');
+          setLuggageRequests([]);
+          setSelectedRideId(null);
+          
+          // Invalidate queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ['publishedRides'] });
+          queryClient.invalidateQueries({ queryKey: ['bookedRides'] });
+          queryClient.invalidateQueries({ queryKey: ['ride-ratings'] });
+        },
+        onError: (error: any) => {
+          console.error('Submit rating error:', error);
+          showError(error?.response?.data?.message || error?.message || 'Failed to submit rating. Please try again.');
+        },
+      }
+    );
   };
 
   // Render backdrop for bottom sheet
@@ -356,6 +437,8 @@ const TrackScreen: React.FC = () => {
                 title="Submit"
                 onPress={handleSubmitRating}
                 style={styles.submitButton}
+                loading={createRatingMutation.isPending}
+                disabled={createRatingMutation.isPending || rating <= 0}
               />
             </>
           )}

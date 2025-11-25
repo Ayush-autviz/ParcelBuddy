@@ -8,9 +8,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FileText } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { ProfileHeader } from '../../components';
+import { ProfileHeader, Card } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 
 type TermsAndPolicyScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'TermsAndPolicy'>;
@@ -27,46 +28,62 @@ const TermsAndPolicyScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Title and Update Date */}
-        <View style={styles.titleSection}>
-          <Text style={styles.mainTitle}>ParcelBuddy - Terms and Conditions</Text>
-        </View>
+        {/* Title Section */}
+        <Card style={styles.titleCard} padding={20}>
+          <View style={styles.titleIconContainer}>
+            <FileText size={32} color={Colors.primaryCyan} />
+          </View>
+          <Text style={styles.mainTitle}>ParcelBuddy</Text>
+          <Text style={styles.subtitle}>Terms and Conditions</Text>
+          <View style={styles.divider} />
+          <Text style={styles.introText}>
+            Please read these terms carefully. By using our platform, you agree to be bound by these terms and conditions.
+          </Text>
+        </Card>
 
         {/* Table of Contents */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TABLE OF CONTENTS</Text>
-          <Text style={styles.listItem}>1. Definitions</Text>
-          <Text style={styles.listItem}>2. Acceptance; Scope; Amendment</Text>
-          <Text style={styles.listItem}>3. Eligibility & User Representations</Text>
-          <Text style={styles.listItem}>4. Nature of Service; No Carrier; Disclaimer</Text>
-          <Text style={styles.listItem}>5. Account Registration, Authentication & KYC</Text>
-          <Text style={styles.listItem}>6. User Responsibilities (Travelers & Senders)</Text>
-          <Text style={styles.listItem}>7. Prohibited Goods & Activities</Text>
-          <Text style={styles.listItem}>8. Fees, Subscriptions, Payments & Billing</Text>
-          <Text style={styles.listItem}>9. Refunds, Cancellations & Chargebacks</Text>
-          <Text style={styles.listItem}>10. Intellectual Property Rights</Text>
-          <Text style={styles.listItem}>11. Privacy, Data Protection & Data Security</Text>
-          <Text style={styles.listItem}>12. Logs, Audit Trails, Records & Cooperation with Authorities</Text>
-          <Text style={styles.listItem}>13. Messages, Content & Moderation</Text>
-          <Text style={styles.listItem}>14. Warranties & Disclaimers</Text>
-          <Text style={styles.listItem}>15. Limitation of Liability; Caps; Remedies</Text>
-          <Text style={styles.listItem}>16. Indemnity</Text>
-          <Text style={styles.listItem}>17. Insurance & Risk Allocation</Text>
-          <Text style={styles.listItem}>18. Suspension, Termination & Consequences</Text>
-          <Text style={styles.listItem}>19. Force Majeure</Text>
-          <Text style={styles.listItem}>20. Governing Law, Dispute Resolution & Jurisdiction</Text>
-          <Text style={styles.listItem}>21. Notices & Grievance Redressal</Text>
-          <Text style={styles.listItem}>22. Miscellaneous (Assignment, Severability, Non-Waiver, Third-Party Rights)</Text>
-          <Text style={styles.listItem}>Annexure A – Privacy Policy (DPDP-compliant)</Text>
-          <Text style={styles.listItem}>Annexure B – Refund & Cancellation Policy</Text>
-          <Text style={styles.listItem}>Annexure C – KYC, AML & Data Sharing Policy</Text>
-          <Text style={styles.listItem}>Annexure D – Subscription Plans & Terms</Text>
-          <Text style={styles.listItem}>Annexure E – Takedown / Complaints Procedure</Text>
-        </View>
+        <Card style={styles.tocCard} padding={20}>
+          <Text style={styles.tocTitle}>TABLE OF CONTENTS</Text>
+          <View style={styles.tocContent}>
+            <Text style={styles.tocItem}>1. Definitions</Text>
+            <Text style={styles.tocItem}>2. Acceptance; Scope; Amendment</Text>
+            <Text style={styles.tocItem}>3. Eligibility & User Representations</Text>
+            <Text style={styles.tocItem}>4. Nature of Service; No Carrier; Disclaimer</Text>
+            <Text style={styles.tocItem}>5. Account Registration, Authentication & KYC</Text>
+            <Text style={styles.tocItem}>6. User Responsibilities (Travelers & Senders)</Text>
+            <Text style={styles.tocItem}>7. Prohibited Goods & Activities</Text>
+            <Text style={styles.tocItem}>8. Fees, Subscriptions, Payments & Billing</Text>
+            <Text style={styles.tocItem}>9. Refunds, Cancellations & Chargebacks</Text>
+            <Text style={styles.tocItem}>10. Intellectual Property Rights</Text>
+            <Text style={styles.tocItem}>11. Privacy, Data Protection & Data Security</Text>
+            <Text style={styles.tocItem}>12. Logs, Audit Trails, Records & Cooperation with Authorities</Text>
+            <Text style={styles.tocItem}>13. Messages, Content & Moderation</Text>
+            <Text style={styles.tocItem}>14. Warranties & Disclaimers</Text>
+            <Text style={styles.tocItem}>15. Limitation of Liability; Caps; Remedies</Text>
+            <Text style={styles.tocItem}>16. Indemnity</Text>
+            <Text style={styles.tocItem}>17. Insurance & Risk Allocation</Text>
+            <Text style={styles.tocItem}>18. Suspension, Termination & Consequences</Text>
+            <Text style={styles.tocItem}>19. Force Majeure</Text>
+            <Text style={styles.tocItem}>20. Governing Law, Dispute Resolution & Jurisdiction</Text>
+            <Text style={styles.tocItem}>21. Notices & Grievance Redressal</Text>
+            <Text style={styles.tocItem}>22. Miscellaneous (Assignment, Severability, Non-Waiver, Third-Party Rights)</Text>
+            <Text style={styles.tocItem}>Annexure A – Privacy Policy (DPDP-compliant)</Text>
+            <Text style={styles.tocItem}>Annexure B – Refund & Cancellation Policy</Text>
+            <Text style={styles.tocItem}>Annexure C – KYC, AML & Data Sharing Policy</Text>
+            <Text style={styles.tocItem}>Annexure D – Subscription Plans & Terms</Text>
+            <Text style={styles.tocItem}>Annexure E – Takedown / Complaints Procedure</Text>
+          </View>
+        </Card>
 
         {/* Section 1: Definitions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. DEFINITIONS (FULLY ELABORATED)</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>1</Text>
+            </View>
+            <Text style={styles.sectionTitle}>DEFINITIONS (FULLY ELABORATED)</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>1.1 "App / Platform"</Text>
           <Text style={styles.sectionText}>
             – The ParcelBuddy mobile applications, websites, dashboards, APIs, plugins, widgets, microservices, software, servers, interfaces, updates, patches, content management systems, and all ancillary services provided by the Company, including future enhancements or features.
@@ -119,11 +136,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – means an account with the App opened by a user and used in order to access the Service provided by ParcelBuddy through the App.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 2: Acceptance; Scope; Amendment */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. ACCEPTANCE; SCOPE; AMENDMENT</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>2</Text>
+            </View>
+            <Text style={styles.sectionTitle}>ACCEPTANCE; SCOPE; AMENDMENT</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>2.1 Acceptance</Text>
           <Text style={styles.sectionText}>
             – By accessing or using the App, you agree unconditionally to these Terms and all annexures. Partial acceptance or selective compliance is prohibited.
@@ -160,11 +183,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – These Terms create enforceable rights and obligations under Indian Contract Act, 1872, read with applicable laws like Customs Act, DGCA regulations, and IT Act, 2000.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 3: Eligibility & User Representations */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. ELIGIBILITY & USER REPRESENTATIONS</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>3</Text>
+            </View>
+            <Text style={styles.sectionTitle}>ELIGIBILITY & USER REPRESENTATIONS</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>3.1 Minimum Age</Text>
           <Text style={styles.sectionText}>
             – Users must be 18 years or older and legally competent to contract.
@@ -190,11 +219,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Users shall not use the App for unlawful purposes, including smuggling, trafficking, or facilitation of illegal activities.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 4: Nature of Service; Disclaimer */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>4. NATURE OF SERVICE; DISCLAIMER</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>4</Text>
+            </View>
+            <Text style={styles.sectionTitle}>NATURE OF SERVICE; DISCLAIMER</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>4.1 Intermediary Role</Text>
           <Text style={styles.sectionText}>
             – ParcelBuddy is a technology platform connecting Travelers and Senders. The Company is solely a technology intermediary and does not provide carriage, warehousing, logistics, or courier services.
@@ -238,11 +273,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             Please note that ParcelBuddy reserves the right to change any aspect of the App or the Service which may include adding new services (which may require payment) or withdrawing any existing Services. ParcelBuddy does not guarantee that the App will be functional at all times and Services may be suspended during such period when the App is not in operation. ParcelBuddy will not be liable to any of the users in case where the Site is non-operational.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 5: Account Creation, Authentication & KYC */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>5. ACCOUNT CREATION, AUTHENTICATION & KYC</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>5</Text>
+            </View>
+            <Text style={styles.sectionTitle}>ACCOUNT CREATION, AUTHENTICATION & KYC</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.sectionText}>
             By accepting the terms and conditions contained herein, every user or any person who wishes to register as a user hereby agrees and consents to the fact that ParcelBuddy may collect IDs / documents belonging to them including but not limited to passport, PAN card and Aadhaar card for the purpose of verification of the information contained in such IDs / documents by third party service providers.
           </Text>
@@ -276,11 +317,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             Any breach of these Terms and Conditions will give rise to immediate suspension of such user's User Account and they may be restricted from accessing any further Services.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 6: User Responsibilities */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>6. USER RESPONSIBILITIES (TRAVELERS & SENDERS)</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>6</Text>
+            </View>
+            <Text style={styles.sectionTitle}>USER RESPONSIBILITIES (TRAVELERS & SENDERS)</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>6.1 Traveler Obligations</Text>
           <Text style={styles.listItem}>• Travelers shall act as independent individuals, not agents, employees, or contractors of ParcelBuddy.</Text>
           <Text style={styles.listItem}>• Trips shall not be used for illegal or criminal purposes.</Text>
@@ -299,11 +346,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.subsectionTitle}>6.3 Joint Responsibilities</Text>
           <Text style={styles.listItem}>• Both parties shall maintain records and communication to support compliance and dispute resolution.</Text>
           <Text style={styles.listItem}>• Users shall act in good faith to ensure safe, legal, and efficient transport of Goods.</Text>
-        </View>
+        </Card>
 
         {/* Section 7: Prohibited Goods & Activities */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>7. PROHIBITED GOODS & ACTIVITIES</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>7</Text>
+            </View>
+            <Text style={styles.sectionTitle}>PROHIBITED GOODS & ACTIVITIES</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>7.1 Prohibited Goods</Text>
           <Text style={styles.sectionText}>
             include (but are not limited to): narcotics, firearms, explosives, radioactive materials, counterfeit goods, endangered species, human biological materials, currency in violation of law, and goods prohibited by Customs Act, DGCA, IATA, or other applicable laws.
@@ -320,11 +373,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – No user will hold the app / the company responsible or will file a legal case against the app or the company incase any of the users (Traveler or Sender) violates the above rules.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 8: Fees, Subscriptions, Payments & Billing */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>8. FEES, SUBSCRIPTIONS, PAYMENTS & BILLING</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>8</Text>
+            </View>
+            <Text style={styles.sectionTitle}>FEES, SUBSCRIPTIONS, PAYMENTS & BILLING</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>8.1 Subscription Plans</Text>
           <Text style={styles.sectionText}>
             – Tiered subscriptions (Silver, Gold, Diamond) are offered, with features, billing cycles, and trial periods specified in Annexure D.
@@ -345,11 +404,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – ParcelBuddy does not act as escrow or custodian unless explicitly indicated. Users remain responsible for settlement between themselves.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 9: Refunds, Cancellations & Chargebacks */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>9. REFUNDS, CANCELLATIONS & CHARGEBACKS</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>9</Text>
+            </View>
+            <Text style={styles.sectionTitle}>REFUNDS, CANCELLATIONS & CHARGEBACKS</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>9.1 Refund Eligibility</Text>
           <Text style={styles.sectionText}>
             – Generally, subscription fees are non-refundable. Exceptions include duplicate charges, billing errors, or Company error.
@@ -362,11 +427,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Refund disputes must be submitted in writing within thirty (30) days to contact@parcelbuddys.com, with supporting evidence.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 10: Intellectual Property Rights */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>10. INTELLECTUAL PROPERTY RIGHTS</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>10</Text>
+            </View>
+            <Text style={styles.sectionTitle}>INTELLECTUAL PROPERTY RIGHTS</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>10.1 Company IP</Text>
           <Text style={styles.sectionText}>
             – ParcelBuddy owns all software, designs, trademarks, logos, and associated content.
@@ -383,11 +454,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Users shall not copy, reverse engineer, or modify the App or remove proprietary notices.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 11: Privacy, Data Protection & Security */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>11. PRIVACY, DATA PROTECTION & SECURITY (DPDP ACT)</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>11</Text>
+            </View>
+            <Text style={styles.sectionTitle}>PRIVACY, DATA PROTECTION & SECURITY (DPDP ACT)</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>11.1 Privacy Policy</Text>
           <Text style={styles.sectionText}>
             – Data collection, storage, transfer of personal data and processing of data are governed by Annexure A, compliant with DPDP Act, 2023.
@@ -416,11 +493,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Data may be processed outside India with adequate safeguards.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 12: Logs, Audit Trails & Cooperation with Authorities */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>12. LOGS, AUDIT TRAILS & COOPERATION WITH AUTHORITIES</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>12</Text>
+            </View>
+            <Text style={styles.sectionTitle}>LOGS, AUDIT TRAILS & COOPERATION WITH AUTHORITIES</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>12.1 Record-Keeping</Text>
           <Text style={styles.sectionText}>
             – Tamper-evident logs, transaction history, KYC records, and audit trails maintained in compliance with applicable laws.
@@ -433,11 +516,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Company will cooperate with law enforcement, regulatory authorities, and courts in investigations.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 13: Messages, Content & Moderation */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>13. MESSAGES, CONTENT & MODERATION</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>13</Text>
+            </View>
+            <Text style={styles.sectionTitle}>MESSAGES, CONTENT & MODERATION</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>13.1 Message Monitoring</Text>
           <Text style={styles.sectionText}>
             – ParcelBuddy may review, analyze, and moderate messages exchanged on the platform for fraud prevention, compliance, and safety.
@@ -507,11 +596,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             Given that Travelers are required to hold valid insurance to cover a Trip and given that ParcelBuddy's service is limited to putting Travelers and Senders in touch with each other and cannot oversee any Trip, users accept that the limitations on the ParcelBuddy's liability set out above are reasonable.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 14: Warranties & Disclaimers */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>14. WARRANTIES & DISCLAIMERS</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>14</Text>
+            </View>
+            <Text style={styles.sectionTitle}>WARRANTIES & DISCLAIMERS</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>14.1 No Warranty</Text>
           <Text style={styles.sectionText}>
             – The App and Services are provided "as is" without warranty of merchantability, fitness for purpose, or non-infringement.
@@ -524,11 +619,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Users warrant lawful use and compliance with Terms.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 15: Limitation of Liability */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>15. LIMITATION OF LIABILITY; CAPS; REMEDIES</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>15</Text>
+            </View>
+            <Text style={styles.sectionTitle}>LIMITATION OF LIABILITY; CAPS; REMEDIES</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>15.1 Liability Cap</Text>
           <Text style={styles.sectionText}>
             – Aggregate liability capped at total subscription fees paid in preceding 12 months or INR [●], whichever is lower.
@@ -545,11 +646,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Repair, replacement, or refund in accordance with Annexure B.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 16: Indemnity */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>16. INDEMNITY</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>16</Text>
+            </View>
+            <Text style={styles.sectionTitle}>INDEMNITY</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>16.1 User Indemnity</Text>
           <Text style={styles.sectionText}>
             – Users indemnify the App and the Company against claims, damages, losses, costs (including legal fees) arising from:
@@ -565,11 +672,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Company will notify Users promptly; Users shall defend and settle at their cost, with Company consent.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 17: Insurance & Risk Allocation */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>17. INSURANCE & RISK ALLOCATION</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>17</Text>
+            </View>
+            <Text style={styles.sectionTitle}>INSURANCE & RISK ALLOCATION</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>17.1 No Company Insurance</Text>
           <Text style={styles.sectionText}>
             – ParcelBuddy does not insure personal property or liabilities.
@@ -582,11 +695,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Custody and risk of Goods remain with the responsible User at all times; the Company bears no risk.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 18: Suspension, Termination & Consequences */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>18. SUSPENSION, TERMINATION & CONSEQUENCES</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>18</Text>
+            </View>
+            <Text style={styles.sectionTitle}>SUSPENSION, TERMINATION & CONSEQUENCES</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>18.1 Suspension</Text>
           <Text style={styles.sectionText}>
             – Company may suspend access for suspected breaches, fraud, safety concerns, or legal process.
@@ -599,11 +718,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Obligations for payments, indemnities, IP, data retention, and liability limitations survive termination.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 19: Force Majeure */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>19. FORCE MAJEURE</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>19</Text>
+            </View>
+            <Text style={styles.sectionTitle}>FORCE MAJEURE</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>19.1 Definition</Text>
           <Text style={styles.sectionText}>
             – Events beyond reasonable control: natural disasters, pandemics, strikes, cyberattacks, government actions.
@@ -616,11 +741,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – If force majeure persists >90 days, either party may terminate with written notice.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 20: Governing Law, Dispute Resolution & Jurisdiction */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>20. GOVERNING LAW, DISPUTE RESOLUTION & JURISDICTION</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>20</Text>
+            </View>
+            <Text style={styles.sectionTitle}>GOVERNING LAW, DISPUTE RESOLUTION & JURISDICTION</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>20.1 Governing Law</Text>
           <Text style={styles.sectionText}>
             – Indian law, including Indian Contract Act, 1872; IT Act, 2000; DPDP Act, 2023; DGCA and Customs regulations.
@@ -637,11 +768,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – ParcelBuddy may at its sole discretion provide its users with an online service for resolving disputes. This service is non-binding. ParcelBuddy is under no obligation to seek to resolve disputes and this service is offered at ParcelBuddy's sole discretion and may be withdrawn at any time.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 21: Notices & Grievance Redressal */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>21. NOTICES & GRIEVANCE REDRESSAL</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>21</Text>
+            </View>
+            <Text style={styles.sectionTitle}>NOTICES & GRIEVANCE REDRESSAL</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>21.1 Notices</Text>
           <Text style={styles.sectionText}>
             – To Company: registered office or contact@parcelbuddys.com; To Users: registered email or in-app messaging.
@@ -654,11 +791,17 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Company may disclose User data in legal or emergency circumstances.
           </Text>
-        </View>
+        </Card>
 
         {/* Section 22: Miscellaneous */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>22. MISCELLANEOUS</Text>
+        <Card style={styles.sectionCard} padding={20}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNumber}>
+              <Text style={styles.sectionNumberText}>22</Text>
+            </View>
+            <Text style={styles.sectionTitle}>MISCELLANEOUS</Text>
+          </View>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>22.1 Assignment</Text>
           <Text style={styles.sectionText}>
             – Company may assign rights; Users may not without prior written consent.
@@ -675,11 +818,18 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – No third-party beneficiaries unless expressly stated.
           </Text>
-        </View>
+        </Card>
 
         {/* Annexure A: Privacy & Cookies Policy */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ANNEXURE A – PRIVACY & COOKIES POLICY (COMPREHENSIVE DPDP & IT RULES COMPLIANT)</Text>
+        <Card style={styles.annexureCard} padding={20}>
+          <View style={styles.annexureHeader}>
+            <View style={styles.annexureBadge}>
+              <Text style={styles.annexureBadgeText}>A</Text>
+            </View>
+            <Text style={styles.annexureTitle}>PRIVACY & COOKIES POLICY</Text>
+          </View>
+          <Text style={styles.annexureSubtitle}>(Comprehensive DPDP & IT Rules Compliant)</Text>
+          <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>1. Purpose & Applicability</Text>
           <Text style={styles.sectionText}>
             This Privacy & Cookies Policy governs all personal data processed by ParcelBuddy through its mobile and web platforms. It outlines the lawful basis, purpose of processing, user rights, retention, security, and cookie usage as per the Digital Personal Data Protection Act, 2023, Information Technology Act, 2000, and IT (Intermediary Guidelines & Digital Media Ethics Code) Rules, 2021.
@@ -818,7 +968,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             ParcelBuddy may update this Privacy & Cookies Policy from time to time. Revised versions will be published on the App. Continued use after updates constitutes acceptance.
           </Text>
-        </View>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -837,39 +987,115 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 100,
   },
-  titleSection: {
+  // Title Card Styles
+  titleCard: {
+    backgroundColor: Colors.backgroundWhite,
     marginBottom: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primaryCyan + '20',
+  },
+  titleIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.primaryCyan + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   mainTitle: {
     fontSize: Fonts.xxl,
     fontWeight: Fonts.weightBold,
     color: Colors.primaryCyan,
-    marginBottom: 8,
+    marginBottom: 4,
+    textAlign: 'center',
   },
-  updateDate: {
-    fontSize: Fonts.sm,
-    color: Colors.textTertiary,
+  subtitle: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightMedium,
+    color: Colors.textSecondary,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  divider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginVertical: 16,
   },
   introText: {
     fontSize: Fonts.base,
-    color: Colors.textPrimary,
-    lineHeight: 24,
-    marginBottom: 24,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+    textAlign: 'center',
   },
-  section: {
-    marginBottom: 24,
+  // Table of Contents Card
+  tocCard: {
+    backgroundColor: Colors.backgroundGray,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  tocTitle: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightBold,
+    color: Colors.primaryCyan,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  tocContent: {
+    gap: 8,
+  },
+  tocItem: {
+    fontSize: Fonts.sm,
+    color: Colors.textPrimary,
+    lineHeight: 20,
+    paddingLeft: 8,
+  },
+  // Section Card Styles
+  sectionCard: {
+    backgroundColor: Colors.backgroundWhite,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionNumber: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryCyan,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  sectionNumberText: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textWhite,
   },
   sectionTitle: {
     fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
-    marginBottom: 12,
+    flex: 1,
+  },
+  sectionDivider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginBottom: 16,
   },
   sectionText: {
     fontSize: Fonts.base,
     color: Colors.textPrimary,
     lineHeight: 24,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   listContainer: {
     marginTop: 8,
@@ -879,14 +1105,54 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     color: Colors.textPrimary,
     lineHeight: 24,
-    marginBottom: 8,
+    marginBottom: 10,
+    paddingLeft: 4,
   },
   subsectionTitle: {
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
-    marginTop: 12,
+    color: Colors.primaryCyan,
+    marginTop: 16,
     marginBottom: 8,
+  },
+  // Annexure Card Styles
+  annexureCard: {
+    backgroundColor: Colors.backgroundGray,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.primaryCyan + '30',
+  },
+  annexureHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  annexureBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryCyan,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  annexureBadgeText: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textWhite,
+  },
+  annexureTitle: {
+    fontSize: Fonts.lg,
+    fontWeight: Fonts.weightBold,
+    color: Colors.primaryCyan,
+    flex: 1,
+  },
+  annexureSubtitle: {
+    fontSize: Fonts.sm,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+    marginBottom: 12,
+    paddingLeft: 52,
   },
 });
 

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -12,8 +14,9 @@ import { Star } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { ProfileHeader, Card, GradientButton } from '../../components';
+import { ProfileHeader, Card, GradientButton, EmptyStateCard } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
+import { useMyRatings, useRatingsGivenByMe, RatingResponse } from '../../hooks/useRating';
 
 type RatingsScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Ratings'>;
 
@@ -25,6 +28,7 @@ interface Review {
   timeAgo: string;
   rating: number;
   reviewText: string;
+  userId?: string; // Store user ID for potential profile fetching
 }
 
 interface RatingDistribution {
@@ -32,65 +36,118 @@ interface RatingDistribution {
   percentage: number;
 }
 
-const receivedReviews: Review[] = [
-  {
-    id: '1',
-    reviewerName: 'Olivia Bennete',
-    timeAgo: '2 weeks ago',
-    rating: 5,
-    reviewText: 'Amazing experience! Rajesh was very professional and handled my laptop bag with great care. He kept me updated throughout the journey and delivered it right on time.',
-  },
-  {
-    id: '2',
-    reviewerName: 'Christ Nolan',
-    timeAgo: '1 month ago',
-    rating: 4.5,
-    reviewText: 'Good service overall. The traveller was punctual and my package arrived safely. Only minor issue was communication could have been better during transit.',
-  },
-  {
-    id: '3',
-    reviewerName: 'Olivia Bennete',
-    timeAgo: '2 months ago',
-    rating: 5,
-    reviewText: 'Fantastic! I needed to send important documents to my family urgently and this service was a lifesaver.',
-  },
-];
+// Helper function to format time ago
+const formatTimeAgo = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+    const diffYears = Math.floor(diffDays / 365);
 
-const givenReviews: Review[] = [
-  {
-    id: '1',
-    reviewerName: 'Olivia Bennete',
-    timeAgo: '2 weeks ago',
-    rating: 5,
-    reviewText: 'Amazing experience! Rajesh was very professional and handled my laptop bag with great care. He kept me updated throughout the journey and delivered it right on time.',
-  },
-  {
-    id: '2',
-    reviewerName: 'Christ Nolan',
-    timeAgo: '1 month ago',
-    rating: 4.5,
-    reviewText: 'Good service overall. The traveller was punctual and my package arrived safely. Only minor issue was communication could have been better during transit.',
-  },
-  {
-    id: '3',
-    reviewerName: 'Olivia Bennete',
-    timeAgo: '2 months ago',
-    rating: 5,
-    reviewText: 'Fantastic! I needed to send important documents to my family urgently and this service was a lifesaver.',
-  },
-];
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    if (diffWeeks < 4) return `${diffWeeks} ${diffWeeks === 1 ? 'week' : 'weeks'} ago`;
+    if (diffMonths < 12) return `${diffMonths} ${diffMonths === 1 ? 'month' : 'months'} ago`;
+    return `${diffYears} ${diffYears === 1 ? 'year' : 'years'} ago`;
+  } catch {
+    return 'Recently';
+  }
+};
 
-const ratingDistribution: RatingDistribution[] = [
-  { stars: 5, percentage: 75 },
-  { stars: 4, percentage: 15 },
-  { stars: 3, percentage: 5 },
-  { stars: 2, percentage: 3 },
-  { stars: 1, percentage: 2 },
-];
+// Helper function to calculate rating distribution
+const calculateRatingDistribution = (ratings: RatingResponse[]): RatingDistribution[] => {
+  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  const total = ratings.length;
+
+  if (total === 0) {
+    return [
+      { stars: 5, percentage: 0 },
+      { stars: 4, percentage: 0 },
+      { stars: 3, percentage: 0 },
+      { stars: 2, percentage: 0 },
+      { stars: 1, percentage: 0 },
+    ];
+  }
+
+  ratings.forEach((rating) => {
+    const stars = Math.floor(rating.rating);
+    if (stars >= 1 && stars <= 5) {
+      distribution[stars as keyof typeof distribution]++;
+    }
+  });
+
+  return [5, 4, 3, 2, 1].map((stars) => ({
+    stars,
+    percentage: Math.round((distribution[stars as keyof typeof distribution] / total) * 100),
+  }));
+};
 
 const RatingsScreen: React.FC = () => {
   const navigation = useNavigation<RatingsScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<TabType>('Received');
+
+  // Fetch ratings data
+  const { 
+    data: myRatingsData = [], 
+    isLoading: isLoadingReceived, 
+    isError: isErrorReceived,
+    isFetching: isFetchingReceived,
+    refetch: refetchReceived 
+  } = useMyRatings();
+
+  const { 
+    data: ratingsGivenData = [], 
+    isLoading: isLoadingGiven, 
+    isError: isErrorGiven,
+    isFetching: isFetchingGiven,
+    refetch: refetchGiven 
+  } = useRatingsGivenByMe();
+
+  // Transform API data to Review format
+  const receivedReviews: Review[] = useMemo(() => {
+    return myRatingsData.map((rating: RatingResponse) => ({
+      id: rating.id.toString(),
+      reviewerName: 'User', // Placeholder - can be enhanced with profile fetching
+      timeAgo: formatTimeAgo(rating.created_on),
+      rating: rating.rating,
+      reviewText: rating.review || '',
+      userId: rating.rated_by,
+    }));
+  }, [myRatingsData]);
+
+  const givenReviews: Review[] = useMemo(() => {
+    return ratingsGivenData.map((rating: RatingResponse) => ({
+      id: rating.id.toString(),
+      reviewerName: 'User', // Placeholder - can be enhanced with profile fetching
+      timeAgo: formatTimeAgo(rating.created_on),
+      rating: rating.rating,
+      reviewText: rating.review || '',
+      userId: rating.rated_to,
+    }));
+  }, [ratingsGivenData]);
+
+  // Calculate rating statistics for received ratings
+  const averageRating = useMemo(() => {
+    if (receivedReviews.length === 0) return 0;
+    const sum = receivedReviews.reduce((acc, review) => acc + review.rating, 0);
+    return sum / receivedReviews.length;
+  }, [receivedReviews]);
+
+  const ratingDistribution = useMemo(() => {
+    return calculateRatingDistribution(myRatingsData);
+  }, [myRatingsData]);
+
+  const isLoading = activeTab === 'Received' ? isLoadingReceived : isLoadingGiven;
+  const isError = activeTab === 'Received' ? isErrorReceived : isErrorGiven;
+  const refetch = activeTab === 'Received' ? refetchReceived : refetchGiven;
+  const isRefetching = activeTab === 'Received' ? isFetchingReceived : isFetchingGiven;
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -125,11 +182,11 @@ const RatingsScreen: React.FC = () => {
       <View style={styles.ratingSummary}>
         <View style={styles.ratingHeader}>
           <View style={styles.ratingLeft}>
-            <Text style={styles.ratingNumber}>4.8</Text>
+            <Text style={styles.ratingNumber}>{averageRating.toFixed(1)}</Text>
             <View style={styles.starsContainer}>
-              {renderStars(4.8)}
+              {renderStars(averageRating)}
             </View>
-            <Text style={styles.reviewCount}>(127 reviews)</Text>
+            <Text style={styles.reviewCount}>({receivedReviews.length} {receivedReviews.length === 1 ? 'review' : 'reviews'})</Text>
           </View>
           <View style={styles.ratingChart}>
             {ratingDistribution.map((item) => (
@@ -196,37 +253,66 @@ const RatingsScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[Colors.primaryCyan]}
+            tintColor={Colors.primaryCyan}
+          />
+        }
       >
-        {/* Rating Summary (Only for Received tab) */}
-        {renderRatingSummary()}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primaryCyan} />
+            <Text style={styles.loadingText}>Loading ratings...</Text>
+          </View>
+        ) : isError ? (
+          <View style={styles.emptyContainer}>
+            <EmptyStateCard
+              title="Error loading ratings"
+              description="Failed to load ratings. Please try again."
+            />
+          </View>
+        ) : (
+          <>
+            {/* Rating Summary (Only for Received tab) */}
+            {renderRatingSummary()}
 
-        {/* Reviews List */}
-        <View style={styles.reviewsContainer}>
-          {currentReviews.map((review) => (
-            <Card key={review.id} style={styles.reviewCard} padding={20}>
-              <View style={styles.reviewHeader}>
-                <View style={styles.reviewerInfo}>
-                  <Text style={styles.reviewerName}>{review.reviewerName}</Text>
-                  <Text style={styles.reviewTime}>{review.timeAgo}</Text>
-                </View>
-                <View style={styles.starsRow}>
-                  {renderStars(review.rating)}
-                </View>
+            {/* Reviews List */}
+            {currentReviews.length > 0 ? (
+              <View style={styles.reviewsContainer}>
+                {currentReviews.map((review) => (
+                  <Card key={review.id} style={styles.reviewCard} padding={20}>
+                    <View style={styles.reviewHeader}>
+                      <View style={styles.reviewerInfo}>
+                        <Text style={styles.reviewerName}>{review.reviewerName}</Text>
+                        <Text style={styles.reviewTime}>{review.timeAgo}</Text>
+                      </View>
+                      <View style={styles.starsRow}>
+                        {renderStars(review.rating)}
+                      </View>
+                    </View>
+                    {review.reviewText ? (
+                      <Text style={styles.reviewText}>{review.reviewText}</Text>
+                    ) : null}
+                  </Card>
+                ))}
               </View>
-              <Text style={styles.reviewText}>{review.reviewText}</Text>
-            </Card>
-          ))}
-        </View>
-
-        {/* View More Button */}
-        <GradientButton
-          title="View More"
-          onPress={() => {
-            // TODO: Navigate to all reviews or load more
-            console.log('View more reviews');
-          }}
-          style={styles.viewMoreButton}
-        />
+            ) : (
+              <View style={styles.emptyContainer}>
+                <EmptyStateCard
+                  title={`No ${activeTab.toLowerCase()} ratings yet`}
+                  description={
+                    activeTab === 'Received'
+                      ? "You haven't received any ratings yet."
+                      : "You haven't given any ratings yet."
+                  }
+                />
+              </View>
+            )}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -395,6 +481,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '50%',
     backgroundColor: Colors.backgroundWhite,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    marginTop: 16,
+  },
+  emptyContainer: {
+    paddingVertical: 60,
   },
 });
 
