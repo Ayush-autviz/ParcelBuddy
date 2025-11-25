@@ -194,6 +194,7 @@ export interface BookedRideResponse {
   luggage_photos?: any[];
   status?: string;
   created_on?: string;
+  ride_status?: string;
   [key: string]: any;
 }
 
@@ -248,10 +249,11 @@ export const useBookedRides = (): UseQueryResult<BookedRideCardData[], Error> =>
           return `${displayHour}:${displayMinutes} ${ampm}`;
         };
 
+        const showRate = request.ride_info?.ride_status === 'completed';
 
 
         return {
-          id: request.ride_info?.id || request.id,
+          id:  request.id,
           status: request.status,
           date: formatDate(request.ride_info?.travel_date || ''),
           origin: request.ride_info?.origin || request.ride_info?.origin_name || 'Unknown Origin',
@@ -259,7 +261,7 @@ export const useBookedRides = (): UseQueryResult<BookedRideCardData[], Error> =>
           destination: request.ride_info?.destination || request.ride_info?.destination_name || 'Unknown Destination',
           destinationTime: formatTime(request.destination_time || request.ride_info?.destination_time),
           passengers: 0,
-          // showRateButton: showRate,
+          showRateButton: showRate,
           bookingRequest: request, // Store original booking request for detail screen
         } as BookedRideCardData;
       });

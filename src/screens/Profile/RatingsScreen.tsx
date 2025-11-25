@@ -17,6 +17,8 @@ import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, Card, GradientButton, EmptyStateCard } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { useMyRatings, useRatingsGivenByMe, RatingResponse } from '../../hooks/useRating';
+import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
+import { SvgXml } from 'react-native-svg';
 
 type RatingsScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Ratings'>;
 
@@ -114,7 +116,7 @@ const RatingsScreen: React.FC = () => {
   const receivedReviews: Review[] = useMemo(() => {
     return myRatingsData.map((rating: RatingResponse) => ({
       id: rating.id.toString(),
-      reviewerName: 'User', // Placeholder - can be enhanced with profile fetching
+      reviewerName: rating.rated_by_name?.trim() || 'User',
       timeAgo: formatTimeAgo(rating.created_on),
       rating: rating.rating,
       reviewText: rating.review || '',
@@ -125,7 +127,7 @@ const RatingsScreen: React.FC = () => {
   const givenReviews: Review[] = useMemo(() => {
     return ratingsGivenData.map((rating: RatingResponse) => ({
       id: rating.id.toString(),
-      reviewerName: 'User', // Placeholder - can be enhanced with profile fetching
+      reviewerName: rating.rated_to_name?.trim() || 'User',
       timeAgo: formatTimeAgo(rating.created_on),
       rating: rating.rating,
       reviewText: rating.review || '',
@@ -157,7 +159,7 @@ const RatingsScreen: React.FC = () => {
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(
-          <Star key={i} size={16} color="#FFD700" fill="#FFD700" />
+          <Star key={i} size={14} color="#FFD700" fill="#FFD700" />
         );
       // } else if (i === fullStars && hasHalfStar) {
       //   stars.push(
@@ -168,7 +170,7 @@ const RatingsScreen: React.FC = () => {
       //   );
       } else {
         stars.push(
-          <Star key={i} size={16} color="#fff" fill="#fff" />
+          <Star key={i} size={14} color="#E0E0E0" fill="#E0E0E0" />
         );
       }
     }
@@ -285,14 +287,19 @@ const RatingsScreen: React.FC = () => {
                 {currentReviews.map((review) => (
                   <Card key={review.id} style={styles.reviewCard} padding={20}>
                     <View style={styles.reviewHeader}>
+                      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                        <View style={styles.reviewerAvatar}>
+                          <SvgXml xml={ProfileUserIcon} height={20} width={20} />
+                        </View>
                       <View style={styles.reviewerInfo}>
                         <Text style={styles.reviewerName}>{review.reviewerName}</Text>
                         <Text style={styles.reviewTime}>{review.timeAgo}</Text>
                       </View>
-                      <View style={styles.starsRow}>
-                        {renderStars(review.rating)}
                       </View>
                     </View>
+                    <View style={styles.starsRow}>
+                        {renderStars(review.rating)}
+                      </View>
                     {review.reviewText ? (
                       <Text style={styles.reviewText}>{review.reviewText}</Text>
                     ) : null}
@@ -449,21 +456,22 @@ const styles = StyleSheet.create({
   },
   reviewerName: {
     fontSize: Fonts.base,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 1,
   },
   reviewTime: {
-    fontSize: Fonts.sm,
+    fontSize: Fonts.xs,
     color: Colors.textTertiary,
   },
   starsRow: {
     flexDirection: 'row',
     gap: 4,
+    marginBottom: 8,
   },
   reviewText: {
-    fontSize: Fonts.base,
-    color: Colors.textSecondary,
+    // fontSize: Fonts.base,
+    color: Colors.textPrimary,
     lineHeight: 22,
   },
   viewMoreButton: {
@@ -480,7 +488,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: '50%',
-    backgroundColor: Colors.backgroundWhite,
+    backgroundColor: Colors.backgroundLight,
   },
   loadingContainer: {
     flex: 1,
@@ -495,6 +503,22 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     paddingVertical: 60,
+  },
+  reviewerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 100,
+    backgroundColor: Colors.backgroundWhite,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.textPrimary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
 

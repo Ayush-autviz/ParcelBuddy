@@ -133,6 +133,11 @@ const TrackScreen: React.FC = () => {
 
   const handleRatePress = async (ride: RideCardData) => {
     console.log('Rate pressed:', ride);
+
+    if (activeTab === 'Booked') {
+      return;
+    }
+
     setSelectedLuggageRequest(null);
     setRating(0);
     setFeedback('');
@@ -245,8 +250,8 @@ const TrackScreen: React.FC = () => {
           queryClient.invalidateQueries({ queryKey: ['ride-ratings'] });
         },
         onError: (error: any) => {
-          console.error('Submit rating error:', error);
-          showError(error?.response?.data?.message || error?.message || 'Failed to submit rating. Please try again.');
+          console.error('Submit rating error:', error.response.data.error);
+          showError(error?.response?.data?.error || 'Failed to submit rating. Please try again.');
         },
       }
     );

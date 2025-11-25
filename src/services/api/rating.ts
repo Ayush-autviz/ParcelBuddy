@@ -11,6 +11,11 @@ export const getRatingGivenByMe = async () => {
   return response.data;
 };
 
+export const getRatingChart = async () => {
+  const response = await apiClient.get(`/ride-ratings/charts/`);
+  return response.data;
+};
+
 export const createRating = async (data: any) => {
   const response = await apiClient.post(`/ride-ratings/`, data);
   return response.data;

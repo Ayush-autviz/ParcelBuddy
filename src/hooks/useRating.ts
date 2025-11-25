@@ -11,6 +11,8 @@ export interface CreateRatingRequest {
 
 export interface RatingResponse {
   id: number;
+  rated_by_name?: string;
+  rated_to_name?: string;
   is_deleted: boolean;
   created_by: string | null;
   created_on: string;
