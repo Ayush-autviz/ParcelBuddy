@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -30,6 +30,7 @@ import { useAuthStore } from '../../services/store';
 import { useQuery } from '@tanstack/react-query';
 import { getProfile } from '../../services/api/profile';
 import { useToast } from '../../components/Toast';
+import ConfirmationModal from '../../components/Modal/ConfirmationModal';
 
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { SvgXml } from 'react-native-svg';
@@ -48,17 +49,25 @@ interface MenuItem {
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { logout, user } = useAuthStore();
-  const { showSuccess } = useToast(); 
+  const { showSuccess } = useToast();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   console.log('user', user);
 
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
 
-  const handleLogout = async () => {
+  const confirmLogout = async () => {
+    setShowLogoutModal(false);
     await logout();
     showSuccess('Logged out successfully');
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Auth' }],
-    });
+    // Navigate to root Auth screen
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Auth' as never }],
+      })
+    );
   };
 
   const menuItems: MenuItem[] = [
@@ -187,6 +196,18 @@ const ProfileScreen: React.FC = () => {
           icon={<LogOut size={20} color={Colors.textWhite} style={styles.logoutIcon} />}
         />
       </ScrollView>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        visible={showLogoutModal}
+        title="Logout"
+        message="Are you sure you want to logout? You will need to login again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutModal(false)}
+        type="destructive"
+      />
     </SafeAreaView>
   );
 };

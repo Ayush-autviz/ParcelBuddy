@@ -1,5 +1,6 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
 import { getPlans } from '../services/api/auth';
+import { createSubscription, CreateSubscriptionRequest, CreateSubscriptionResponse } from '../services/api/subscription';
 
 export interface SubscriptionPlanResponse {
   id: string;
@@ -15,6 +16,7 @@ export interface SubscriptionPlanResponse {
   created_on: string;
   modified_on: string;
   features: string[];
+  is_current_plan?: boolean;
 }
 
 export interface PlansResponse {
@@ -33,6 +35,12 @@ export const useSubscriptionPlans = (): UseQueryResult<PlansResponse, Error> => 
     },
     staleTime: 30000, // Cache for 30 seconds
     retry: 1,
+  });
+};
+
+export const useCreateSubscription = (): UseMutationResult<CreateSubscriptionResponse, Error, CreateSubscriptionRequest, unknown> => {
+  return useMutation({
+    mutationFn: (data: CreateSubscriptionRequest) => createSubscription(data),
   });
 };
 

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,7 +17,8 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
-import { useSubscriptionPlans } from '../../hooks/useSubscription';
+import { useSubscriptionPlans, useCreateSubscription } from '../../hooks/useSubscription';
+import { useToast } from '../../components/Toast';
 
 type SubscriptionScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Subscription'>;
 
@@ -30,17 +32,23 @@ interface SubscriptionPlan {
   price: string;
   features: PlanFeature[];
   isCurrent: boolean;
+  showUpgrade: boolean;
 }
 
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation<SubscriptionScreenNavigationProp>();
   const { data: plansData, isLoading, isError } = useSubscriptionPlans();
+  const createSubscriptionMutation = useCreateSubscription();
+  const { showSuccess, showError } = useToast();
 
 
 
   // Transform API data to UI format
   const subscriptionPlans: SubscriptionPlan[] = useMemo(() => {
     if (!plansData?.plans) return [];
+    
+    // Check if any plan has is_current_plan: true
+    const hasCurrentPlan = plansData.plans.some((plan) => plan.is_current_plan === true);
     
     return plansData.plans
       .filter((plan) => plan.is_active)
@@ -61,7 +69,8 @@ const SubscriptionScreen: React.FC = () => {
           name: plan.name,
           price: priceText,
           features,
-          isCurrent: false, // TODO: Determine current plan from user profile
+          isCurrent: plan.is_current_plan || false,
+          showUpgrade: !hasCurrentPlan, // Only show upgrade if no plan is current
         };
       });
   }, [plansData]);
@@ -72,8 +81,32 @@ const SubscriptionScreen: React.FC = () => {
   console.log('subscriptionPlans', subscriptionPlans);
 
   const handleUpgrade = (planId: string) => {
-    // TODO: Implement upgrade functionality
-    console.log('Upgrade to:', planId);
+    createSubscriptionMutation.mutate(
+      { plan_id: planId },
+      {
+        onSuccess: (response) => {
+          console.log('Subscription created successfully:', response);
+          if (response.checkout_url) {
+            // Open checkout URL in device browser
+            Linking.openURL(response.checkout_url).catch((err) => {
+              console.error('Failed to open checkout URL:', err);
+              showError('Failed to open checkout page. Please try again.');
+            });
+            showSuccess('Redirecting to checkout...');
+          } else {
+            showError('Checkout URL not received. Please try again.');
+          }
+        },
+        onError: (error: any) => {
+          console.error('Error creating subscription:', error);
+          const errorMessage = error?.response?.data?.message || 
+                              error?.response?.data?.error || 
+                              error?.message || 
+                              'Failed to create subscription. Please try again.';
+          showError(errorMessage);
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -179,11 +212,15 @@ const SubscriptionScreen: React.FC = () => {
                       </View>
                     ))}
                   </View>
-                  <GradientButton
-                    title="Upgrade"
-                    onPress={() => handleUpgrade(plan.id)}
-                    style={styles.upgradeButton}
-                  />
+                  {plan.showUpgrade && (
+                    <GradientButton
+                      title="Upgrade"
+                      onPress={() => handleUpgrade(plan.id)}
+                      style={styles.upgradeButton}
+                      loading={createSubscriptionMutation.isPending}
+                      disabled={createSubscriptionMutation.isPending}
+                    />
+                  )}
                 </View>
               )}
             </View>
@@ -211,15 +248,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 30,
   },
   currentPlanIndicator: {
-    backgroundColor: Colors.primaryCyan + '20',
+    backgroundColor: '#DFF1F2',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: Colors.primaryCyan + '30',
   },
   currentPlanContent: {
     flexDirection: 'row',
