@@ -77,6 +77,9 @@ const ProfileSetupScreen: React.FC = () => {
     showOpenSettings: boolean;
   } | null>(null);
   const {setUser} = useAuthStore();
+
+  const formattedCountry = country.slice(0, 2).toUpperCase();
+
   
   const profileSetupMutation = useProfileSetup();
   const { showWarning, showError } = useToast();
@@ -149,17 +152,23 @@ const ProfileSetupScreen: React.FC = () => {
     const formData = new FormData();
     formData.append('first_name', first_name);
     formData.append('last_name', last_name);
-    formData.append('date_of_birth', dateOfBirth?.toISOString() || '');
+    // Format date as YYYY-MM-DD
+    const formatDateForAPI = (date: Date | null): string => {
+      if (!date) return '';
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    formData.append('date_of_birth', formatDateForAPI(dateOfBirth));
     formData.append('email', email.trim());
     formData.append('profile.bio', bio.trim() || '');
     
-    // Append location coordinates and country
-    if (location) {
-      formData.append('profile.latitude', location.latitude.toString());
-      formData.append('profile.longitude', location.longitude.toString());
-    }
+
+    // Append country
     if (country) {
-      formData.append('profile.country', country);
+      formData.append('profile.country', formattedCountry);
     }
 
     // Append profile photo if available
@@ -466,7 +475,7 @@ const ProfileSetupScreen: React.FC = () => {
                 </View>
               ) : country ? (
                 <Text style={styles.locationInputText}>
-                  {country}
+                  {formattedCountry}
                 </Text>
               ) : (
                 <Text style={[styles.locationInputText, styles.locationInputPlaceholder]}>

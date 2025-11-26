@@ -9,13 +9,15 @@ import {
   TextInput,
   Alert,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { User, Pencil, ChevronDown } from 'lucide-react-native';
+import { User, Pencil, ChevronDown, CheckCircle } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PhoneInput from 'react-native-international-phone-number';
+import { SvgXml } from 'react-native-svg';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton, DatePickerInput, TextArea } from '../../components';
@@ -24,6 +26,10 @@ import { useToast } from '../../components/Toast';
 import { useMyProfile } from '../../hooks/useProfile';
 import { useProfileSetup } from '../../hooks/useAuthMutations';
 import { useQueryClient } from '@tanstack/react-query';
+import { getCurrentLocation, LocationCoordinates, PermissionResult } from '../../services/geolocation';
+import { getCountryByCoordinates } from '../../services/api/auth';
+import { MapPinIcon } from '../../assets/icons/svg/main';
+import PermissionModal from '../../components/Modal/PermissionModal';
 
 type ProfileStackParamList = {
   ProfileList: undefined;
@@ -68,6 +74,17 @@ const EditProfileScreen: React.FC = () => {
       setBio(profileData.profile?.bio || '');
       setEmail(profileData.email || '');
       setProfilePhoto(profileData.profile?.profile_photo || null);
+      
+      // Set location and country if available
+      if (profileData.profile?.latitude && profileData.profile?.longitude) {
+        setLocation({
+          latitude: profileData.profile.latitude,
+          longitude: profileData.profile.longitude,
+        });
+      }
+      if (profileData.profile?.country) {
+        setCountry(profileData.profile.country);
+      }
       
       // Parse and set phone number
       const parsed = parsePhoneNumber(profileData.phone);
@@ -118,6 +135,16 @@ const EditProfileScreen: React.FC = () => {
   const [countryCode, setCountryCode] = useState('');
   const [email, setEmail] = useState(currentProfile?.email || '');
   const [profilePhoto, setProfilePhoto] = useState(currentProfile?.profile?.profile_photo || null);
+  const [location, setLocation] = useState<LocationCoordinates | null>(null);
+  const [country, setCountry] = useState<string>('');
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [isFetchingCountry, setIsFetchingCountry] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [permissionModalData, setPermissionModalData] = useState<{
+    title: string;
+    message: string;
+    showOpenSettings: boolean;
+  } | null>(null);
 
   // Validation
   const [fullNameError, setFullNameError] = useState('');
@@ -149,6 +176,55 @@ const EditProfileScreen: React.FC = () => {
   const handleImagePicker = () => {
     // TODO: Implement image picker
     Alert.alert('Image Picker', 'Image picker functionality will be implemented');
+  };
+
+  const handleLocationFetch = async () => {
+    setIsFetchingLocation(true);
+    try {
+      const result = await getCurrentLocation();
+      
+      // Check if result is LocationCoordinates (has latitude property)
+      if ('latitude' in result && 'longitude' in result) {
+        const locationData = result as LocationCoordinates;
+        setLocation(locationData);
+        
+        // Fetch country using coordinates
+        setIsFetchingCountry(true);
+        try {
+          const countryResponse = await getCountryByCoordinates(
+            locationData.latitude.toString(),
+            locationData.longitude.toString()
+          );
+          if (countryResponse?.country) {
+            setCountry(countryResponse.country);
+          }
+        } catch (countryError: any) {
+          console.error('Error fetching country:', countryError);
+          showError('Failed to fetch country information');
+        } finally {
+          setIsFetchingCountry(false);
+        }
+      } else {
+        // It's a PermissionResult
+        const permissionResult = result as PermissionResult;
+        setPermissionModalData({
+          title: 'Location Permission Required',
+          message: permissionResult.error || 'Location permission is required.',
+          showOpenSettings: permissionResult.shouldOpenSettings,
+        });
+        setShowPermissionModal(true);
+      }
+    } catch (error: any) {
+      console.error('Error fetching location:', error);
+      setPermissionModalData({
+        title: 'Error',
+        message: error?.error || 'Failed to get location. Please try again.',
+        showOpenSettings: false,
+      });
+      setShowPermissionModal(true);
+    } finally {
+      setIsFetchingLocation(false);
+    }
   };
 
   const handleSave = () => {
@@ -194,12 +270,31 @@ const EditProfileScreen: React.FC = () => {
     formData.append('email', email.trim());
     formData.append('phone', fullPhoneNumber);
     
+    // Format date as YYYY-MM-DD
+    const formatDateForAPI = (date: Date | null): string => {
+      if (!date) return '';
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
     if (dateOfBirth) {
-      formData.append('date_of_birth', dateOfBirth.toISOString().split('T')[0]);
+      formData.append('date_of_birth', formatDateForAPI(dateOfBirth));
     }
     
     if (bio.trim()) {
       formData.append('profile.bio', bio.trim());
+    }
+
+    // Append location coordinates and country
+    if (location) {
+      formData.append('profile.latitude', location.latitude.toString());
+      formData.append('profile.longitude', location.longitude.toString());
+    }
+    if (country) {
+      const formattedCountry = country.slice(0, 2).toUpperCase();
+      formData.append('profile.country', formattedCountry);
     }
 
     // Note: Profile photo upload would go here if image picker is implemented
@@ -216,8 +311,9 @@ const EditProfileScreen: React.FC = () => {
       last_name,
       email: email.trim(),
       phone: fullPhoneNumber,
-      date_of_birth: dateOfBirth?.toISOString().split('T')[0],
+      date_of_birth: formatDateForAPI(dateOfBirth),
       bio: bio.trim(),
+      country: country ? country.slice(0, 2).toUpperCase() : '',
     });
 
     profileSetupMutation.mutate(formData, {
@@ -412,6 +508,42 @@ const EditProfileScreen: React.FC = () => {
               <Text style={styles.errorText}>{emailError}</Text>
             ) : null}
           </View>
+
+          {/* Location Section */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Location<Text style={styles.required}>*</Text>
+            </Text>
+            <TouchableOpacity
+              style={styles.locationInputWrapper}
+              onPress={handleLocationFetch}
+              activeOpacity={0.7}
+              disabled={isFetchingLocation || isFetchingCountry}
+            >
+              <SvgXml xml={MapPinIcon} width={20} height={20} />
+              {isFetchingLocation || isFetchingCountry ? (
+                <View style={styles.locationLoadingContainer}>
+                  <ActivityIndicator size="small" color={Colors.primaryCyan} />
+                  <Text style={[styles.locationInputText, styles.locationInputPlaceholder]}>
+                    {isFetchingLocation ? 'Fetching location...' : 'Fetching country...'}
+                  </Text>
+                </View>
+              ) : country ? (
+                <Text style={styles.locationInputText}>
+                  {country.slice(0, 2).toUpperCase()}
+                </Text>
+              ) : (
+                <Text style={[styles.locationInputText, styles.locationInputPlaceholder]}>
+                  Tap to fetch your location
+                </Text>
+              )}
+              {country && !isFetchingLocation && !isFetchingCountry && (
+                <View style={styles.verifiedIconContainer}>
+                  <CheckCircle size={20} color={Colors.primaryCyan} />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Action Buttons */}
@@ -463,6 +595,24 @@ const EditProfileScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Permission Modal */}
+      {permissionModalData && (
+        <PermissionModal
+          visible={showPermissionModal}
+          title={permissionModalData.title}
+          message={permissionModalData.message}
+          showOpenSettings={permissionModalData.showOpenSettings}
+          onCancel={() => {
+            setShowPermissionModal(false);
+            setPermissionModalData(null);
+          }}
+          onOpenSettings={() => {
+            setShowPermissionModal(false);
+            setPermissionModalData(null);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -648,6 +798,43 @@ const styles = StyleSheet.create({
   modalConfirmButton: {
     flex: 1,
     marginTop: 0,
+  },
+  locationInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundWhite,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 50,
+  },
+  locationLoadingContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+    gap: 8,
+  },
+  locationInputText: {
+    flex: 1,
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
+    marginLeft: 12,
+  },
+  locationInputPlaceholder: {
+    color: Colors.textLight,
+  },
+  verifiedIconContainer: {
+    position: 'absolute',
+    right: 16,
+    top: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

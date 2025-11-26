@@ -83,17 +83,17 @@ const SplashScreen: React.FC = () => {
         index: 0,
         routes: [{ name: 'Auth' }],
       });
-  } else if (!user?.profile_setup) {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
-    });
-  }
-    else  {
+    }
+    else if (profile?.length !== 0) {
       setUser(profile);
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainApp' }],
+      });
+    } else if (!user?.profile_setup) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
       });
     }
     }, 1500);

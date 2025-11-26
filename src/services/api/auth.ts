@@ -1,4 +1,7 @@
 import apiClient from "../apiClient";
+import { useAuthStore } from "../store";
+
+const location = useAuthStore.getState().user?.profile?.country;
 
 // get otp
 export const getOtp = async (data: any) => {
@@ -46,6 +49,6 @@ export const getCountry = async () => {
 
 // get plans
 export const getPlans = async () => {
-  const response = await apiClient.get(`/auth/plans/`);
+  const response = await apiClient.get(`/auth/plans/?region=${location}`);
   return response.data;
 };
