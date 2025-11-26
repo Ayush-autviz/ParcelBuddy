@@ -29,8 +29,10 @@ import { useAuthStore } from '../../services/store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useToast } from '../../components/Toast';
 import { CameraIcon, MapPinIcon } from '../../assets/icons/svg/main';
-import { getCurrentLocation, LocationCoordinates } from '../../services/geolocation';
+import { getCurrentLocation, LocationCoordinates, PermissionResult } from '../../services/geolocation';
 import { ActivityIndicator } from 'react-native';
+import PermissionModal from '../../components/Modal/PermissionModal';
+import { getCountryByCoordinates } from '../../services/api/auth';
 
 const { width } = Dimensions.get('window');
 
@@ -65,7 +67,15 @@ const ProfileSetupScreen: React.FC = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [location, setLocation] = useState<LocationCoordinates | null>(null);
+  const [country, setCountry] = useState<string>('');
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [isFetchingCountry, setIsFetchingCountry] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [permissionModalData, setPermissionModalData] = useState<{
+    title: string;
+    message: string;
+    showOpenSettings: boolean;
+  } | null>(null);
   const {setUser} = useAuthStore();
   
   const profileSetupMutation = useProfileSetup();
@@ -118,7 +128,7 @@ const ProfileSetupScreen: React.FC = () => {
       return;
     }
 
-    if (!location) {
+    if (!location || !country) {
       showWarning('Please fetch your location');
       return;
     }
@@ -143,10 +153,13 @@ const ProfileSetupScreen: React.FC = () => {
     formData.append('email', email.trim());
     formData.append('profile.bio', bio.trim() || '');
     
-    // Append location coordinates
+    // Append location coordinates and country
     if (location) {
       formData.append('profile.latitude', location.latitude.toString());
       formData.append('profile.longitude', location.longitude.toString());
+    }
+    if (country) {
+      formData.append('profile.country', country);
     }
 
     // Append profile photo if available
@@ -212,13 +225,47 @@ const ProfileSetupScreen: React.FC = () => {
   const handleLocationFetch = async () => {
     setIsFetchingLocation(true);
     try {
-      const locationData = await getCurrentLocation();
-      if (locationData) {
+      const result = await getCurrentLocation();
+      
+      // Check if result is LocationCoordinates (has latitude property)
+      if ('latitude' in result && 'longitude' in result) {
+        const locationData = result as LocationCoordinates;
         setLocation(locationData);
+        
+        // Fetch country using coordinates
+        setIsFetchingCountry(true);
+        try {
+          const countryResponse = await getCountryByCoordinates(
+            locationData.latitude.toString(),
+            locationData.longitude.toString()
+          );
+          if (countryResponse?.country) {
+            setCountry(countryResponse.country);
+          }
+        } catch (countryError: any) {
+          console.error('Error fetching country:', countryError);
+          showError('Failed to fetch country information');
+        } finally {
+          setIsFetchingCountry(false);
+        }
+      } else {
+        // It's a PermissionResult
+        const permissionResult = result as PermissionResult;
+        setPermissionModalData({
+          title: 'Location Permission Required',
+          message: permissionResult.error || 'Location permission is required.',
+          showOpenSettings: permissionResult.shouldOpenSettings,
+        });
+        setShowPermissionModal(true);
       }
     } catch (error: any) {
       console.error('Error fetching location:', error);
-      showError('Failed to get location. Please try again.');
+      setPermissionModalData({
+        title: 'Error',
+        message: error?.error || 'Failed to get location. Please try again.',
+        showOpenSettings: false,
+      });
+      setShowPermissionModal(true);
     } finally {
       setIsFetchingLocation(false);
     }
@@ -407,26 +454,26 @@ const ProfileSetupScreen: React.FC = () => {
               style={styles.locationInputWrapper}
               onPress={handleLocationFetch}
               activeOpacity={0.7}
-              disabled={isFetchingLocation}
+              disabled={isFetchingLocation || isFetchingCountry}
             >
               <SvgXml xml={MapPinIcon} width={20} height={20} />
-              {isFetchingLocation ? (
+              {isFetchingLocation || isFetchingCountry ? (
                 <View style={styles.locationLoadingContainer}>
                   <ActivityIndicator size="small" color={Colors.primaryCyan} />
                   <Text style={[styles.locationInputText, styles.locationInputPlaceholder]}>
-                    Fetching location...
+                    {isFetchingLocation ? 'Fetching location...' : 'Fetching country...'}
                   </Text>
                 </View>
-              ) : location ? (
+              ) : country ? (
                 <Text style={styles.locationInputText}>
-                  {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                  {country}
                 </Text>
               ) : (
                 <Text style={[styles.locationInputText, styles.locationInputPlaceholder]}>
                   Tap to fetch your location
                 </Text>
               )}
-              {location && !isFetchingLocation && (
+              {country && !isFetchingLocation && !isFetchingCountry && (
                 <View style={styles.verifiedIconContainer}>
                   <CheckCircle size={20} color={Colors.primaryCyan} />
                 </View>
@@ -461,10 +508,29 @@ const ProfileSetupScreen: React.FC = () => {
             title={profileSetupMutation.isPending ? 'Saving...' : 'Save Profile'}
             onPress={handleSaveProfile}
             loading={profileSetupMutation.isPending}
+            disabled={!location || !country || isFetchingLocation || isFetchingCountry}
             style={styles.saveButton}
           />
         </View>
       </KeyboardAwareScrollView>
+
+      {/* Permission Modal */}
+      {permissionModalData && (
+        <PermissionModal
+          visible={showPermissionModal}
+          title={permissionModalData.title}
+          message={permissionModalData.message}
+          showOpenSettings={permissionModalData.showOpenSettings}
+          onCancel={() => {
+            setShowPermissionModal(false);
+            setPermissionModalData(null);
+          }}
+          onOpenSettings={() => {
+            setShowPermissionModal(false);
+            setPermissionModalData(null);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };

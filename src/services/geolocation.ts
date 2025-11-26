@@ -1,5 +1,5 @@
 import Geolocation from 'react-native-geolocation-service';
-import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
+import { Platform, PermissionsAndroid, Linking } from 'react-native';
 
 export interface LocationCoordinates {
   latitude: number;
@@ -87,7 +87,7 @@ const requestPermission = async (): Promise<{ granted: boolean; shouldOpenSettin
 /**
  * Open app settings
  */
-const openSettings = () => {
+export const openSettings = () => {
   if (Platform.OS === 'ios') {
     Linking.openURL('app-settings:');
   } else {
@@ -95,36 +95,26 @@ const openSettings = () => {
   }
 };
 
+export interface PermissionResult {
+  granted: boolean;
+  shouldOpenSettings: boolean;
+  error?: string;
+}
+
 /**
  * Get current location coordinates
- * @returns Promise with location coordinates or void if permission denied
+ * @returns Promise with location coordinates or permission result if denied
  */
-export const getCurrentLocation = async (): Promise<LocationCoordinates | void> => {
+export const getCurrentLocation = async (): Promise<LocationCoordinates | PermissionResult> => {
   const permissionResult = await requestPermission();
   
   if (!permissionResult.granted) {
-    if (permissionResult.shouldOpenSettings) {
-      // Permission was permanently denied, show alert to open settings
-      Alert.alert(
-        'Location Permission Required',
-        'Location permission is required to use this feature. Please enable it in your device settings.',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Open Settings',
-            onPress: () => {
-              openSettings();
-            },
-          },
-        ]
-      );
-    } else {
-      Alert.alert('Permission Denied', 'Location permission is required.');
-    }
-    return;
+    return {
+      ...permissionResult,
+      error: permissionResult.shouldOpenSettings
+        ? 'Location permission is required to use this feature. Please enable it in your device settings.'
+        : 'Location permission is required.',
+    };
   }
 
   return new Promise((resolve, reject) => {
@@ -147,27 +137,19 @@ export const getCurrentLocation = async (): Promise<LocationCoordinates | void> 
         // Handle permission errors
         if (error.code === 1) {
           // Permission denied
-          Alert.alert(
-            'Location Permission Required',
-            'Location permission is required. Please enable it in your device settings.',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-              },
-              {
-                text: 'Open Settings',
-                onPress: () => {
-                  openSettings();
-                },
-              },
-            ]
-          );
+          resolve({
+            granted: false,
+            shouldOpenSettings: true,
+            error: 'Location permission is required. Please enable it in your device settings.',
+          });
         } else {
           // Other location errors
-          Alert.alert('Error', 'Failed to get location: ' + error.message);
+          reject({
+            granted: false,
+            shouldOpenSettings: false,
+            error: 'Failed to get location: ' + error.message,
+          });
         }
-        reject(error);
       },
       // { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
     );

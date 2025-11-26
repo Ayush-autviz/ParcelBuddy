@@ -24,7 +24,21 @@ export const profileSetup = async (data: FormData) => {
   return response.data;
 };
 
-// get country
+// get country by coordinates
+export const getCountryByCoordinates = async (lat: string, lon: string) => {
+  const formData = new FormData();
+  formData.append('lat', lat);
+  formData.append('lon', lon);
+  
+  const response = await apiClient.post('/auth/get-country/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+// get country (legacy - for backward compatibility)
 export const getCountry = async () => {
   const response = await apiClient.get('/auth/get-country/');
   return response.data;
