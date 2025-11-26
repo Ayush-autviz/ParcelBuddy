@@ -34,7 +34,7 @@ const SplashScreen: React.FC = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.3);
-  const {token, setUser} = useAuthStore();
+  const {token, setUser, user} = useAuthStore();
   const { clearSearchForm } = useSearchFormStore();
   const { clearCreateForm } = useCreateFormStore();
 
@@ -83,17 +83,17 @@ const SplashScreen: React.FC = () => {
         index: 0,
         routes: [{ name: 'Auth' }],
       });
-    }
-    else if (profile?.length !== 0) {
+  } else if (!user?.profile_setup) {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
+    });
+  }
+    else  {
       setUser(profile);
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainApp' }],
-      });
-    } else {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
       });
     }
     }, 1500);

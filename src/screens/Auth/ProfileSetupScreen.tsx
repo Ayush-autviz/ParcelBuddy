@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,9 @@ import { useProfileSetup } from '../../hooks/useAuthMutations';
 import { useAuthStore } from '../../services/store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useToast } from '../../components/Toast';
-import { CameraIcon } from '../../assets/icons/svg/main';
+import { CameraIcon, MapPinIcon } from '../../assets/icons/svg/main';
+import { getCurrentLocation, LocationCoordinates } from '../../services/geolocation';
+import { ActivityIndicator } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -62,6 +64,8 @@ const ProfileSetupScreen: React.FC = () => {
   const [bio, setBio] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [location, setLocation] = useState<LocationCoordinates | null>(null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const {setUser} = useAuthStore();
   
   const profileSetupMutation = useProfileSetup();
@@ -114,10 +118,17 @@ const ProfileSetupScreen: React.FC = () => {
       return;
     }
 
+    if (!location) {
+      showWarning('Please fetch your location');
+      return;
+    }
+
     if (!agreeToTerms) {
       showWarning('Please agree to the Terms of Service and Privacy Policy');
       return;
     }
+
+   
 
     // Split full name into first and last name
     const nameParts = fullName.trim()?.split(' ');
@@ -131,6 +142,12 @@ const ProfileSetupScreen: React.FC = () => {
     formData.append('date_of_birth', dateOfBirth?.toISOString() || '');
     formData.append('email', email.trim());
     formData.append('profile.bio', bio.trim() || '');
+    
+    // Append location coordinates
+    if (location) {
+      formData.append('profile.latitude', location.latitude.toString());
+      formData.append('profile.longitude', location.longitude.toString());
+    }
 
     // Append profile photo if available
     if (profileImageAsset && profileImageAsset.uri) {
@@ -190,6 +207,21 @@ const ProfileSetupScreen: React.FC = () => {
 
   const handlePrivacyPress = () => {
     Alert.alert('Privacy Policy', 'Read our privacy policy here');
+  };
+
+  const handleLocationFetch = async () => {
+    setIsFetchingLocation(true);
+    try {
+      const locationData = await getCurrentLocation();
+      if (locationData) {
+        setLocation(locationData);
+      }
+    } catch (error: any) {
+      console.error('Error fetching location:', error);
+      showError('Failed to get location. Please try again.');
+    } finally {
+      setIsFetchingLocation(false);
+    }
   };
 
   return (
@@ -364,6 +396,42 @@ const ProfileSetupScreen: React.FC = () => {
               numberOfLines={4}
               textAlignVertical="top"
             />
+          </View>
+
+          {/* Location Section */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              Location<Text style={styles.required}>*</Text>
+            </Text>
+            <TouchableOpacity
+              style={styles.locationInputWrapper}
+              onPress={handleLocationFetch}
+              activeOpacity={0.7}
+              disabled={isFetchingLocation}
+            >
+              <SvgXml xml={MapPinIcon} width={20} height={20} />
+              {isFetchingLocation ? (
+                <View style={styles.locationLoadingContainer}>
+                  <ActivityIndicator size="small" color={Colors.primaryCyan} />
+                  <Text style={[styles.locationInputText, styles.locationInputPlaceholder]}>
+                    Fetching location...
+                  </Text>
+                </View>
+              ) : location ? (
+                <Text style={styles.locationInputText}>
+                  {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                </Text>
+              ) : (
+                <Text style={[styles.locationInputText, styles.locationInputPlaceholder]}>
+                  Tap to fetch your location
+                </Text>
+              )}
+              {location && !isFetchingLocation && (
+                <View style={styles.verifiedIconContainer}>
+                  <CheckCircle size={20} color={Colors.primaryCyan} />
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
 
           {/* Terms and Privacy Checkbox */}
@@ -637,6 +705,33 @@ const styles = StyleSheet.create({
   datePicker: {
     width: '100%',
     height: 200,
+  },
+  locationInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundWhite,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 50,
+  },
+  locationLoadingContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+    gap: 8,
+  },
+  locationInputText: {
+    flex: 1,
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
+    marginLeft: 12,
+  },
+  locationInputPlaceholder: {
+    color: Colors.textLight,
   },
 });
 

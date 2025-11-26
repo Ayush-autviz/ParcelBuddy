@@ -43,8 +43,13 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to take a profile picture.</string>
+
+
+	<!-- Location Permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>We need your location to complete your profile setup.</string>
+
+
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to select a profile image.</string>
 	<key>RCTNewArchEnabled</key>

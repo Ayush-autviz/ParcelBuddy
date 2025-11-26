@@ -23,6 +23,7 @@
     "lucide-react-native": "^0.548.0",
     "react": "19.1.1",
     "react-native": "0.82.1",
+    "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "^2.29.0",
     "react-native-gifted-chat": "^2.8.1",
     "react-native-image-picker": "^8.2.1",

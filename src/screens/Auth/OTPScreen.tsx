@@ -124,15 +124,17 @@ const OTPScreen: React.FC = () => {
             access_token: response.tokens.access,
             refresh_token: response.tokens.refresh,
           });
-          if (response.profile) { 
-            setUser(response.profile);
-          }
+          // if (response.profile) { 
+          //   setUser(response.profile);
+          // }
           if (!response.profile_setup) {
+            setUser({profile_setup: false});
             navigation.reset({
               index: 0,
               routes: [{ name: 'ProfileSetup' }],
             });
           } else {
+            setUser(response.profile);
             navigation.reset({
               index: 0,
               routes: [{ name: 'MainApp' }],
