@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,6 +16,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
+import { useSubscriptionPlans } from '../../hooks/useSubscription';
 
 type SubscriptionScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Subscription'>;
 
@@ -30,53 +32,72 @@ interface SubscriptionPlan {
   isCurrent: boolean;
 }
 
-const subscriptionPlans: SubscriptionPlan[] = [
-  {
-    id: 'basic',
-    name: 'Basic',
-    price: '$7.99/month',
-    isCurrent: false,
-    features: [
-      { text: 'Create up to 2 rides/month.' },
-      { text: 'Search rides unlimited.' },
-      { text: 'Send requests to 20 travellers/month.' },
-      { text: 'Email support.' },
-    ],
-  },
-  {
-    id: 'silver',
-    name: 'Silver',
-    price: '$14.99/month',
-    isCurrent: true,
-    features: [
-      { text: 'Create up to 10 rides/month.' },
-      { text: 'Search rides unlimited.' },
-      { text: 'Send requests to 40 travelers/month.' },
-      { text: 'Email support.' },
-    ],
-  },
-  {
-    id: 'gold',
-    name: 'Gold',
-    price: '$19.99/month',
-    isCurrent: false,
-    features: [
-      { text: 'Create up to 30 rides/month.' },
-      { text: 'Search rides unlimited.' },
-      { text: 'Send requests to 100 travelers/month.' },
-      { text: 'Email support.' },
-    ],
-  },
-];
-
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation<SubscriptionScreenNavigationProp>();
+  const { data: plansData, isLoading, isError } = useSubscriptionPlans();
+
+
+
+  // Transform API data to UI format
+  const subscriptionPlans: SubscriptionPlan[] = useMemo(() => {
+    if (!plansData?.plans) return [];
+    
+    return plansData.plans
+      .filter((plan) => plan.is_active)
+      .map((plan) => {
+        // Format price
+        const priceText = `${plan.currency} ${plan.price}/${plan.duration_days === 30 ? 'month' : `${plan.duration_days} days`}`;
+        
+        // Build features array
+        const features: PlanFeature[] = [
+          { text: `Create up to ${plan.rides_per_month} rides/month.` },
+          { text: 'Search rides unlimited.' },
+          { text: `Send requests to ${plan.requests_per_month} travellers/month.` },
+          ...(plan.features || []).map((feature) => ({ text: feature })),
+        ];
+
+        return {
+          id: plan.id,
+          name: plan.name,
+          price: priceText,
+          features,
+          isCurrent: false, // TODO: Determine current plan from user profile
+        };
+      });
+  }, [plansData]);
+
   const currentPlan = subscriptionPlans.find((plan) => plan.isCurrent);
+
+  console.log('currentPlan', currentPlan);
+  console.log('subscriptionPlans', subscriptionPlans);
 
   const handleUpgrade = (planId: string) => {
     // TODO: Implement upgrade functionality
     console.log('Upgrade to:', planId);
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ProfileHeader title="Subscription" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primaryCyan} />
+          <Text style={styles.loadingText}>Loading plans...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ProfileHeader title="Subscription" />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Failed to load subscription plans. Please try again.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -109,7 +130,12 @@ const SubscriptionScreen: React.FC = () => {
 
         {/* Subscription Plans */}
         <View style={styles.plansContainer}>
-          {subscriptionPlans.map((plan) => (
+          {subscriptionPlans.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No subscription plans available</Text>
+            </View>
+          ) : (
+            subscriptionPlans.map((plan) => (
             <View key={plan.id} style={styles.planCardWrapper}>
               {plan.isCurrent ? (
                 <LinearGradient
@@ -161,7 +187,8 @@ const SubscriptionScreen: React.FC = () => {
                 </View>
               )}
             </View>
-          ))}
+            ))
+          )}
         </View>
 
         {/* Footer Disclaimer */}
@@ -272,22 +299,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   planName: {
-    fontSize: Fonts.xl,
+    fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
     color: Colors.primaryCyan,
   },
   planNameActive: {
-    fontSize: Fonts.xl,
+    fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
     color: Colors.textWhite,
   },
   planPrice: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.primaryCyan,
   },
   planPriceActive: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textWhite,
   },
@@ -301,16 +328,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   featureText: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     color: Colors.textPrimary,
     flex: 1,
-    lineHeight: 22,
+    // lineHeight: 22,
   },
   featureTextActive: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     color: Colors.textWhite,
     flex: 1,
-    lineHeight: 22,
+    // lineHeight: 22,
   },
   upgradeButton: {
     marginTop: 0,
@@ -334,6 +361,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     marginTop: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    marginTop: 12,
+  },
+  errorText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
   },
 });
 

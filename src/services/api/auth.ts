@@ -23,3 +23,15 @@ export const profileSetup = async (data: FormData) => {
   });
   return response.data;
 };
+
+// get country
+export const getCountry = async () => {
+  const response = await apiClient.get('/auth/get-country/');
+  return response.data;
+};
+
+// get plans
+export const getPlans = async () => {
+  const response = await apiClient.get(`/auth/plans/`);
+  return response.data;
+};

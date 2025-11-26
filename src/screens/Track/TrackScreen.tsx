@@ -28,6 +28,7 @@ import { useToast } from '../../components/Toast';
 import { ChevronRight } from 'lucide-react-native';
 import { useCreateRating } from '../../hooks/useRating';
 import { useQueryClient } from '@tanstack/react-query';
+import { getPublishedRideById } from '../../services/api/ride';
 
 type TabType = 'Booked' | 'Published';
 type TrackScreenNavigationProp = StackNavigationProp<ExtendedTrackStackParamList, 'TrackList'>;
@@ -131,57 +132,123 @@ const TrackScreen: React.FC = () => {
     });
   };
 
-  const handleRatePress = async (ride: RideCardData) => {
+  const handleRatePress = async (ride: RideCardData | BookedRideCardData) => {
     console.log('Rate pressed:', ride);
-
-    if (activeTab === 'Booked') {
-      return;
-    }
 
     setSelectedLuggageRequest(null);
     setRating(0);
     setFeedback('');
-    setSelectedRideId(ride.id);
     setIsLoadingLuggageRequests(true);
     
     try {
-      const response = await getLuggageRequestsForRide(ride.id);
-      console.log('Luggage requests response hehehehe:', response);
-      
-      let allRequests: LuggageRequest[] = [];
-      if (response && response.luggageRequests && Array.isArray(response.luggageRequests)) {
-        allRequests = response.luggageRequests;
-        console.log('allRequests', allRequests);  console.log('allRequests', allRequests);
-      } else if (Array.isArray(response)) {
-        allRequests = response;
+      if (activeTab === 'Booked') {
+        // For booked rides, rate the traveler
+        const bookedRide = ride as BookedRideCardData;
+        const bookingRequest = bookedRide.bookingRequest;
+        
+        if (!bookingRequest || !bookingRequest.ride_info) {
+          showError('Ride information not found');
+          setIsLoadingLuggageRequests(false);
+          return;
+        }
+
+        // Try to get traveler from multiple sources
+        let traveler = bookingRequest.ride_info?.traveler || bookingRequest.traveler;
+        
+        // If traveler not found in booking request, fetch ride details
+        if (!traveler && bookingRequest.ride_info.id) {
+          try {
+            const rideDetails = await getPublishedRideById(bookingRequest.ride_info.id);
+            traveler = rideDetails?.traveler;
+          } catch (error) {
+            console.error('Error fetching ride details:', error);
+          }
+        }
+
+        if (!traveler) {
+          showError('Traveler information not found');
+          setIsLoadingLuggageRequests(false);
+          return;
+        }
+
+        const firstName = traveler?.first_name || '';
+        const lastName = traveler?.last_name || '';
+        const travelerName = `${firstName} ${lastName}`.trim() || 'Unknown';
+        const travelerProfilePhoto = traveler?.profile?.profile_photo || null;
+
+        // Handle luggage_photo array (could be luggage_photo or luggage_photos)
+        const luggagePhotos = bookingRequest.luggage_photo || bookingRequest.luggage_photos || [];
+        const itemCount = Array.isArray(luggagePhotos) ? luggagePhotos.length : 1;
+
+        // Create a LuggageRequest-like object for the traveler
+        const travelerRequest: LuggageRequest = {
+          id: bookingRequest.id,
+          senderName: travelerName,
+          senderProfilePhoto: travelerProfilePhoto,
+          status: bookingRequest.status || 'approved',
+          itemCount: itemCount,
+          sender: {
+            id: traveler.id,
+            first_name: traveler.first_name,
+            last_name: traveler.last_name,
+            profile: {
+              profile_photo: travelerProfilePhoto,
+            },
+          },
+          ride: bookingRequest.ride_info,
+          fullData: bookingRequest, // Store full booking request data for API calls
+        };
+
+        // For booked rides, directly show the rating screen (skip selection)
+        setLuggageRequests([travelerRequest]);
+        setSelectedLuggageRequest(travelerRequest);
+        setSelectedRideId(bookingRequest.id);
+        bottomSheetModalRef.current?.present();
+        // Snap to rating screen directly
+        setTimeout(() => {
+          bottomSheetModalRef.current?.snapToIndex(1);
+        }, 100);
+      } else {
+        // For published rides, show list of senders to rate
+        setSelectedRideId(ride.id);
+        const response = await getLuggageRequestsForRide(ride.id);
+        console.log('Luggage requests response hehehehe:', response);
+        
+        let allRequests: LuggageRequest[] = [];
+        if (response && response.luggageRequests && Array.isArray(response.luggageRequests)) {
+          allRequests = response.luggageRequests;
+          console.log('allRequests', allRequests);  console.log('allRequests', allRequests);
+        } else if (Array.isArray(response)) {
+          allRequests = response;
+        }
+        
+        // Filter to show only approved requests and map to include full data
+        const approvedRequests = allRequests
+          .filter((request) => request.status?.toLowerCase() === 'approved')
+          .map((request: any) => {
+            const firstName = request.sender?.first_name || '';
+            const lastName = request.sender?.last_name || '';
+            const senderName = `${firstName} ${lastName}`.trim() || 'Unknown';
+            const senderProfilePhoto = request.sender?.profile?.profile_photo || null;
+            
+            return {
+              id: request.id,
+              senderName,
+              senderProfilePhoto,
+              status: request.status,
+              itemCount: request.luggage_photo?.length || 1,
+              sender: request.sender,
+              ride: request.ride,
+              fullData: request, // Store full request data for API calls
+            };
+          });
+        
+        setLuggageRequests(approvedRequests);
+        bottomSheetModalRef.current?.present();
       }
-      
-      // Filter to show only approved requests and map to include full data
-      const approvedRequests = allRequests
-        .filter((request) => request.status?.toLowerCase() === 'approved')
-        .map((request: any) => {
-          const firstName = request.sender?.first_name || '';
-          const lastName = request.sender?.last_name || '';
-          const senderName = `${firstName} ${lastName}`.trim() || 'Unknown';
-          const senderProfilePhoto = request.sender?.profile?.profile_photo || null;
-          
-          return {
-            id: request.id,
-            senderName,
-            senderProfilePhoto,
-            status: request.status,
-            itemCount: request.luggage_photo?.length || 1,
-            sender: request.sender,
-            ride: request.ride,
-            fullData: request, // Store full request data for API calls
-          };
-        });
-      
-      setLuggageRequests(approvedRequests);
-      bottomSheetModalRef.current?.present();
     } catch (error: any) {
-      console.error('Error fetching luggage requests:', error);
-      showError(error?.response?.data?.message || error?.message || 'Failed to load luggage requests');
+      console.error('Error fetching data for rating:', error);
+      showError(error?.response?.data?.message || error?.message || 'Failed to load data');
     } finally {
       setIsLoadingLuggageRequests(false);
     }
@@ -202,7 +269,7 @@ const TrackScreen: React.FC = () => {
     }
 
     // Determine rating type based on active tab
-    const ratingType = activeTab === 'Published' ? 'traveler' : 'sender';
+    const ratingType = activeTab === 'Published' ? 'sender' : 'traveler';
     
     // Get the user ID to rate
     let ratedToId: string | undefined;
@@ -210,8 +277,9 @@ const TrackScreen: React.FC = () => {
       // For published rides, rate the sender
       ratedToId = selectedLuggageRequest.sender?.id || selectedLuggageRequest.fullData?.sender?.id;
     } else {
-      // For booked rides, rate the traveler
-      ratedToId = selectedLuggageRequest.ride?.traveler?.id || selectedLuggageRequest.fullData?.ride?.traveler?.id;
+      // For booked rides, sender is rating the traveler
+      // For booked rides, we stored traveler info in the sender field
+      ratedToId = selectedLuggageRequest.sender?.id || selectedLuggageRequest.fullData?.ride_info?.traveler?.id;
     }
 
     if (!ratedToId) {
@@ -235,7 +303,8 @@ const TrackScreen: React.FC = () => {
         review: feedback || '',
       },
       {
-        onSuccess: () => {
+        onSuccess: (response: any) => {
+          console.log('Rating submitted successfully!', response);
           showSuccess('Rating submitted successfully!');
           bottomSheetModalRef.current?.dismiss();
           setSelectedLuggageRequest(null);
@@ -269,7 +338,7 @@ const TrackScreen: React.FC = () => {
     []
   );
 
-  const renderRideCard = ({ item }: { item: RideCardData }) => (
+  const renderRideCard = ({ item }: { item: RideCardData | BookedRideCardData }) => (
     <RideCard
       ride={item}
       onPress={() => handleRidePress(item)}
@@ -388,27 +457,41 @@ const TrackScreen: React.FC = () => {
           ) : (
             // Rating Screen
             <>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => {
-                  setSelectedLuggageRequest(null);
-                  bottomSheetModalRef.current?.snapToIndex(0);
-                }}
-              >
-                <ArrowLeft size={24} color={Colors.textPrimary} />
-              </TouchableOpacity>
-              <Text style={styles.ratingTitle}>How was your experience with</Text>
-              <View style={styles.ratingProfileContainer}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <View style={styles.ratingProfileIcon}>
-                  {selectedLuggageRequest.senderProfilePhoto ? (
-                    <Image source={{ uri: selectedLuggageRequest.senderProfilePhoto }} style={styles.ratingProfileAvatar} />
-                  ) : (
-                    <SvgXml xml={ProfileUserIcon} height={24} width={24} />
-                  )}
+              {activeTab === 'Published' && (
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => {
+                    setSelectedLuggageRequest(null);
+                    bottomSheetModalRef.current?.snapToIndex(0);
+                  }}
+                >
+                  <ArrowLeft size={24} color={Colors.textPrimary} />
+                </TouchableOpacity>
+              )}
+              {activeTab === 'Booked' ? (
+                <>
+                  <Text style={styles.ratingTitle}>
+                    Rate your traveller
+                  </Text>
+                  <Text style={styles.ratingSubtitle}>How was your experience with this ride?</Text>
+                </>
+              ) : (
+                <Text style={styles.ratingTitle}>How was your experience with</Text>
+              )}
+              {activeTab === 'Published' && (
+                <View style={styles.ratingProfileContainer}>
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <View style={styles.ratingProfileIcon}>
+                    {selectedLuggageRequest.senderProfilePhoto ? (
+                      <Image source={{ uri: selectedLuggageRequest.senderProfilePhoto }} style={styles.ratingProfileAvatar} />
+                    ) : (
+                      <SvgXml xml={ProfileUserIcon} height={24} width={24} />
+                    )}
+                  </View>
+                  <Text style={styles.ratingProfileName}>{selectedLuggageRequest.sender?.first_name} {selectedLuggageRequest.sender?.last_name}</Text>
                 </View>
-                <Text style={styles.ratingProfileName}>{selectedLuggageRequest.sender?.first_name} {selectedLuggageRequest.sender?.last_name}</Text>
-              </View>
+                </View>
+              )}
               
               <View style={styles.starsContainer}>
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -424,7 +507,6 @@ const TrackScreen: React.FC = () => {
                     />
                   </TouchableOpacity>
                 ))}
-              </View>
               </View>
               
               <TextInput
@@ -571,8 +653,13 @@ const styles = StyleSheet.create({
   // Rating Screen Styles
   ratingTitle: {
     fontSize: Fonts.lg,
-    fontWeight: Fonts.weightBold,
+    fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  ratingSubtitle: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
     marginBottom: 16,
   },
   ratingProfileContainer: {
@@ -618,6 +705,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
     minHeight: 100,
     marginBottom: 24,
+    marginTop: 10
   },
   submitButton: {
     width: '100%',

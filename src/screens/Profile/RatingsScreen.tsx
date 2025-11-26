@@ -16,7 +16,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, Card, GradientButton, EmptyStateCard } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
-import { useMyRatings, useRatingsGivenByMe, RatingResponse } from '../../hooks/useRating';
+import { useMyRatings, useRatingsGivenByMe, useRatingChart, RatingResponse } from '../../hooks/useRating';
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
 import { SvgXml } from 'react-native-svg';
 
@@ -63,33 +63,29 @@ const formatTimeAgo = (dateString: string): string => {
   }
 };
 
-// Helper function to calculate rating distribution
-const calculateRatingDistribution = (ratings: RatingResponse[]): RatingDistribution[] => {
-  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  const total = ratings.length;
 
-  if (total === 0) {
-    return [
-      { stars: 5, percentage: 0 },
-      { stars: 4, percentage: 0 },
-      { stars: 3, percentage: 0 },
-      { stars: 2, percentage: 0 },
-      { stars: 1, percentage: 0 },
-    ];
-  }
+//   if (total === 0) {
+//     return [
+//       { stars: 5, percentage: 0 },
+//       { stars: 4, percentage: 0 },
+//       { stars: 3, percentage: 0 },
+//       { stars: 2, percentage: 0 },
+//       { stars: 1, percentage: 0 },
+//     ];
+//   }
 
-  ratings.forEach((rating) => {
-    const stars = Math.floor(rating.rating);
-    if (stars >= 1 && stars <= 5) {
-      distribution[stars as keyof typeof distribution]++;
-    }
-  });
+//   ratings.forEach((rating) => {
+//     const stars = Math.floor(rating.rating);
+//     if (stars >= 1 && stars <= 5) {
+//       distribution[stars as keyof typeof distribution]++;
+//     }
+//   });
 
-  return [5, 4, 3, 2, 1].map((stars) => ({
-    stars,
-    percentage: Math.round((distribution[stars as keyof typeof distribution] / total) * 100),
-  }));
-};
+//   return [5, 4, 3, 2, 1].map((stars) => ({
+//     stars,
+//     percentage: Math.round((distribution[stars as keyof typeof distribution] / total) * 100),
+//   }));
+// };
 
 const RatingsScreen: React.FC = () => {
   const navigation = useNavigation<RatingsScreenNavigationProp>();
@@ -111,6 +107,14 @@ const RatingsScreen: React.FC = () => {
     isFetching: isFetchingGiven,
     refetch: refetchGiven 
   } = useRatingsGivenByMe();
+
+  // Fetch rating chart data
+  const { 
+    data: ratingChartData,
+    isLoading: isLoadingChart,
+    isFetching: isFetchingChart,
+    refetch: refetchChart 
+  } = useRatingChart();
 
   // Transform API data to Review format
   const receivedReviews: Review[] = useMemo(() => {
@@ -135,21 +139,44 @@ const RatingsScreen: React.FC = () => {
     }));
   }, [ratingsGivenData]);
 
-  // Calculate rating statistics for received ratings
+  // Use API data for rating statistics from chart API
   const averageRating = useMemo(() => {
-    if (receivedReviews.length === 0) return 0;
-    const sum = receivedReviews.reduce((acc, review) => acc + review.rating, 0);
-    return sum / receivedReviews.length;
-  }, [receivedReviews]);
+    return ratingChartData?.average_rating ?? 0;
+  }, [ratingChartData]);
 
   const ratingDistribution = useMemo(() => {
-    return calculateRatingDistribution(myRatingsData);
-  }, [myRatingsData]);
+    // Use API data from chart API
+    if (ratingChartData?.percentages) {
+      // Transform percentages object to array format
+      return [5, 4, 3, 2, 1].map((stars) => ({
+        stars,
+        percentage: Math.round(ratingChartData.percentages[stars.toString()] || 0),
+      }));
+    }
+    // Default empty distribution if API data not available
+    return [5, 4, 3, 2, 1].map((stars) => ({
+      stars,
+      percentage: 0,
+    }));
+  }, [ratingChartData]);
 
-  const isLoading = activeTab === 'Received' ? isLoadingReceived : isLoadingGiven;
+  const totalReviews = useMemo(() => {
+    return ratingChartData?.total_reviews ?? 0;
+  }, [ratingChartData]);
+
+  const isLoading = activeTab === 'Received' 
+    ? (isLoadingReceived || isLoadingChart) 
+    : isLoadingGiven;
   const isError = activeTab === 'Received' ? isErrorReceived : isErrorGiven;
-  const refetch = activeTab === 'Received' ? refetchReceived : refetchGiven;
-  const isRefetching = activeTab === 'Received' ? isFetchingReceived : isFetchingGiven;
+  const refetch = activeTab === 'Received' 
+    ? () => {
+        refetchReceived();
+        refetchChart();
+      }
+    : refetchGiven;
+  const isRefetching = activeTab === 'Received' 
+    ? (isFetchingReceived || isFetchingChart)
+    : isFetchingGiven;
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -161,13 +188,6 @@ const RatingsScreen: React.FC = () => {
         stars.push(
           <Star key={i} size={14} color="#FFD700" fill="#FFD700" />
         );
-      // } else if (i === fullStars && hasHalfStar) {
-      //   stars.push(
-      //     <View key={i} style={styles.halfStarContainer}>
-      //       <Star size={16} color="#FFD700" fill="#FFD700" />
-      //       <View style={styles.halfStarOverlay} />
-      //     </View>
-      //   );
       } else {
         stars.push(
           <Star key={i} size={14} color="#E0E0E0" fill="#E0E0E0" />
@@ -188,7 +208,9 @@ const RatingsScreen: React.FC = () => {
             <View style={styles.starsContainer}>
               {renderStars(averageRating)}
             </View>
-            <Text style={styles.reviewCount}>({receivedReviews.length} {receivedReviews.length === 1 ? 'review' : 'reviews'})</Text>
+            <Text style={styles.reviewCount}>
+              ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+            </Text>
           </View>
           <View style={styles.ratingChart}>
             {ratingDistribution.map((item) => (
