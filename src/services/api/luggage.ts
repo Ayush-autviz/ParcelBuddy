@@ -1,7 +1,38 @@
 import apiClient from "../apiClient";
 
 // get luggage request 
-export const getLuggageRequests = async () => {
+export const getLuggageRequests = async (pageUrl?: string) => {
+    if (pageUrl) {
+        // Extract path and query from full URL
+        // Find the path after the domain (e.g., /luggage-requests/?page=2)
+        // BaseURL is http://13.233.74.72:8000, so we need to extract everything after that
+        try {
+            const baseUrl = 'http://13.233.74.72:8000';
+            if (pageUrl.startsWith(baseUrl)) {
+                const pathWithQuery = pageUrl.substring(baseUrl.length);
+                const response = await apiClient.get(pathWithQuery);
+                return response.data;
+            } else if (pageUrl.startsWith('/')) {
+                // Already a relative path
+                const response = await apiClient.get(pageUrl);
+                return response.data;
+            } else {
+                // Try to extract path from any URL format
+                const urlMatch = pageUrl.match(/\/[^?]*(\?.*)?$/);
+                if (urlMatch) {
+                    const pathWithQuery = urlMatch[0];
+                    const response = await apiClient.get(pathWithQuery);
+                    return response.data;
+                }
+                // Fallback: try using it as a relative path
+                const response = await apiClient.get(pageUrl);
+                return response.data;
+            }
+        } catch (error) {
+            console.error('Error parsing page URL:', error);
+            throw error;
+        }
+    }
     const response = await apiClient.get(`/luggage-requests/?ordering=-created_on`);
     return response.data;
 };
@@ -51,5 +82,11 @@ export const respondToLuggageRequest = async (requestId: string, data: any) => {
 // update luggage request weight
 export const updateLuggageRequestWeight = async (requestId: string, data: any) => {
     const response = await apiClient.patch(`/luggage/${requestId}/update-weight/`, data);
+    return response.data;
+};
+
+// get approved luggage requests for a ride
+export const getApprovedLuggageRequestsForRide = async (rideId: string) => {
+    const response = await apiClient.get(`/rides/${rideId}/approved_requests/`);
     return response.data;
 };

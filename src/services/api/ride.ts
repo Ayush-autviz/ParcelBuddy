@@ -19,7 +19,37 @@ export const getPublishedRideById = async (id: string) => {
 };
 
 // get my rides
-export const getPublishedRides = async () => {
+export const getPublishedRides = async (pageUrl?: string) => {
+    if (pageUrl) {
+        // Extract path and query from full URL
+        // Find the path after the domain (e.g., /rides/my_rides/?page=2)
+        try {
+            const baseUrl = 'http://13.233.74.72:8000';
+            if (pageUrl.startsWith(baseUrl)) {
+                const pathWithQuery = pageUrl.substring(baseUrl.length);
+                const response = await apiClient.get(pathWithQuery);
+                return response.data;
+            } else if (pageUrl.startsWith('/')) {
+                // Already a relative path
+                const response = await apiClient.get(pageUrl);
+                return response.data;
+            } else {
+                // Try to extract path from any URL format
+                const urlMatch = pageUrl.match(/\/[^?]*(\?.*)?$/);
+                if (urlMatch) {
+                    const pathWithQuery = urlMatch[0];
+                    const response = await apiClient.get(pathWithQuery);
+                    return response.data;
+                }
+                // Fallback: try using it as a relative path
+                const response = await apiClient.get(pageUrl);
+                return response.data;
+            }
+        } catch (error) {
+            console.error('Error parsing page URL:', error);
+            throw error;
+        }
+    }
     const response = await apiClient.get(`/rides/my_rides/`);
     return response.data;
 };

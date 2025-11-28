@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,8 @@ import { Header, TabButton, RideCard, RideCardData, EmptyStateCard } from '../..
 import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
 import { usePublishedRides } from '../../hooks/useRides';
 import { useBookedRides, BookedRideCardData } from '../../hooks/useLuggage';
+import { getLuggageRequests } from '../../services/api/luggage';
+import { getPublishedRides } from '../../services/api/ride';
 import GradientButton from '../../components/GradientButton';
 import { SvgXml } from 'react-native-svg';
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
@@ -70,6 +72,16 @@ const TrackScreen: React.FC = () => {
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   
+  // Pagination state for booked rides
+  const [allBookedRides, setAllBookedRides] = useState<BookedRideCardData[]>([]);
+  const [nextPageUrlBooked, setNextPageUrlBooked] = useState<string | null>(null);
+  const [isLoadingMoreBooked, setIsLoadingMoreBooked] = useState(false);
+  
+  // Pagination state for published rides
+  const [allPublishedRides, setAllPublishedRides] = useState<RideCardData[]>([]);
+  const [nextPageUrlPublished, setNextPageUrlPublished] = useState<string | null>(null);
+  const [isLoadingMorePublished, setIsLoadingMorePublished] = useState(false);
+  
   // Rating mutation
   const createRatingMutation = useCreateRating();
   
@@ -78,7 +90,7 @@ const TrackScreen: React.FC = () => {
 
   // Fetch published rides from API
   const { 
-    data: publishedRides, 
+    data: publishedRidesData, 
     isLoading: isLoadingPublished, 
     isFetching: isFetchingPublished, 
     isError: isErrorPublished, 
@@ -88,7 +100,7 @@ const TrackScreen: React.FC = () => {
 
   // Fetch booked rides (luggage requests) from API
   const { 
-    data: bookedRides , 
+    data: bookedRidesData , 
     isLoading: isLoadingBooked, 
     isFetching: isFetchingBooked, 
     isError: isErrorBooked, 
@@ -96,11 +108,144 @@ const TrackScreen: React.FC = () => {
     failureReason: failureReasonBooked 
   } = useBookedRides();
 
-  console.log('bookedRides', bookedRides);
-  console.log('publishedRides', publishedRides);
+  // Update all booked rides and pagination when data changes or tab switches
+  useEffect(() => {
+    if (activeTab === 'Booked' && bookedRidesData?.rides) {
+      // Reset and set initial data when switching to Booked tab
+      setAllBookedRides(bookedRidesData.rides);
+      setNextPageUrlBooked(bookedRidesData.pagination?.next_page || null);
+    } else if (activeTab === 'Published' && publishedRidesData?.rides) {
+      // Reset and set initial data when switching to Published tab
+      setAllPublishedRides(publishedRidesData.rides);
+      setNextPageUrlPublished(publishedRidesData.pagination?.next_page || null);
+    }
+  }, [activeTab, bookedRidesData, publishedRidesData]);
 
+  const handleLoadMoreBooked = async () => {
+    if (!nextPageUrlBooked || isLoadingMoreBooked) return;
 
-  const rides = activeTab === 'Booked' ? bookedRides : publishedRides;
+    setIsLoadingMoreBooked(true);
+    try {
+      const response = await getLuggageRequests(nextPageUrlBooked);
+      
+      const hasPagination = response?.pagination && response?.results;
+      const requestsArray = hasPagination 
+        ? response.results 
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
+      
+      if (Array.isArray(requestsArray)) {
+        // Format the new rides using the same logic as useBookedRides
+        const formatDate = (dateString: string): string => {
+          if (!dateString) return 'Invalid Date';
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return 'Invalid Date';
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const month = months[date.getMonth()];
+          const day = date.getDate().toString().padStart(2, '0');
+          return `${month} ${day}`;
+        };
+
+        const formatTime = (timeString: string | null | undefined): string => {
+          if (!timeString) return '12:00 AM';
+          const timeParts = timeString.split(':');
+          const hours = timeParts[0] || '0';
+          const minutes = timeParts[1] || '0';
+          const hour = parseInt(hours, 10);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const displayHour = hour % 12 || 12;
+          const displayMinutes = minutes.padStart(2, '0');
+          return `${displayHour}:${displayMinutes} ${ampm}`;
+        };
+
+        const newRides = requestsArray
+          .filter((request: any) => request.status !== 'cancelled')
+          .map((request: any) => ({
+            id: request.id,
+            status: request.status,
+            date: formatDate(request.ride_info?.travel_date || ''),
+            origin: request.ride_info?.origin || request.ride_info?.origin_name || 'Unknown Origin',
+            originTime: formatTime(request.travel_time || request.ride_info?.travel_time),
+            destination: request.ride_info?.destination || request.ride_info?.destination_name || 'Unknown Destination',
+            destinationTime: formatTime(request.destination_time || request.ride_info?.destination_time),
+            passengers: 0,
+            showRateButton: request.ride_info?.ride_status === 'completed',
+            bookingRequest: request,
+          } as BookedRideCardData));
+
+        setAllBookedRides(prev => [...prev, ...newRides]);
+        setNextPageUrlBooked(hasPagination ? response.pagination.next_page : null);
+      }
+    } catch (error: any) {
+      console.error('Error loading more booked rides:', error);
+      showError(error?.response?.data?.message || error?.message || 'Failed to load more rides');
+    } finally {
+      setIsLoadingMoreBooked(false);
+    }
+  };
+
+  const handleLoadMorePublished = async () => {
+    if (!nextPageUrlPublished || isLoadingMorePublished) return;
+
+    setIsLoadingMorePublished(true);
+    try {
+      const response = await getPublishedRides(nextPageUrlPublished);
+      
+      const hasPagination = response?.pagination && response?.results;
+      const ridesArray = hasPagination 
+        ? response.results 
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
+      
+      if (Array.isArray(ridesArray)) {
+        // Format the new rides using the same logic as usePublishedRides
+        const formatDate = (dateString: string): string => {
+          if (!dateString) return 'Invalid Date';
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return 'Invalid Date';
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const month = months[date.getMonth()];
+          const day = date.getDate().toString().padStart(2, '0');
+          return `${month} ${day}`;
+        };
+
+        const formatTime = (timeString: string | null | undefined): string => {
+          if (!timeString) return '12:00 AM';
+          const timeParts = timeString.split(':');
+          const hours = timeParts[0] || '0';
+          const minutes = timeParts[1] || '0';
+          const hour = parseInt(hours, 10);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const displayHour = hour % 12 || 12;
+          const displayMinutes = minutes.padStart(2, '0');
+          return `${displayHour}:${displayMinutes} ${ampm}`;
+        };
+
+        const newRides = ridesArray.map((ride: any) => ({
+          id: ride.id || '',
+          status: ride.status,
+          date: formatDate(ride.travel_date),
+          origin: ride.origin_name || 'Unknown Origin',
+          originTime: formatTime(ride.travel_time),
+          destination: ride.destination_name || 'Unknown Destination',
+          destinationTime: formatTime(ride.destination_time),
+          passengers: 0,
+          showRateButton: ride.status === 'completed',
+        } as RideCardData));
+
+        setAllPublishedRides(prev => [...prev, ...newRides]);
+        setNextPageUrlPublished(hasPagination ? response.pagination.next_page : null);
+      }
+    } catch (error: any) {
+      console.error('Error loading more published rides:', error);
+      showError(error?.response?.data?.message || error?.message || 'Failed to load more rides');
+    } finally {
+      setIsLoadingMorePublished(false);
+    }
+  };
+
+  const rides = activeTab === 'Booked' ? allBookedRides : allPublishedRides;
+  const nextPageUrl = activeTab === 'Booked' ? nextPageUrlBooked : nextPageUrlPublished;
+  const isLoadingMore = activeTab === 'Booked' ? isLoadingMoreBooked : isLoadingMorePublished;
+  const handleLoadMore = activeTab === 'Booked' ? handleLoadMoreBooked : handleLoadMorePublished;
   const isLoading = activeTab === 'Booked' ? isLoadingBooked : isLoadingPublished;
   const isFetching = activeTab === 'Booked' ? isFetchingBooked : isFetchingPublished;
   const isError = activeTab === 'Booked' ? isErrorBooked : isErrorPublished;
@@ -381,15 +526,30 @@ const TrackScreen: React.FC = () => {
           />
         </View>
       ) : rides && rides.length > 0 ? (
-        <FlatList
-          data={rides}
-          renderItem={renderRideCard}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshing={isFetching}
-          onRefresh={refetch}
-        />
+        <>
+          <FlatList
+            data={rides}
+            renderItem={renderRideCard}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshing={isFetching}
+            onRefresh={refetch}
+            ListFooterComponent={
+              nextPageUrl ? (
+                <View style={styles.loadMoreContainer}>
+                  <GradientButton
+                    title="View More"
+                    onPress={handleLoadMore}
+                    style={styles.loadMoreButton}
+                    loading={isLoadingMore}
+                    disabled={isLoadingMore}
+                  />
+                </View>
+              ) : null
+            }
+          />
+        </>
       ) : (
         <View style={styles.emptyContainer}>
           <EmptyStateCard
@@ -710,6 +870,15 @@ const styles = StyleSheet.create({
   submitButton: {
     width: '100%',
     alignSelf: 'flex-end',
+  },
+  loadMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadMoreButton: {
+    width: '50%',
+    alignSelf: 'center',
   },
 });
 

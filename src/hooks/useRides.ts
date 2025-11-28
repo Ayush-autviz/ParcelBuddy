@@ -24,21 +24,38 @@ export interface PublishedRideResponse {
   destination_time: string;
 }
 
-export const usePublishedRides = (): UseQueryResult<RideCardData[], Error> => {
+// Interface for paginated published rides response
+export interface PaginatedPublishedRidesResponse {
+  rides: RideCardData[];
+  pagination: {
+    next_page: string | null;
+    current_page: number;
+    total_pages: number;
+    total_records: number;
+  } | null;
+}
+
+export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesResponse, Error> => {
   return useQuery({
     queryKey: ['publishedRides'],
     queryFn: async () => {
       const response = await getPublishedRides();
       
-      // Handle case where response might be wrapped in an object (e.g., { data: [...] })
-      const ridesArray = Array.isArray(response) ? response : (response?.data || response?.results || []);
+      // Check if response has pagination structure
+      const hasPagination = response?.pagination && response?.results;
+      const ridesArray = hasPagination 
+        ? response.results 
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
       
       if (!Array.isArray(ridesArray)) {
         console.warn('getPublishedRides: Expected array but got:', typeof response, response);
-        return [];
+        return {
+          rides: [],
+          pagination: null,
+        };
       }
 
-      return ridesArray.map((ride: PublishedRideResponse) => {
+      const rides = ridesArray.map((ride: PublishedRideResponse) => {
         // Format date: "2025-11-07" -> "Nov 07"
         const formatDate = (dateString: string): string => {
           if (!dateString) {
@@ -85,6 +102,16 @@ export const usePublishedRides = (): UseQueryResult<RideCardData[], Error> => {
           showRateButton: showRate,
         } as RideCardData;
       });
+
+      return {
+        rides,
+        pagination: hasPagination ? {
+          next_page: response.pagination.next_page,
+          current_page: response.pagination.current_page,
+          total_pages: response.pagination.total_pages,
+          total_records: response.pagination.total_records,
+        } : null,
+      };
     },
     staleTime: 30000, // Cache for 30 seconds
     retry: 1,

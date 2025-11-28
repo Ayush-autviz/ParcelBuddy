@@ -203,22 +203,39 @@ export interface BookedRideCardData extends RideCardData {
   bookingRequest?: BookedRideResponse; // Store original booking request data
 }
 
+// Interface for paginated booked rides response
+export interface PaginatedBookedRidesResponse {
+  rides: BookedRideCardData[];
+  pagination: {
+    next_page: string | null;
+    current_page: number;
+    total_pages: number;
+    total_records: number;
+  } | null;
+}
+
 // Hook to get booked rides (luggage requests made by the user)
-export const useBookedRides = (): UseQueryResult<BookedRideCardData[], Error> => {
+export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, Error> => {
   return useQuery({
     queryKey: ['bookedRides'],
     queryFn: async () => {
       const response = await getLuggageRequests();
       
-      // Handle case where response might be wrapped in an object
-      const requestsArray = Array.isArray(response) ? response : (response?.data || response?.results || []);
+      // Check if response has pagination structure
+      const hasPagination = response?.pagination && response?.results;
+      const requestsArray = hasPagination 
+        ? response.results 
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
       
       if (!Array.isArray(requestsArray)) {
         console.warn('getLuggageRequests: Expected array but got:', typeof response, response);
-        return [];
+        return {
+          rides: [],
+          pagination: null,
+        };
       }
 
-      return requestsArray.filter((request: BookedRideResponse) => request.status !== 'cancelled').map((request: BookedRideResponse) => {
+      const rides = requestsArray.filter((request: BookedRideResponse) => request.status !== 'cancelled').map((request: BookedRideResponse) => {
         // Format date: "2025-11-07" -> "Nov 07"
         const formatDate = (dateString: string): string => {
           if (!dateString) {
@@ -265,6 +282,16 @@ export const useBookedRides = (): UseQueryResult<BookedRideCardData[], Error> =>
           bookingRequest: request, // Store original booking request for detail screen
         } as BookedRideCardData;
       });
+
+      return {
+        rides,
+        pagination: hasPagination ? {
+          next_page: response.pagination.next_page,
+          current_page: response.pagination.current_page,
+          total_pages: response.pagination.total_pages,
+          total_records: response.pagination.total_records,
+        } : null,
+      };
     },
     staleTime: 30000, // Cache for 30 seconds
     retry: 1,
