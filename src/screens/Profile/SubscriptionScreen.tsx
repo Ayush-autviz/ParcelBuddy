@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,7 @@ const SubscriptionScreen: React.FC = () => {
   const { data: plansData, isLoading, isError } = useSubscriptionPlans();
   const createSubscriptionMutation = useCreateSubscription();
   const { showSuccess, showError } = useToast();
+  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
 
 
 
@@ -81,11 +82,13 @@ const SubscriptionScreen: React.FC = () => {
   console.log('subscriptionPlans', subscriptionPlans);
 
   const handleUpgrade = (planId: string) => {
+    setLoadingPlanId(planId);
     createSubscriptionMutation.mutate(
       { plan_id: planId },
       {
         onSuccess: (response) => {
           console.log('Subscription created successfully:', response);
+          setLoadingPlanId(null); // Clear loading state
           if (response.checkout_url) {
             // Open checkout URL in device browser
             Linking.openURL(response.checkout_url).catch((err) => {
@@ -99,6 +102,7 @@ const SubscriptionScreen: React.FC = () => {
         },
         onError: (error: any) => {
           console.error('Error creating subscription:', error);
+          setLoadingPlanId(null); // Clear loading state on error
           const errorMessage = error?.response?.data?.message || 
                               error?.response?.data?.error || 
                               error?.message || 
@@ -217,8 +221,8 @@ const SubscriptionScreen: React.FC = () => {
                       title="Upgrade"
                       onPress={() => handleUpgrade(plan.id)}
                       style={styles.upgradeButton}
-                      loading={createSubscriptionMutation.isPending}
-                      disabled={createSubscriptionMutation.isPending}
+                      loading={loadingPlanId === plan.id}
+                      disabled={loadingPlanId !== null}
                     />
                   )}
                 </View>

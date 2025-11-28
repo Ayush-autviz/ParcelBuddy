@@ -56,7 +56,7 @@ const ChatDetailScreen: React.FC = () => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   
   // Define snap points for bottom sheet
-  const snapPoints = useMemo(() => ['25%'], []);
+  const snapPoints = useMemo(() => ['75%'], []);
 
   // Get current user ID for Gifted Chat
   const currentUserId = (user as any)?.id || (user as any)?.user_id || 'current-user';
@@ -502,16 +502,17 @@ const ChatDetailScreen: React.FC = () => {
         </View>
       )}
 
-      <KeyboardAvoidingView
+      {/* <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+      > */}
+      <View style={{flex: 1}}>
         <GiftedChat
           messages={messages}
           onSend={onSend}
           user={currentUser}
-          bottomOffset={-100}
+          bottomOffset={ is_ride_created_by_me && luggage_request_status ? -100 : -30}
           placeholder="Type a message..."
           isLoadingEarlier={isLoading}
           showUserAvatar={false}
@@ -527,7 +528,8 @@ const ChatDetailScreen: React.FC = () => {
           // renderAvatar={renderAvatar}
           renderAvatar={null}
         />
-      </KeyboardAvoidingView>
+      </View>
+      {/* </KeyboardAvoidingView> */}
 
       {/* Action Buttons - Only show if ride is created by me */}
       {is_ride_created_by_me && luggage_request_status === 'pending' && (
@@ -733,7 +735,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: Colors.backgroundWhite,
+    backgroundColor: Colors.backgroundLight,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
