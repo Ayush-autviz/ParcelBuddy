@@ -40,6 +40,7 @@ const SenderDetailScreen: React.FC = () => {
   const createChatRoomMutation = useCreateChatRoom();
 
   // Extract the actual profile data from the API response
+  // API response structure: { message: "...", profile: { ... } }
   const profileData = profileDataResponse?.profile || profileDataResponse;
   const currentProfile: any = profileData || sender;
 
@@ -47,7 +48,7 @@ const SenderDetailScreen: React.FC = () => {
   const lastName = currentProfile?.last_name || '';
   const fullName = `${firstName} ${lastName}`.trim() || 'Sender';
   
-  // Profile photo is nested: profileData.profile.profile.profile_photo
+  // Profile photo is nested: profileData.profile.profile_photo
   const profilePhoto = currentProfile?.profile?.profile_photo;
   
   // Calculate age from date_of_birth
@@ -71,11 +72,17 @@ const SenderDetailScreen: React.FC = () => {
   const age = calculateAge(currentProfile?.date_of_birth || currentProfile?.profile?.date_of_birth);
   
   // Get data from API response - handle nested structure
+  // New API structure: { profile: { profile: { average_rating, bio, ... }, ride_details: { ... }, total_rating, ... } }
   const nestedProfile = currentProfile?.profile;
   const rating = nestedProfile?.average_rating || currentProfile?.average_rating || 0;
-  const reviewCount = nestedProfile?.review_count || currentProfile?.review_count || nestedProfile?.total_reviews || 0;
+  const reviewCount = currentProfile?.total_rating || nestedProfile?.review_count || currentProfile?.review_count || nestedProfile?.total_reviews || 0;
   const about = nestedProfile?.bio || currentProfile?.bio || 'No bio available.';
-  const isVerified = nestedProfile?.is_verified || currentProfile?.is_verified || nestedProfile?.verified || false;
+  const isVerified = nestedProfile?.is_kyc_verified || currentProfile?.is_kyc_verified || nestedProfile?.is_verified || currentProfile?.is_verified || nestedProfile?.verified || false;
+  
+  // Get ride details from new API structure
+  const rideDetails = currentProfile?.ride_details;
+  const totalRides = rideDetails?.total_ride || 0;
+  const completedRides = rideDetails?.completed_ride || 0;
 
   const handleChat = () => {
     if (!luggageRequestId) {
@@ -209,8 +216,8 @@ const SenderDetailScreen: React.FC = () => {
         </Card>
 
         {/* Verification Section - Only show if verified */}
-  
-        <Card style={styles.verificationCard} padding={20}>
+        {isVerified && (
+          <Card style={styles.verificationCard} padding={20}>
             <Text style={styles.sectionTitle}>Verification</Text>
             <View style={styles.verificationRow}>
               <View style={styles.checkIconContainer}>
@@ -219,6 +226,7 @@ const SenderDetailScreen: React.FC = () => {
               <Text style={styles.verificationText}>Government ID Verified</Text>
             </View>
           </Card>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

@@ -100,6 +100,7 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
           destinationTime: formatTime(ride.destination_time),
           passengers: 0, // Not available in API, set to 0 or calculate if needed
           showRateButton: showRate,
+          requestCount: ride.total_request_count || 0,
         } as RideCardData;
       });
 

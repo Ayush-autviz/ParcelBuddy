@@ -19,6 +19,8 @@ export interface RideCardData {
   destinationTime: string;
   passengers: number;
   showRateButton?: boolean;
+  isRated?: boolean;
+  requestCount?: number;
 }
 
 interface RideCardProps {
@@ -30,8 +32,15 @@ interface RideCardProps {
 
 const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }) => {
   const renderPassengerIcons = () => {
-    // return Array.from({ length: ride.passengers }).map((_, index) => (
-      return Array.from({ length: 3 }).map((_, index) => (
+    // Use requestCount if available, otherwise fall back to passengers or default to 0
+    const count = ride.requestCount !== undefined ? ride.requestCount : (ride.passengers || 0);
+    const displayCount = Math.min(count, 3); // Show max 3 icons
+    
+    if (displayCount === 0) {
+      return null;
+    }
+    
+    return Array.from({ length: displayCount }).map((_, index) => (
       <View
         key={index}
         style={[
@@ -39,7 +48,6 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
           index > 0 && styles.passengerAvatarOverlap,
         ]}
       >
-        {/* <User size={16} color={Colors.gradientEnd} /> */}
         <SvgXml xml={FilledUserIcon} height={16} width={16} />
       </View>
     ));
@@ -93,13 +101,17 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
         <View style={styles.passengersContainer}>
           {renderPassengerIcons()}
         </View>
-        {ride.showRateButton && onRatePress && (
-          <GradientButton
-            title="Rate"
-            onPress={onRatePress}
-            style={styles.rateButton}
-            textStyle={styles.rateButtonText}
-          />
+        {ride.showRateButton && (
+          ride.isRated ? (
+            <Text style={styles.ratedText}>Rated</Text>
+          ) : onRatePress ? (
+            <GradientButton
+              title="Rate"
+              onPress={onRatePress}
+              style={styles.rateButton}
+              textStyle={styles.rateButtonText}
+            />
+          ) : null
         )}
       </View>
     </TouchableOpacity>
@@ -214,6 +226,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.borderLight,
     marginVertical: 16,
+  },
+  ratedText: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textSecondary,
   },
 });
 

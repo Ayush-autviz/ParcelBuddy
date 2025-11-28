@@ -267,7 +267,8 @@ export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, E
         };
 
         const showRate = request.ride_info?.ride_status === 'completed';
-
+        const isRated = request.is_rated === true;
+        const requestCount = request.total_request_count || 0;
 
         return {
           id:  request.id,
@@ -279,6 +280,8 @@ export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, E
           destinationTime: formatTime(request.destination_time || request.ride_info?.destination_time),
           passengers: 0,
           showRateButton: showRate,
+          isRated: isRated,
+          requestCount: requestCount,
           bookingRequest: request, // Store original booking request for detail screen
         } as BookedRideCardData;
       });

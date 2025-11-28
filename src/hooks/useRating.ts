@@ -13,6 +13,8 @@ export interface RatingResponse {
   id: number;
   rated_by_name?: string;
   rated_to_name?: string;
+  rated_by_image?: string | null;
+  rated_to_image?: string | null;
   is_deleted: boolean;
   created_by: string | null;
   created_on: string;
@@ -33,11 +35,21 @@ export interface PaginatedRatingResponse {
     total_records: number;
     total_pages: number;
     current_page: number;
-    next_page: number | null;
-    previous_page: number | null;
+    next_page: string | null;
+    previous_page: string | null;
     page_size: number;
   };
   results: RatingResponse[];
+}
+
+export interface PaginatedRatingsData {
+  ratings: RatingResponse[];
+  pagination: {
+    next_page: string | null;
+    current_page: number;
+    total_pages: number;
+    total_records: number;
+  } | null;
 }
 
 export const useCreateRating = (): UseMutationResult<any, Error, CreateRatingRequest, unknown> => {
@@ -46,33 +58,69 @@ export const useCreateRating = (): UseMutationResult<any, Error, CreateRatingReq
   });
 };
 
-export const useMyRatings = (): UseQueryResult<RatingResponse[], Error> => {
+export const useMyRatings = (): UseQueryResult<PaginatedRatingsData, Error> => {
   return useQuery({
     queryKey: ['myRatings'],
     queryFn: async () => {
       const response = await getMyRating();
-      // Handle paginated response
-      if (response && response.results && Array.isArray(response.results)) {
-        return response.results;
+      const hasPagination = response?.pagination && response?.results;
+      const ratingsArray = hasPagination
+        ? response.results
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
+
+      if (!Array.isArray(ratingsArray)) {
+        console.warn('getMyRating: Expected array but got:', typeof response, response);
+        return {
+          ratings: [],
+          pagination: null,
+        };
       }
-      // Fallback for non-paginated response
-      return Array.isArray(response) ? response : [];
+
+      return {
+        ratings: ratingsArray,
+        pagination: hasPagination ? {
+          next_page: response.pagination.next_page,
+          current_page: response.pagination.current_page,
+          total_pages: response.pagination.total_pages,
+          total_records: response.pagination.total_records,
+        } : null,
+      };
     },
+    staleTime: 30000,
+    retry: 1,
   });
 };
 
-export const useRatingsGivenByMe = (): UseQueryResult<RatingResponse[], Error> => {
+export const useRatingsGivenByMe = (): UseQueryResult<PaginatedRatingsData, Error> => {
   return useQuery({
     queryKey: ['ratingsGivenByMe'],
     queryFn: async () => {
       const response = await getRatingGivenByMe();
-      // Handle paginated response
-      if (response && response.results && Array.isArray(response.results)) {
-        return response.results;
+      const hasPagination = response?.pagination && response?.results;
+      const ratingsArray = hasPagination
+        ? response.results
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
+
+      if (!Array.isArray(ratingsArray)) {
+        console.warn('getRatingGivenByMe: Expected array but got:', typeof response, response);
+        return {
+          ratings: [],
+          pagination: null,
+        };
       }
-      // Fallback for non-paginated response
-      return Array.isArray(response) ? response : [];
+
+      return {
+        ratings: ratingsArray,
+        pagination: hasPagination ? {
+          next_page: response.pagination.next_page,
+          current_page: response.pagination.current_page,
+          total_pages: response.pagination.total_pages,
+          total_records: response.pagination.total_records,
+        } : null,
+      };
     },
+    staleTime: 30000,
+    retry: 1,
   });
 };
 

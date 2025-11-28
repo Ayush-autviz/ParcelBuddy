@@ -8,11 +8,13 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Star, ArrowLeft } from 'lucide-react-native';
+import { Star, ArrowLeft, ChevronLeft } from 'lucide-react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView, BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -25,7 +27,7 @@ import { getPublishedRides } from '../../services/api/ride';
 import GradientButton from '../../components/GradientButton';
 import { SvgXml } from 'react-native-svg';
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
-import { getLuggageRequestsForRide } from '../../services/api/luggage';
+import { getLuggageRequestsForRide, getApprovedLuggageRequestsForRide } from '../../services/api/luggage';
 import { useToast } from '../../components/Toast';
 import { ChevronRight } from 'lucide-react-native';
 import { useCreateRating } from '../../hooks/useRating';
@@ -42,6 +44,7 @@ interface LuggageRequest {
   senderProfilePhoto: string | null;
   status: string;
   itemCount: number;
+  hasRated?: boolean;
   sender?: {
     id: string;
     first_name?: string;
@@ -82,11 +85,14 @@ const TrackScreen: React.FC = () => {
   const [nextPageUrlPublished, setNextPageUrlPublished] = useState<string | null>(null);
   const [isLoadingMorePublished, setIsLoadingMorePublished] = useState(false);
   
+  // Track which tabs have been initialized to preserve data when switching
+  const initializedTabsRef = useRef<Set<TabType>>(new Set());
+  
   // Rating mutation
   const createRatingMutation = useCreateRating();
   
   // Define snap points for bottom sheet - larger for rating screen
-  const snapPoints = useMemo(() => ['50%', '75%'], []);
+  const snapPoints = useMemo(() => ['50%', '90%'], []);
 
   // Fetch published rides from API
   const { 
@@ -108,18 +114,80 @@ const TrackScreen: React.FC = () => {
     failureReason: failureReasonBooked 
   } = useBookedRides();
 
-  // Update all booked rides and pagination when data changes or tab switches
+  // Initialize data only when switching to a tab that hasn't been initialized yet
+  // This preserves loaded data when switching between tabs
   useEffect(() => {
-    if (activeTab === 'Booked' && bookedRidesData?.rides) {
-      // Reset and set initial data when switching to Booked tab
+    if (activeTab === 'Booked' && bookedRidesData?.rides && !initializedTabsRef.current.has('Booked')) {
+      // Initialize Booked tab data only if it hasn't been initialized yet
       setAllBookedRides(bookedRidesData.rides);
       setNextPageUrlBooked(bookedRidesData.pagination?.next_page || null);
-    } else if (activeTab === 'Published' && publishedRidesData?.rides) {
-      // Reset and set initial data when switching to Published tab
+      initializedTabsRef.current.add('Booked');
+    } else if (activeTab === 'Published' && publishedRidesData?.rides && !initializedTabsRef.current.has('Published')) {
+      // Initialize Published tab data only if it hasn't been initialized yet
       setAllPublishedRides(publishedRidesData.rides);
       setNextPageUrlPublished(publishedRidesData.pagination?.next_page || null);
+      initializedTabsRef.current.add('Published');
     }
   }, [activeTab, bookedRidesData, publishedRidesData]);
+  
+  // Track initial page sizes for refresh handling
+  const initialPageSizeRef = useRef<{ booked: number; published: number }>({ booked: 0, published: 0 });
+  const lastDataRef = useRef<{ booked: string | null; published: string | null }>({ booked: null, published: null });
+  
+  // Handle pull-to-refresh: update first page when data is refetched (only if data actually changed)
+  useEffect(() => {
+    if (activeTab === 'Booked' && bookedRidesData?.rides && initializedTabsRef.current.has('Booked')) {
+      // Track initial page size on first load
+      if (initialPageSizeRef.current.booked === 0) {
+        initialPageSizeRef.current.booked = bookedRidesData.rides.length;
+      }
+      
+      // Create a simple hash to detect if data actually changed
+      const dataHash = bookedRidesData.rides.map(r => r.id).join(',');
+      if (lastDataRef.current.booked !== dataHash) {
+        lastDataRef.current.booked = dataHash;
+        const initialPageSize = initialPageSizeRef.current.booked;
+        
+        // Use functional update to avoid stale closure
+        setAllBookedRides(prev => {
+          // If we have more data than the initial page, preserve additional pages
+          if (prev.length > initialPageSize) {
+            const additionalPages = prev.slice(initialPageSize);
+            return [...bookedRidesData.rides, ...additionalPages];
+          } else {
+            // No additional pages, just update with fresh data
+            return bookedRidesData.rides;
+          }
+        });
+        setNextPageUrlBooked(bookedRidesData.pagination?.next_page || null);
+      }
+    } else if (activeTab === 'Published' && publishedRidesData?.rides && initializedTabsRef.current.has('Published')) {
+      // Track initial page size on first load
+      if (initialPageSizeRef.current.published === 0) {
+        initialPageSizeRef.current.published = publishedRidesData.rides.length;
+      }
+      
+      // Create a simple hash to detect if data actually changed
+      const dataHash = publishedRidesData.rides.map(r => r.id).join(',');
+      if (lastDataRef.current.published !== dataHash) {
+        lastDataRef.current.published = dataHash;
+        const initialPageSize = initialPageSizeRef.current.published;
+        
+        // Use functional update to avoid stale closure
+        setAllPublishedRides(prev => {
+          // If we have more data than the initial page, preserve additional pages
+          if (prev.length > initialPageSize) {
+            const additionalPages = prev.slice(initialPageSize);
+            return [...publishedRidesData.rides, ...additionalPages];
+          } else {
+            // No additional pages, just update with fresh data
+            return publishedRidesData.rides;
+          }
+        });
+        setNextPageUrlPublished(publishedRidesData.pagination?.next_page || null);
+      }
+    }
+  }, [bookedRidesData, publishedRidesData, activeTab]);
 
   const handleLoadMoreBooked = async () => {
     if (!nextPageUrlBooked || isLoadingMoreBooked) return;
@@ -169,6 +237,8 @@ const TrackScreen: React.FC = () => {
             destinationTime: formatTime(request.destination_time || request.ride_info?.destination_time),
             passengers: 0,
             showRateButton: request.ride_info?.ride_status === 'completed',
+            isRated: request.is_rated === true,
+            requestCount: request.total_request_count || 0,
             bookingRequest: request,
           } as BookedRideCardData));
 
@@ -229,6 +299,7 @@ const TrackScreen: React.FC = () => {
           destinationTime: formatTime(ride.destination_time),
           passengers: 0,
           showRateButton: ride.status === 'completed',
+          requestCount: ride.total_request_count || 0,
         } as RideCardData));
 
         setAllPublishedRides(prev => [...prev, ...newRides]);
@@ -354,39 +425,44 @@ const TrackScreen: React.FC = () => {
           bottomSheetModalRef.current?.snapToIndex(1);
         }, 100);
       } else {
-        // For published rides, show list of senders to rate
+        // For published rides, use getApprovedLuggageRequestsForRide API
         setSelectedRideId(ride.id);
-        const response = await getLuggageRequestsForRide(ride.id);
-        console.log('Luggage requests response hehehehe:', response);
+        const response = await getApprovedLuggageRequestsForRide(ride.id);
+        console.log('Approved luggage requests response:', response);
         
-        let allRequests: LuggageRequest[] = [];
-        if (response && response.luggageRequests && Array.isArray(response.luggageRequests)) {
-          allRequests = response.luggageRequests;
-          console.log('allRequests', allRequests);  console.log('allRequests', allRequests);
-        } else if (Array.isArray(response)) {
+        let allRequests: any[] = [];
+        if (Array.isArray(response)) {
           allRequests = response;
+        } else if (response && Array.isArray(response.data)) {
+          allRequests = response.data;
         }
         
-        // Filter to show only approved requests and map to include full data
-        const approvedRequests = allRequests
-          .filter((request) => request.status?.toLowerCase() === 'approved')
-          .map((request: any) => {
-            const firstName = request.sender?.first_name || '';
-            const lastName = request.sender?.last_name || '';
-            const senderName = `${firstName} ${lastName}`.trim() || 'Unknown';
-            const senderProfilePhoto = request.sender?.profile?.profile_photo || null;
-            
-            return {
-              id: request.id,
-              senderName,
-              senderProfilePhoto,
-              status: request.status,
-              itemCount: request.luggage_photo?.length || 1,
-              sender: request.sender,
-              ride: request.ride,
-              fullData: request, // Store full request data for API calls
-            };
-          });
+        // Map the response to LuggageRequest format
+        const approvedRequests = allRequests.map((request: any) => {
+          // The API returns sender_name and sender_profile_pic directly
+          const senderName = request.sender_name || 'Unknown';
+          const senderProfilePhoto = request.sender_profile_pic || null;
+          const hasRated = request.has_rated === true;
+          
+          return {
+            id: request.id,
+            senderName,
+            senderProfilePhoto,
+            status: 'approved',
+            itemCount: 1,
+            hasRated: hasRated,
+            sender: {
+              id: request.sender,
+              first_name: senderName.split(' ')[0] || '',
+              last_name: senderName.split(' ').slice(1).join(' ') || '',
+              profile: {
+                profile_photo: senderProfilePhoto,
+              },
+            },
+            ride: request.ride,
+            fullData: request, // Store full request data for API calls
+          };
+        });
         
         setLuggageRequests(approvedRequests);
         bottomSheetModalRef.current?.present();
@@ -400,12 +476,34 @@ const TrackScreen: React.FC = () => {
   };
 
   const handleLuggageRequestSelect = (request: LuggageRequest) => {
+    // Don't allow selection if already rated
+    if (request.hasRated) {
+      return;
+    }
     setSelectedLuggageRequest(request);
     setRating(0);
     setFeedback('');
-    // Snap to higher point for rating screen
-    bottomSheetModalRef.current?.snapToIndex(1);
+    // The snap to 90% will be handled by onChange callback and useEffect below
   };
+
+  // Helper function to expand sheet to 90% using double snap for reliability
+  const expandSheet = useCallback(() => {
+    setTimeout(() => {
+      bottomSheetModalRef.current?.snapToIndex(1);
+      // Double snap to ensure it works (sometimes first snap is ignored)
+      setTimeout(() => {
+        bottomSheetModalRef.current?.snapToIndex(1);
+      }, 50);
+    }, 50);
+  }, []);
+
+  // Effect to snap to 90% when a user is selected (for published rides rating screen)
+  // This is a backup to ensure expansion happens after re-render
+  useEffect(() => {
+    if (selectedLuggageRequest && activeTab === 'Published') {
+      expandSheet();
+    }
+  }, [selectedLuggageRequest, activeTab, expandSheet]);
 
   const handleSubmitRating = () => {
     if (!selectedLuggageRequest || rating <= 0) {
@@ -418,9 +516,10 @@ const TrackScreen: React.FC = () => {
     
     // Get the user ID to rate
     let ratedToId: string | undefined;
-    if (ratingType === 'traveler') {
+    if (ratingType === 'sender') {
       // For published rides, rate the sender
-      ratedToId = selectedLuggageRequest.sender?.id || selectedLuggageRequest.fullData?.sender?.id;
+      // The new API returns sender as a string ID in fullData
+      ratedToId = selectedLuggageRequest.fullData?.sender || selectedLuggageRequest.sender?.id;
     } else {
       // For booked rides, sender is rating the traveler
       // For booked rides, we stored traveler info in the sender field
@@ -572,8 +671,17 @@ const TrackScreen: React.FC = () => {
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.bottomSheetIndicator}
         index={0}
+        onAnimate={(fromIndex, toIndex) => {
+          // When the sheet animates from closed (-1) to first snap point (0) and we have
+          // a selected request for published rides, expand to 90% (index 1)
+          if (fromIndex === -1 && toIndex === 0 && selectedLuggageRequest && activeTab === 'Published') {
+            setTimeout(() => {
+              bottomSheetModalRef.current?.snapToIndex(1);
+            }, 10);
+          }
+        }}
       >
-        <BottomSheetView style={styles.bottomSheetContent}>
+        <BottomSheetView style={[styles.bottomSheetContent, {flex: 1} ]}>
           {!selectedLuggageRequest ? (
             // Luggage Request Selection Screen
             <>
@@ -591,25 +699,40 @@ const TrackScreen: React.FC = () => {
                 <FlatList
                   data={luggageRequests}
                   keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.profileItem}
-                      onPress={() => handleLuggageRequestSelect(item)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.profileIconContainer}>
-                        {item.senderProfilePhoto ? (
-                          <Image source={{ uri: item.senderProfilePhoto }} style={styles.profileAvatar} />
+                  renderItem={({ item }) => {
+                    const isRated = item.hasRated === true;
+                    return (
+                      <TouchableOpacity
+                        style={[
+                          styles.profileItem,
+                          isRated && styles.profileItemDisabled
+                        ]}
+                        onPress={() => handleLuggageRequestSelect(item)}
+                        activeOpacity={isRated ? 1 : 0.7}
+                        disabled={isRated}
+                      >
+                        <View style={styles.profileIconContainer}>
+                          {item.senderProfilePhoto ? (
+                            <Image source={{ uri: item.senderProfilePhoto }} style={styles.profileAvatar} />
+                          ) : (
+                            <SvgXml xml={ProfileUserIcon} height={24} width={24} />
+                          )}
+                        </View>
+                        <View style={styles.profileInfo}>
+                          <Text style={[styles.profileName, isRated && styles.profileNameDisabled]}>
+                            {item.senderName || `${item.sender?.first_name || ''} ${item.sender?.last_name || ''}`.trim() || 'Unknown'}
+                          </Text>
+                        </View>
+                        {isRated ? (
+                          <View style={styles.ratedBadge}>
+                            <Text style={styles.ratedBadgeText}>Rated</Text>
+                          </View>
                         ) : (
-                          <SvgXml xml={ProfileUserIcon} height={24} width={24} />
+                          <ChevronRight size={20} color={Colors.textTertiary} />
                         )}
-                      </View>
-                      <View style={styles.profileInfo}>
-                        <Text style={styles.profileName}>{item.sender?.first_name} {item.sender?.last_name}</Text>
-                      </View>
-                      <ChevronRight size={20} color={Colors.textTertiary} />
-                    </TouchableOpacity>
-                  )}
+                      </TouchableOpacity>
+                    );
+                  }}
                   contentContainerStyle={styles.profileList}
                 />
               )}
@@ -617,17 +740,6 @@ const TrackScreen: React.FC = () => {
           ) : (
             // Rating Screen
             <>
-              {activeTab === 'Published' && (
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => {
-                    setSelectedLuggageRequest(null);
-                    bottomSheetModalRef.current?.snapToIndex(0);
-                  }}
-                >
-                  <ArrowLeft size={24} color={Colors.textPrimary} />
-                </TouchableOpacity>
-              )}
               {activeTab === 'Booked' ? (
                 <>
                   <Text style={styles.ratingTitle}>
@@ -636,7 +748,18 @@ const TrackScreen: React.FC = () => {
                   <Text style={styles.ratingSubtitle}>How was your experience with this ride?</Text>
                 </>
               ) : (
-                <Text style={styles.ratingTitle}>How was your experience with</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 4}}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => {
+                    setSelectedLuggageRequest(null);
+                    bottomSheetModalRef.current?.snapToIndex(0);
+                  }}
+                >
+                  <ChevronLeft size={24} color={Colors.textPrimary} />
+                </TouchableOpacity>
+                <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightSemiBold, color: Colors.textPrimary}}>How was your experience with</Text>
+                </View>
               )}
               {activeTab === 'Published' && (
                 <View style={styles.ratingProfileContainer}>
@@ -648,7 +771,7 @@ const TrackScreen: React.FC = () => {
                       <SvgXml xml={ProfileUserIcon} height={24} width={24} />
                     )}
                   </View>
-                  <Text style={styles.ratingProfileName}>{selectedLuggageRequest.sender?.first_name} {selectedLuggageRequest.sender?.last_name}</Text>
+                  <Text style={styles.ratingProfileName}>{selectedLuggageRequest.senderName || `${selectedLuggageRequest.sender?.first_name || ''} ${selectedLuggageRequest.sender?.last_name || ''}`.trim() || 'Unknown'}</Text>
                 </View>
                 </View>
               )}
@@ -688,6 +811,12 @@ const TrackScreen: React.FC = () => {
                 disabled={createRatingMutation.isPending || rating <= 0}
               />
             </>
+            
+          )}
+          {selectedLuggageRequest && (
+            <ScrollView style={{height: 400}}>
+             
+            </ScrollView>
           )}
         </BottomSheetView>
       </BottomSheetModal>
@@ -759,7 +888,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: 'flex-start',
-    marginBottom: 16,
     padding: 4,
   },
   bottomSheetTitle: {
@@ -780,6 +908,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: Colors.borderLight,
+  },
+  profileItemDisabled: {
+    opacity: 0.6,
+    backgroundColor: Colors.backgroundGray,
   },
   profileIconContainer: {
     width: 40,
@@ -805,6 +937,20 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: 4,
   },
+  profileNameDisabled: {
+    color: Colors.textSecondary,
+  },
+  ratedBadge: {
+    backgroundColor: Colors.primaryCyan,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  ratedBadgeText: {
+    fontSize: Fonts.sm,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textWhite,
+  },
   profileStatus: {
     fontSize: Fonts.sm,
     color: Colors.textSecondary,
@@ -826,7 +972,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
   },
   ratingProfileIcon: {
     width: 40,
@@ -852,7 +997,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 4,
-    // marginBottom: 24,
+    marginBottom: 4,
   },
   feedbackInput: {
     backgroundColor: Colors.backgroundWhite,

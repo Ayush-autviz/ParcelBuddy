@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { useMyRatings, useRatingsGivenByMe, useRatingChart, RatingResponse } from '../../hooks/useRating';
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
 import { SvgXml } from 'react-native-svg';
+import { getMyRating, getRatingGivenByMe } from '../../services/api/rating';
 
 type RatingsScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Ratings'>;
 
@@ -91,9 +92,22 @@ const RatingsScreen: React.FC = () => {
   const navigation = useNavigation<RatingsScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<TabType>('Received');
 
+  // State for pagination
+  const [allReceivedRatings, setAllReceivedRatings] = useState<RatingResponse[]>([]);
+  const [nextPageUrlReceived, setNextPageUrlReceived] = useState<string | null>(null);
+  const [isLoadingMoreReceived, setIsLoadingMoreReceived] = useState(false);
+
+  const [allGivenRatings, setAllGivenRatings] = useState<RatingResponse[]>([]);
+  const [nextPageUrlGiven, setNextPageUrlGiven] = useState<string | null>(null);
+  const [isLoadingMoreGiven, setIsLoadingMoreGiven] = useState(false);
+
+  const initializedTabsRef = useRef<Set<TabType>>(new Set());
+  const initialPageSizeRef = useRef<{ received: number; given: number }>({ received: 0, given: 0 });
+  const lastDataRef = useRef<{ received: string | null; given: string | null }>({ received: null, given: null });
+
   // Fetch ratings data
   const { 
-    data: myRatingsData = [], 
+    data: myRatingsData, 
     isLoading: isLoadingReceived, 
     isError: isErrorReceived,
     isFetching: isFetchingReceived,
@@ -101,12 +115,115 @@ const RatingsScreen: React.FC = () => {
   } = useMyRatings();
 
   const { 
-    data: ratingsGivenData = [], 
+    data: ratingsGivenData, 
     isLoading: isLoadingGiven, 
     isError: isErrorGiven,
     isFetching: isFetchingGiven,
     refetch: refetchGiven 
   } = useRatingsGivenByMe();
+
+  // Initialize data for each tab only once
+  useEffect(() => {
+    if (activeTab === 'Received' && myRatingsData?.ratings && !initializedTabsRef.current.has('Received')) {
+      setAllReceivedRatings(myRatingsData.ratings);
+      setNextPageUrlReceived(myRatingsData.pagination?.next_page || null);
+      initializedTabsRef.current.add('Received');
+    } else if (activeTab === 'Given' && ratingsGivenData?.ratings && !initializedTabsRef.current.has('Given')) {
+      setAllGivenRatings(ratingsGivenData.ratings);
+      setNextPageUrlGiven(ratingsGivenData.pagination?.next_page || null);
+      initializedTabsRef.current.add('Given');
+    }
+  }, [activeTab, myRatingsData, ratingsGivenData]);
+
+  // Handle refresh - update only first page if data changes
+  useEffect(() => {
+    if (activeTab === 'Received' && myRatingsData?.ratings && initializedTabsRef.current.has('Received')) {
+      if (initialPageSizeRef.current.received === 0) {
+        initialPageSizeRef.current.received = myRatingsData.ratings.length;
+      }
+      const dataHash = myRatingsData.ratings.map(r => r.id).join(',');
+      if (lastDataRef.current.received !== dataHash) {
+        lastDataRef.current.received = dataHash;
+        const initialPageSize = initialPageSizeRef.current.received;
+        setAllReceivedRatings(prev => {
+          if (prev.length > initialPageSize) {
+            const additionalPages = prev.slice(initialPageSize);
+            return [...myRatingsData.ratings, ...additionalPages];
+          } else {
+            return myRatingsData.ratings;
+          }
+        });
+        setNextPageUrlReceived(myRatingsData.pagination?.next_page || null);
+      }
+    } else if (activeTab === 'Given' && ratingsGivenData?.ratings && initializedTabsRef.current.has('Given')) {
+      if (initialPageSizeRef.current.given === 0) {
+        initialPageSizeRef.current.given = ratingsGivenData.ratings.length;
+      }
+      const dataHash = ratingsGivenData.ratings.map(r => r.id).join(',');
+      if (lastDataRef.current.given !== dataHash) {
+        lastDataRef.current.given = dataHash;
+        const initialPageSize = initialPageSizeRef.current.given;
+        setAllGivenRatings(prev => {
+          if (prev.length > initialPageSize) {
+            const additionalPages = prev.slice(initialPageSize);
+            return [...ratingsGivenData.ratings, ...additionalPages];
+          } else {
+            return ratingsGivenData.ratings;
+          }
+        });
+        setNextPageUrlGiven(ratingsGivenData.pagination?.next_page || null);
+      }
+    }
+  }, [myRatingsData, ratingsGivenData, activeTab]);
+
+  // Load more functions
+  const handleLoadMoreReceived = async () => {
+    if (!nextPageUrlReceived || isLoadingMoreReceived) return;
+
+    setIsLoadingMoreReceived(true);
+    try {
+      const response = await getMyRating(nextPageUrlReceived);
+      const hasPagination = response?.pagination && response?.results;
+      const newRatings = hasPagination
+        ? response.results
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
+
+      if (Array.isArray(newRatings) && newRatings.length > 0) {
+        setAllReceivedRatings(prev => [...prev, ...newRatings]);
+        setNextPageUrlReceived(hasPagination ? response.pagination.next_page : null);
+      } else {
+        setNextPageUrlReceived(null);
+      }
+    } catch (error) {
+      console.error('Error loading more received ratings:', error);
+    } finally {
+      setIsLoadingMoreReceived(false);
+    }
+  };
+
+  const handleLoadMoreGiven = async () => {
+    if (!nextPageUrlGiven || isLoadingMoreGiven) return;
+
+    setIsLoadingMoreGiven(true);
+    try {
+      const response = await getRatingGivenByMe(nextPageUrlGiven);
+      const hasPagination = response?.pagination && response?.results;
+      const newRatings = hasPagination
+        ? response.results
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
+
+      if (Array.isArray(newRatings) && newRatings.length > 0) {
+        setAllGivenRatings(prev => [...prev, ...newRatings]);
+        setNextPageUrlGiven(hasPagination ? response.pagination.next_page : null);
+      } else {
+        setNextPageUrlGiven(null);
+      }
+    } catch (error) {
+      console.error('Error loading more given ratings:', error);
+    } finally {
+      setIsLoadingMoreGiven(false);
+    }
+  };
 
   // Fetch rating chart data
   const { 
@@ -118,7 +235,7 @@ const RatingsScreen: React.FC = () => {
 
   // Transform API data to Review format
   const receivedReviews: Review[] = useMemo(() => {
-    return myRatingsData.map((rating: RatingResponse) => ({
+    return allReceivedRatings.map((rating: RatingResponse) => ({
       id: rating.id.toString(),
       reviewerName: rating.rated_by_name?.trim() || 'User',
       timeAgo: formatTimeAgo(rating.created_on),
@@ -126,10 +243,10 @@ const RatingsScreen: React.FC = () => {
       reviewText: rating.review || '',
       userId: rating.rated_by,
     }));
-  }, [myRatingsData]);
+  }, [allReceivedRatings]);
 
   const givenReviews: Review[] = useMemo(() => {
-    return ratingsGivenData.map((rating: RatingResponse) => ({
+    return allGivenRatings.map((rating: RatingResponse) => ({
       id: rating.id.toString(),
       reviewerName: rating.rated_to_name?.trim() || 'User',
       timeAgo: formatTimeAgo(rating.created_on),
@@ -137,7 +254,7 @@ const RatingsScreen: React.FC = () => {
       reviewText: rating.review || '',
       userId: rating.rated_to,
     }));
-  }, [ratingsGivenData]);
+  }, [allGivenRatings]);
 
   // Use API data for rating statistics from chart API
   const averageRating = useMemo(() => {
@@ -327,6 +444,32 @@ const RatingsScreen: React.FC = () => {
                     ) : null}
                   </Card>
                 ))}
+                {/* View More Button */}
+                {(activeTab === 'Received' ? nextPageUrlReceived : nextPageUrlGiven) && (
+                  <View style={styles.viewMoreContainer}>
+                    <GradientButton
+                      title={
+                        activeTab === 'Received'
+                          ? isLoadingMoreReceived
+                            ? 'Loading...'
+                            : 'View More'
+                          : isLoadingMoreGiven
+                          ? 'Loading...'
+                          : 'View More'
+                      }
+                      onPress={
+                        activeTab === 'Received' ? handleLoadMoreReceived : handleLoadMoreGiven
+                      }
+                      style={styles.viewMoreButton}
+                      loading={
+                        activeTab === 'Received' ? isLoadingMoreReceived : isLoadingMoreGiven
+                      }
+                      disabled={
+                        activeTab === 'Received' ? isLoadingMoreReceived : isLoadingMoreGiven
+                      }
+                    />
+                  </View>
+                )}
               </View>
             ) : (
               <View style={styles.emptyContainer}>
@@ -496,8 +639,14 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     lineHeight: 22,
   },
+  viewMoreContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
   viewMoreButton: {
     marginTop: 8,
+    width: '50%',
+    alignSelf: 'center',
   },
   halfStarContainer: {
     position: 'relative',

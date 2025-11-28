@@ -34,7 +34,7 @@ const UserProfileScreen: React.FC = () => {
   const { data: profileDataResponse, isLoading, isError, error } = useProfileById(profileId);
 
   // Extract the actual profile data from the API response
-  // API response structure: { message: "...", profile: { ... profile: { ... } } }
+  // API response structure: { message: "...", profile: { ... } }
   const profileData = profileDataResponse?.profile || profileDataResponse;
   const currentProfile: any = profileData || traveler;
 
@@ -42,7 +42,7 @@ const UserProfileScreen: React.FC = () => {
   const lastName = currentProfile?.last_name || '';
   const fullName = `${firstName} ${lastName}`.trim() || 'Traveler';
   
-  // Profile photo is nested: profileData.profile.profile.profile_photo
+  // Profile photo is nested: profileData.profile.profile_photo
   const profilePhoto = currentProfile?.profile?.profile_photo;
   
   // Calculate age from date_of_birth
@@ -66,14 +66,17 @@ const UserProfileScreen: React.FC = () => {
   const age = calculateAge(currentProfile?.date_of_birth || currentProfile?.profile?.date_of_birth);
   
   // Get data from API response - handle nested structure
-  // API structure: { profile: { profile: { average_rating, bio, ... } } }
+  // New API structure: { profile: { profile: { average_rating, bio, ... }, ride_details: { ... }, total_rating, ... } }
   const nestedProfile = currentProfile?.profile;
   const rating = nestedProfile?.average_rating || currentProfile?.average_rating || 0;
-  const reviewCount = nestedProfile?.review_count || currentProfile?.review_count || nestedProfile?.total_reviews || 0;
-  const ridesPublished = nestedProfile?.rides_published || currentProfile?.rides_published || nestedProfile?.total_rides_published || 0;
-  const ridesCompleted = nestedProfile?.rides_completed || currentProfile?.rides_completed || nestedProfile?.total_rides_completed || 0;
+  const reviewCount = currentProfile?.total_rating || nestedProfile?.review_count || currentProfile?.review_count || nestedProfile?.total_reviews || 0;
   const about = nestedProfile?.bio || currentProfile?.bio || 'No bio available.';
-  const isVerified = nestedProfile?.is_verified || currentProfile?.is_verified || nestedProfile?.verified || false;
+  const isVerified = nestedProfile?.is_kyc_verified || currentProfile?.is_kyc_verified || nestedProfile?.is_verified || currentProfile?.is_verified || nestedProfile?.verified || false;
+  
+  // Get ride details from new API structure
+  const rideDetails = currentProfile?.ride_details;
+  const ridesPublished = rideDetails?.total_ride || nestedProfile?.rides_published || currentProfile?.rides_published || nestedProfile?.total_rides_published || 0;
+  const ridesCompleted = rideDetails?.completed_ride || nestedProfile?.rides_completed || currentProfile?.rides_completed || nestedProfile?.total_rides_completed || 0;
 
   const handleChat = () => {
     // TODO: Navigate to chat screen
@@ -189,7 +192,7 @@ const UserProfileScreen: React.FC = () => {
         </Card>
 
         {/* Verification Section - Only show if verified */}
-      
+        {isVerified && (
           <Card style={styles.verificationCard} padding={20}>
             <Text style={styles.sectionTitle}>Verification</Text>
             <View style={styles.verificationRow}>
@@ -199,6 +202,7 @@ const UserProfileScreen: React.FC = () => {
               <Text style={styles.verificationText}>Government ID Verified</Text>
             </View>
           </Card>
+        )}
      
       </ScrollView>
     </SafeAreaView>

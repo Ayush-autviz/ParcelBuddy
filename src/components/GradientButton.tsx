@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../constants/colors';
 import { Fonts } from '../constants/fonts';
@@ -31,14 +31,14 @@ const GradientButton: React.FC<GradientButtonProps> = ({
       activeOpacity={0.8}
     >
       <LinearGradient
-        colors={[Colors.gradientStart, Colors.gradientEnd]}
+        colors={disabled ? [Colors.backgroundLight, Colors.backgroundLight] : [Colors.gradientStart, Colors.gradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradient}
       >
         {icon && <View style={styles.iconContainer}>{icon}</View>}
-        <Text style={[styles.buttonText, textStyle]}>
-          {loading ? 'Loading...' : title}
+        <Text style={[styles.buttonText, textStyle, disabled && styles.buttonTextDisabled]}>
+          {loading ? <ActivityIndicator size="small" color={Colors.textWhite} /> : title}
         </Text>
       </LinearGradient>
     </TouchableOpacity>
@@ -63,6 +63,9 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     fontSize: Fonts.lg,
     fontWeight: Fonts.weightBold,
+  },
+  buttonTextDisabled: {
+    color: Colors.textSecondary,
   },
 });
 
