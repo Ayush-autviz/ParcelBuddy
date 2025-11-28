@@ -31,14 +31,14 @@ const GradientButton: React.FC<GradientButtonProps> = ({
       activeOpacity={0.8}
     >
       <LinearGradient
-        colors={disabled ? [Colors.backgroundLight, Colors.backgroundGray] : [Colors.gradientStart, Colors.gradientEnd]}
+        colors={[Colors.gradientStart, Colors.gradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradient}
       >
         {icon && <View style={styles.iconContainer}>{icon}</View>}
-        <Text style={[styles.buttonText, textStyle, disabled && styles.buttonTextDisabled]}>
-          {loading ? <ActivityIndicator size="small" color={'#000'} /> : title}
+        <Text style={[styles.buttonText, textStyle]}>
+          {loading ? <ActivityIndicator size="small" color={Colors.textWhite} /> : title}
         </Text>
       </LinearGradient>
     </TouchableOpacity>

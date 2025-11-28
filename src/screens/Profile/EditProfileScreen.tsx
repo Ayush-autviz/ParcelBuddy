@@ -590,6 +590,8 @@ const EditProfileScreen: React.FC = () => {
                 title="Confirm"
                 onPress={handleConfirmSave}
                 style={styles.modalConfirmButton}
+                loading={profileSetupMutation.isPending}
+                disabled={profileSetupMutation.isPending}
               />
             </View>
           </View>

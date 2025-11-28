@@ -110,6 +110,7 @@ const KYCVerificationModal: React.FC<KYCVerificationModalProps> = ({
                 loading={loading}
                 style={styles.buttonContainer}
                 textStyle={styles.buttonText}
+                disabled={loading}
               />
             </View>
           </TouchableWithoutFeedback>

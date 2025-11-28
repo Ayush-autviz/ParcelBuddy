@@ -99,7 +99,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'subscription',
       title: 'Current Subscription',
-      subtitle: 'Silver',
+      // subtitle: 'Silver',
       icon: ProfileSubscriptionIcon,
       onPress: () => {
         navigation.navigate('Subscription');
@@ -200,13 +200,12 @@ const ProfileScreen: React.FC = () => {
       {/* Logout Confirmation Modal */}
       <ConfirmationModal
         visible={showLogoutModal}
-        title="Logout"
-        message="Are you sure you want to logout? You will need to login again to access your account."
-        confirmText="Logout"
+        title="Logout Confirmation"
+        message="Are you sure you want to logout?"
+        confirmText="Confirm"
         cancelText="Cancel"
         onConfirm={confirmLogout}
         onCancel={() => setShowLogoutModal(false)}
-        type="destructive"
       />
     </SafeAreaView>
   );

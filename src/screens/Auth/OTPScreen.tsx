@@ -238,6 +238,7 @@ const OTPScreen: React.FC = () => {
             onPress={handleVerify}
             loading={verifyOtpMutation.isPending}
             style={styles.verifyButton}
+            disabled={verifyOtpMutation.isPending}
           />
 
           {/* Resend Section */}

@@ -84,7 +84,7 @@ const SplashScreen: React.FC = () => {
         routes: [{ name: 'Auth' }],
       });
     }
-    else if (profile?.length !== 0) {
+    else if (profile) {
       setUser(profile);
       navigation.reset({
         index: 0,

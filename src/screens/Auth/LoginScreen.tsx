@@ -197,6 +197,7 @@ const LoginScreen: React.FC = () => {
             onPress={handleGetOTP}
             loading={getOtpMutation.isPending}
             style={styles.otpButton}
+            disabled={getOtpMutation.isPending}
           />
 
           {/* Terms and Privacy Policy */}

@@ -439,6 +439,7 @@ const SendRequestScreen: React.FC = () => {
           onPress={handleBookNow}
           style={styles.bookButton}
           loading={createLuggageRequestMutation.isPending}
+          disabled={createLuggageRequestMutation.isPending}
         />
 
         {/* Disclaimer Section */}

@@ -22,3 +22,33 @@ export const createSubscription = async (data: CreateSubscriptionRequest): Promi
     const response = await apiClient.post('/auth/subscription/create/', data);
     return response.data;
 };
+
+export const getTransactionHistory = async (pageUrl?: string): Promise<any> => {
+  if (pageUrl) {
+    try {
+      const baseUrl = 'http://13.233.74.72:8000';
+      if (pageUrl.startsWith(baseUrl)) {
+        const pathWithQuery = pageUrl.substring(baseUrl.length);
+        const response = await apiClient.get(pathWithQuery);
+        return response.data;
+      } else if (pageUrl.startsWith('/')) {
+        const response = await apiClient.get(pageUrl);
+        return response.data;
+      } else {
+        const urlMatch = pageUrl.match(/\/[^?]*(\?.*)?$/);
+        if (urlMatch) {
+          const pathWithQuery = urlMatch[0];
+          const response = await apiClient.get(pathWithQuery);
+          return response.data;
+        }
+        const response = await apiClient.get(pageUrl);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Error fetching paginated transaction history:', error);
+      throw error;
+    }
+  }
+  const response = await apiClient.get('/auth/payement-transaction/');
+  return response.data;
+};

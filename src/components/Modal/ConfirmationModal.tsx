@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { AlertTriangle } from 'lucide-react-native';
+import GradientButton from '../GradientButton';
 
 interface ConfirmationModalProps {
   visible: boolean;
@@ -60,30 +62,35 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
               {/* Buttons */}
               <View style={styles.buttonContainer}>
+                {/* <TouchableOpacity
+                  style={styles.confirmButtonWrapper}
+                  onPress={onConfirm}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={type === 'destructive' ? [Colors.error, Colors.error] : [Colors.gradientStart, Colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.confirmButton}
+                  >
+                    <Text style={styles.confirmButtonText}>
+                      {confirmText}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity> */}
+                <GradientButton
+                  title={confirmText}
+                  onPress={onConfirm}
+                  disabled={false}
+                  loading={false}
+                  style={styles.confirmButtonWrapper}
+                />
                 <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
+                  style={styles.cancelButton}
                   onPress={onCancel}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.cancelButtonText}>{cancelText}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    styles.confirmButton,
-                    type === 'destructive' && styles.destructiveButton,
-                  ]}
-                  onPress={onConfirm}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.confirmButtonText,
-                      type === 'destructive' && styles.destructiveButtonText,
-                    ]}
-                  >
-                    {confirmText}
-                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -140,36 +147,36 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 12,
   },
-  button: {
+  confirmButtonWrapper: {
     flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  confirmButton: {
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: Colors.backgroundGray,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  cancelButtonText: {
-    fontSize: Fonts.base,
-    fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
-  },
-  confirmButton: {
-    backgroundColor: Colors.primaryCyan,
   },
   confirmButtonText: {
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textWhite,
   },
-  destructiveButton: {
-    backgroundColor: Colors.error,
+  cancelButton: {
+    flex: 1,
+    backgroundColor: Colors.backgroundWhite,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  destructiveButtonText: {
-    color: Colors.textWhite,
+  cancelButtonText: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
   },
 });
 

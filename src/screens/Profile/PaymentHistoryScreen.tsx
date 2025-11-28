@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { ProfileHeader, Card } from '../../components';
+import { ProfileHeader, Card, EmptyStateCard, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
+import { useTransactionHistory, TransactionResponse } from '../../hooks/useSubscription';
+import { getTransactionHistory } from '../../services/api/subscription';
 
 type PaymentHistoryScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'PaymentHistory'>;
 
@@ -24,37 +28,103 @@ interface PaymentEntry {
   status: string;
 }
 
-const paymentData: PaymentEntry[] = [
-  {
-    id: '1',
-    planName: 'Silver Plan',
-    date: 'Dec 15, 2024',
-    amount: '$14.99',
-    status: 'Free',
-  },
-  {
-    id: '2',
-    planName: 'Silver Plan',
-    date: 'Nov 15, 2024',
-    amount: '$14.99',
-    status: 'Free',
-  },
-  {
-    id: '3',
-    planName: 'Free Plan',
-    date: 'Oct 15, 2024',
-    amount: '$0.00',
-    status: 'Free',
-  },
-];
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  } catch (error) {
+    return dateString || 'Date not available';
+  }
+};
+
+// Helper function to capitalize first letter
+const capitalizeFirst = (str: string): string => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
 
 const PaymentHistoryScreen: React.FC = () => {
   const navigation = useNavigation<PaymentHistoryScreenNavigationProp>();
+  const { data: transactionData, isLoading, isError, isFetching, refetch } = useTransactionHistory();
+  
+  // State for pagination
+  const [allTransactions, setAllTransactions] = useState<TransactionResponse[]>([]);
+  const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  const initializedRef = useRef(false);
+  const initialPageSizeRef = useRef(0);
+  const lastDataRef = useRef<string | null>(null);
 
-  const handleViewAllTransactions = () => {
-    // TODO: Navigate to all transactions screen or show more
-    console.log('View all transactions');
+  // Initialize data
+  useEffect(() => {
+    if (transactionData?.transactions && !initializedRef.current) {
+      setAllTransactions(transactionData.transactions);
+      setNextPageUrl(transactionData.pagination?.next_page || null);
+      initializedRef.current = true;
+    }
+  }, [transactionData]);
+
+  // Handle refresh - update only first page if data changes
+  useEffect(() => {
+    if (transactionData?.transactions && initializedRef.current) {
+      if (initialPageSizeRef.current === 0) {
+        initialPageSizeRef.current = transactionData.transactions.length;
+      }
+      const dataHash = transactionData.transactions.map(t => t.id).join(',');
+      if (lastDataRef.current !== dataHash) {
+        lastDataRef.current = dataHash;
+        const initialPageSize = initialPageSizeRef.current;
+        setAllTransactions(prev => {
+          if (prev.length > initialPageSize) {
+            const additionalPages = prev.slice(initialPageSize);
+            return [...transactionData.transactions, ...additionalPages];
+          } else {
+            return transactionData.transactions;
+          }
+        });
+        setNextPageUrl(transactionData.pagination?.next_page || null);
+      }
+    }
+  }, [transactionData]);
+
+  const handleLoadMore = async () => {
+    if (!nextPageUrl || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const response = await getTransactionHistory(nextPageUrl);
+      const hasPagination = response?.pagination && response?.results;
+      const newTransactions = hasPagination
+        ? response.results
+        : (Array.isArray(response) ? response : (response?.data || response?.results || []));
+
+      if (Array.isArray(newTransactions) && newTransactions.length > 0) {
+        setAllTransactions(prev => [...prev, ...newTransactions]);
+        setNextPageUrl(hasPagination ? response.pagination.next_page : null);
+      } else {
+        setNextPageUrl(null);
+      }
+    } catch (error) {
+      console.error('Error loading more transactions:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
+
+  // Transform API data to PaymentEntry format
+  const paymentEntries: PaymentEntry[] = allTransactions.map((transaction: TransactionResponse) => ({
+    id: transaction.id,
+    planName: capitalizeFirst(transaction.subscription_plan_name || 'Plan'),
+    date: formatDate(transaction.created_on),
+    amount: `${transaction.currency} ${transaction.amount}`,
+    status: capitalizeFirst(transaction.status || ''),
+  }));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -64,36 +134,71 @@ const PaymentHistoryScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching}
+            onRefresh={refetch}
+            colors={[Colors.primaryCyan]}
+            tintColor={Colors.primaryCyan}
+          />
+        }
       >
         {/* Section Title */}
         <Text style={styles.sectionTitle}>Payment History</Text>
 
-        {/* Payment Entries */}
-        <View style={styles.paymentsContainer}>
-          {paymentData.map((payment) => (
-            <Card key={payment.id} style={styles.paymentCard} padding={20}>
-              <View style={styles.paymentContent}>
-                <View style={styles.paymentLeft}>
-                  <Text style={styles.planName}>{payment.planName}</Text>
-                  <Text style={styles.paymentDate}>{payment.date}</Text>
-                </View>
-                <View style={styles.paymentRight}>
-                  <Text style={styles.paymentAmount}>{payment.amount}</Text>
-                  <Text style={styles.paymentStatus}>{payment.status}</Text>
-                </View>
-              </View>
-            </Card>
-          ))}
-        </View>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primaryCyan} />
+            <Text style={styles.loadingText}>Loading transactions...</Text>
+          </View>
+        ) : isError ? (
+          <View style={styles.emptyContainer}>
+            <EmptyStateCard
+              title="Error loading transactions"
+              description="Failed to load payment history. Please try again."
+            />
+          </View>
+        ) : paymentEntries.length > 0 ? (
+          <>
+            {/* Payment Entries */}
+            <View style={styles.paymentsContainer}>
+              {paymentEntries.map((payment) => (
+                <Card key={payment.id} style={styles.paymentCard} padding={20}>
+                  <View style={styles.paymentContent}>
+                    <View style={styles.paymentLeft}>
+                      <Text style={styles.planName}>{payment.planName}</Text>
+                      <Text style={styles.paymentDate}>{payment.date}</Text>
+                    </View>
+                    <View style={styles.paymentRight}>
+                      <Text style={styles.paymentAmount}>{payment.amount}</Text>
+                      <Text style={styles.paymentStatus}>{payment.status}</Text>
+                    </View>
+                  </View>
+                </Card>
+              ))}
+            </View>
 
-        {/* View All Transactions Button */}
-        <TouchableOpacity
-          style={styles.viewAllButton}
-          onPress={handleViewAllTransactions}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.viewAllButtonText}>View All Transactions</Text>
-        </TouchableOpacity>
+            {/* View More Button */}
+            {nextPageUrl && (
+              <View style={styles.viewMoreContainer}>
+                <GradientButton
+                  title={isLoadingMore ? 'Loading...' : 'View More'}
+                  onPress={handleLoadMore}
+                  style={styles.viewMoreButton}
+                  loading={isLoadingMore}
+                  disabled={isLoadingMore}
+                />
+              </View>
+            )}
+          </>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <EmptyStateCard
+              title="No transactions yet"
+              description="You haven't made any payments yet."
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -166,20 +271,27 @@ const styles = StyleSheet.create({
     color: Colors.primaryCyan,
     fontWeight: Fonts.weightMedium,
   },
-  viewAllButton: {
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.backgroundWhite,
+  viewMoreContainer: {
+    marginTop: 16,
+    marginBottom: 8,
   },
-  viewAllButtonText: {
+  viewMoreButton: {
+    width: '50%',
+    alignSelf: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
     fontSize: Fonts.base,
-    fontWeight: Fonts.weightSemiBold,
-    color: Colors.primaryCyan,
+    color: Colors.textSecondary,
+    marginTop: 16,
+  },
+  emptyContainer: {
+    paddingVertical: 60,
   },
 });
 

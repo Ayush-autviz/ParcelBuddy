@@ -517,7 +517,7 @@ const ProfileSetupScreen: React.FC = () => {
             title={profileSetupMutation.isPending ? 'Saving...' : 'Save Profile'}
             onPress={handleSaveProfile}
             loading={profileSetupMutation.isPending}
-            disabled={!location || !country || isFetchingLocation || isFetchingCountry}
+            disabled={profileSetupMutation.isPending}
             style={styles.saveButton}
           />
         </View>
