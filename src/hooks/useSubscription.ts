@@ -26,11 +26,11 @@ export interface PlansResponse {
   plans: SubscriptionPlanResponse[];
 }
 
-export const useSubscriptionPlans = (): UseQueryResult<PlansResponse, Error> => {
+export const useSubscriptionPlans = (region?: string): UseQueryResult<PlansResponse, Error> => {
   return useQuery({
-    queryKey: ['subscriptionPlans'],
+    queryKey: ['subscriptionPlans', region],
     queryFn: async () => {
-      const response = await getPlans();
+      const response = await getPlans(region);
       return response;
     },
     staleTime: 30000, // Cache for 30 seconds

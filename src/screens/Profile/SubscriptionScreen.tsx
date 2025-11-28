@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -19,6 +20,7 @@ import { ProfileHeader, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { useSubscriptionPlans, useCreateSubscription } from '../../hooks/useSubscription';
 import { useToast } from '../../components/Toast';
+import { useAuthStore } from '../../services/store';
 
 type SubscriptionScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Subscription'>;
 
@@ -37,7 +39,10 @@ interface SubscriptionPlan {
 
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation<SubscriptionScreenNavigationProp>();
-  const { data: plansData, isLoading, isError } = useSubscriptionPlans();
+  const { user } = useAuthStore();
+  // Get region from user profile, fallback to empty string if not available
+  const region = user?.profile?.country || '';
+  const { data: plansData, isLoading, isError, isFetching, refetch } = useSubscriptionPlans(region);
   const createSubscriptionMutation = useCreateSubscription();
   const { showSuccess, showError } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
@@ -144,6 +149,14 @@ const SubscriptionScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching}
+            onRefresh={refetch}
+            colors={[Colors.primaryCyan]}
+            tintColor={Colors.primaryCyan}
+          />
+        }
       >
         {/* Current Plan Indicator */}
         {currentPlan && (

@@ -78,7 +78,7 @@ const SplashScreen: React.FC = () => {
     // clearSearchForm();
     // clearCreateForm();
     const timer = setTimeout(() => {
-    if (!token) {
+    if (!token?.access_token) {
       navigation.reset({
         index: 0,
         routes: [{ name: 'Auth' }],
