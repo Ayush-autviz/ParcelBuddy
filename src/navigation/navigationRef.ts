@@ -9,3 +9,4 @@ export function navigate(name: keyof RootStackParamList, params?: any) {
   }
 }
 
+

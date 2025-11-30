@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Linking,
   RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Shield, Check } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -47,7 +47,20 @@ const SubscriptionScreen: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
 
+  // Refetch data when screen comes into focus (e.g., from deep link)
+  useFocusEffect(
+    useCallback(() => {
+      // Refetch when screen comes into focus, even if data is fresh
+      refetch({ cancelRefetch: false });
+    }, [refetch])
+  );
 
+  // Also refetch when region changes (in case user data loads after screen mount)
+  useEffect(() => {
+    if (region) {
+      refetch({ cancelRefetch: false });
+    }
+  }, [region, refetch]);
 
   // Transform API data to UI format
   const subscriptionPlans: SubscriptionPlan[] = useMemo(() => {

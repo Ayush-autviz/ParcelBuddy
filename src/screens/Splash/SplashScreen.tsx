@@ -8,7 +8,7 @@ import {
   StatusBar,
   Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { SvgXml } from 'react-native-svg';
@@ -18,6 +18,18 @@ import { EllipseBottom, EllipseTop } from '../../constants/svg';
 import { useQuery } from '@tanstack/react-query';
 import { getMyProfile } from '../../services/api/profile';
 import { useAuthStore, useSearchFormStore, useCreateFormStore } from '../../services/store';
+
+// Store for pending deep link (shared with App.tsx)
+export let pendingDeepLink: string | null = null;
+export const setPendingDeepLink = (url: string | null) => {
+  pendingDeepLink = url;
+};
+export const getPendingDeepLink = (): string | null => {
+  return pendingDeepLink;
+};
+export const clearPendingDeepLink = () => {
+  pendingDeepLink = null;
+};
 
 const { width, height } = Dimensions.get('window');
 
@@ -78,24 +90,65 @@ const SplashScreen: React.FC = () => {
     // clearSearchForm();
     // clearCreateForm();
     const timer = setTimeout(() => {
-    if (!token?.access_token) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Auth' }],
-      });
-    }
-    else if (profile) {
-      setUser(profile);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainApp' }],
-      });
-    } else if (!user?.profile_setup) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
-      });
-    }
+      // Check for pending deep link
+      const deepLink = getPendingDeepLink();
+      const isPaymentDeepLink = deepLink?.includes('parcelbuddy://payment') ?? false;
+      
+      if (!token?.access_token) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Auth' }],
+        });
+      } else if (profile) {
+        setUser(profile);
+        
+        // If we have a payment deep link, navigate directly to PaymentHistory screen
+        if (isPaymentDeepLink && deepLink) {
+          console.log('SplashScreen: Navigating to PaymentHistory via deep link');
+          
+          // Clear the pending deep link
+          clearPendingDeepLink();
+          
+          navigation.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'MainApp',
+                state: {
+                  routes: [
+                    { name: 'Search' },
+                    { name: 'Create' },
+                    { name: 'Track' },
+                    { name: 'Chat' },
+                    {
+                      name: 'Profile',
+                      state: {
+                        routes: [
+                          { name: 'ProfileList' },
+                          { name: 'PaymentHistory' },
+                        ],
+                        index: 1,
+                      },
+                    },
+                  ],
+                  index: 4, // Profile tab
+                },
+              },
+            ],
+          });
+        } else {
+          // Normal navigation to MainApp
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'MainApp' }],
+          });
+        }
+      } else if (!user?.profile_setup) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
+        });
+      }
     }, 1500);
     return () => clearTimeout(timer);
   }, [profile]);
