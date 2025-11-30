@@ -447,7 +447,7 @@ const RatingsScreen: React.FC = () => {
                 {/* View More Button */}
                 {(activeTab === 'Received' ? nextPageUrlReceived : nextPageUrlGiven) && (
                   <View style={styles.viewMoreContainer}>
-                    <GradientButton
+                    {/* <GradientButton
                       title={
                         activeTab === 'Received'
                           ? isLoadingMoreReceived
@@ -467,7 +467,17 @@ const RatingsScreen: React.FC = () => {
                       disabled={
                         activeTab === 'Received' ? isLoadingMoreReceived : isLoadingMoreGiven
                       }
-                    />
+                    /> */}
+                    <TouchableOpacity onPress={
+                      activeTab === 'Received' ? handleLoadMoreReceived : handleLoadMoreGiven}
+                      style={styles.viewMoreButton}
+                    >
+                      {isLoadingMoreReceived || isLoadingMoreGiven ? (
+                        <ActivityIndicator size="small" color={Colors.textPrimary} />
+                      ) : (
+                      <Text style={{color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold}}>View More</Text>
+                      )}
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -645,8 +655,15 @@ const styles = StyleSheet.create({
   },
   viewMoreButton: {
     marginTop: 8,
-    width: '50%',
+    width: '100%',
     alignSelf: 'center',
+    backgroundColor: Colors.backgroundGray,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   halfStarContainer: {
     position: 'relative',

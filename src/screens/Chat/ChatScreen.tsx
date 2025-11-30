@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, Card, SearchInput, EmptyStateCard } from '../../components';
 import { useChatList, ChatRoom } from '../../hooks/useChat';
+import { getChatMessagesList } from '../../services/api/chat';
 import { SvgXml } from 'react-native-svg';
 import { FilledUserIcon } from '../../assets/icons/svg/main';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
@@ -41,18 +42,76 @@ const ChatScreen: React.FC = () => {
   const navigation = useNavigation<ChatScreenNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Pagination state
+  const [allChatRooms, setAllChatRooms] = useState<ChatRoom[]>([]);
+  const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const initializedRef = useRef(false);
+  const initialPageSizeRef = useRef<number>(0);
+  const lastDataRef = useRef<string | null>(null);
+  
   // Fetch chat list from API
   const { data: chatListResponse, isLoading, isError, error, refetch, isRefetching } = useChatList();
 
   console.log('chatListResponse', chatListResponse);
+
+  // Initialize data only once
+  useEffect(() => {
+    if (chatListResponse?.results && !initializedRef.current) {
+      setAllChatRooms(chatListResponse.results);
+      setNextPageUrl(chatListResponse.pagination?.next_page || null);
+      initializedRef.current = true;
+      initialPageSizeRef.current = chatListResponse.results.length;
+    }
+  }, [chatListResponse]);
+
+  // Handle refresh - update only first page if data changes
+  useEffect(() => {
+    if (chatListResponse?.results && initializedRef.current) {
+      if (initialPageSizeRef.current === 0) {
+        initialPageSizeRef.current = chatListResponse.results.length;
+      }
+      const dataHash = chatListResponse.results.map(r => r.id).join(',');
+      if (lastDataRef.current !== dataHash) {
+        lastDataRef.current = dataHash;
+        const initialPageSize = initialPageSizeRef.current;
+        setAllChatRooms(prev => {
+          if (prev.length > initialPageSize) {
+            const additionalPages = prev.slice(initialPageSize);
+            return [...chatListResponse.results, ...additionalPages];
+          }
+          return chatListResponse.results;
+        });
+        setNextPageUrl(chatListResponse.pagination?.next_page || null);
+      }
+    }
+  }, [chatListResponse]);
+
+  // Load more chat rooms
+  const handleLoadMore = async () => {
+    if (!nextPageUrl || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const response = await getChatMessagesList(nextPageUrl);
+      if (response?.results) {
+        setAllChatRooms(prev => [...prev, ...response.results]);
+        setNextPageUrl(response.pagination?.next_page || null);
+      }
+    } catch (err) {
+      console.error('Error loading more chat rooms:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
   
   // Transform API response to MessageItem format
   const messages: any = useMemo(() => {
-    if (!chatListResponse?.results || !Array.isArray(chatListResponse.results)) {
+    if (!allChatRooms || allChatRooms.length === 0) {
       return [];
     }
 
-    return chatListResponse.results.map((room: ChatRoom) => {
+    return allChatRooms.map((room: ChatRoom) => {
       const otherUser = room.other_user;
       const firstName = otherUser?.first_name || '';
       const lastName = otherUser?.last_name || '';
@@ -91,7 +150,7 @@ const ChatScreen: React.FC = () => {
         hasUnread: (room.unread_count || 0) > 0,
       };
     });
-  }, [chatListResponse]);
+  }, [allChatRooms]);
 
   // Filter messages based on search query
   const filteredMessages = useMemo(() => {
@@ -104,7 +163,7 @@ const ChatScreen: React.FC = () => {
 
   const handleMessagePress = (message: MessageItem) => {
     // Find the original room data to get user info
-    const room = chatListResponse?.results?.find((r: ChatRoom) => r.id === message.id);
+    const room = allChatRooms.find((r: ChatRoom) => r.id === message.id);
     const otherUser = room?.other_user;
     const firstName = otherUser?.first_name || '';
     const lastName = otherUser?.last_name || '';
@@ -243,6 +302,23 @@ const ChatScreen: React.FC = () => {
               colors={[Colors.primaryCyan]}
               tintColor={Colors.primaryCyan}
             />
+          }
+          ListFooterComponent={
+            nextPageUrl ? (
+              <View style={styles.viewMoreContainer}>
+                <TouchableOpacity
+                  onPress={handleLoadMore}
+                  style={styles.viewMoreButton}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? (
+                    <ActivityIndicator size="small" color={Colors.textPrimary} />
+                  ) : (
+                    <Text style={styles.viewMoreText}>View More</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : null
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -402,6 +478,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 100,
+  },
+  viewMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewMoreButton: {
+    width: '100%',
+    alignSelf: 'center',
+    backgroundColor: Colors.backgroundGray,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  viewMoreText: {
+    color: Colors.textPrimary,
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
   },
 });
 

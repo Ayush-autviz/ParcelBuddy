@@ -1,8 +1,28 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
 import { getChatMessagesList, createChatRoom } from '../services/api/chat';
 
+export interface PaginatedChatListResponse {
+  pagination: {
+    total_records: number;
+    total_pages: number;
+    current_page: number;
+    next_page: string | null;
+    previous_page: string | null;
+    page_size: number;
+  };
+  total_unread: number;
+  results: ChatRoom[];
+}
+
 export interface ChatListResponse {
-  count: number;
+  pagination?: {
+    total_records: number;
+    total_pages: number;
+    current_page: number;
+    next_page: string | null;
+    previous_page: string | null;
+    page_size: number;
+  };
   total_unread: number;
   results: ChatRoom[];
 }
@@ -57,11 +77,11 @@ export interface ChatRoom {
   [key: string]: any;
 }
 
-export const useChatList = (): UseQueryResult<ChatListResponse, Error> => {
+export const useChatList = (pageUrl?: string): UseQueryResult<PaginatedChatListResponse, Error> => {
   return useQuery({
-    queryKey: ['chatList'],
+    queryKey: ['chatList', pageUrl],
     queryFn: async () => {
-      const response = await getChatMessagesList();
+      const response = await getChatMessagesList(pageUrl);
       return response;
     },
     staleTime: 30000, // Cache for 30 seconds

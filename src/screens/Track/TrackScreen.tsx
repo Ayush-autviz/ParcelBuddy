@@ -637,13 +637,20 @@ const TrackScreen: React.FC = () => {
             ListFooterComponent={
               nextPageUrl ? (
                 <View style={styles.loadMoreContainer}>
-                  <GradientButton
+                  {/* <GradientButton
                     title="View More"
                     onPress={handleLoadMore}
                     style={styles.loadMoreButton}
                     loading={isLoadingMore}
                     disabled={isLoadingMore}
-                  />
+                  /> */}
+                  <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
+                    {isLoadingMore ? (
+                      <ActivityIndicator size="small" color={Colors.textPrimary} />
+                    ) : (
+                      <Text style={{color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold}}>View More</Text>
+                    )}
+                  </TouchableOpacity>
                 </View>
               ) : null
             }
@@ -1022,8 +1029,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadMoreButton: {
-    width: '50%',
-    alignSelf: 'center',
+    width: '100%',
+    backgroundColor: Colors.backgroundGray,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
 });
 

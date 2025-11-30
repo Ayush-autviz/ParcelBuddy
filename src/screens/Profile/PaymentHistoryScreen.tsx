@@ -143,8 +143,6 @@ const PaymentHistoryScreen: React.FC = () => {
           />
         }
       >
-        {/* Section Title */}
-        <Text style={styles.sectionTitle}>Payment History</Text>
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -181,13 +179,20 @@ const PaymentHistoryScreen: React.FC = () => {
             {/* View More Button */}
             {nextPageUrl && (
               <View style={styles.viewMoreContainer}>
-                <GradientButton
+                {/* <GradientButton
                   title={isLoadingMore ? 'Loading...' : 'View More'}
                   onPress={handleLoadMore}
                   style={styles.viewMoreButton}
                   loading={isLoadingMore}
                   disabled={isLoadingMore}
-                />
+                /> */}
+                <TouchableOpacity onPress={handleLoadMore} style={styles.viewMoreButton}>
+                  {isLoadingMore ? (
+                    <ActivityIndicator size="small" color={Colors.textPrimary} />
+                  ) : (
+                    <Text style={{color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold}}>View More</Text>
+                  )}
+                </TouchableOpacity>
               </View>
             )}
           </>
@@ -276,8 +281,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   viewMoreButton: {
-    width: '50%',
+    width: '100%',
     alignSelf: 'center',
+    backgroundColor: Colors.backgroundGray,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   loadingContainer: {
     flex: 1,
