@@ -8,7 +8,8 @@
     withCredentials: true,
   });
 
-  const BaseURL = 'http://13.233.74.72:8000';
+  // const BaseURL = 'http://13.233.74.72:8000';
+  const BaseURL = 'https://api.parcelbuddys.com'
 
   // Request Interceptor
   instance.interceptors.request.use((config) => {

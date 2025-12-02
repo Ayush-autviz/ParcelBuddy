@@ -66,7 +66,7 @@ const TrackScreen: React.FC = () => {
   const navigation = useNavigation<TrackScreenNavigationProp>();
   const { showError, showSuccess } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<TabType>('Published');
+  const [activeTab, setActiveTab] = useState<TabType>('Booked');
   const [selectedLuggageRequest, setSelectedLuggageRequest] = useState<any | null>(null);
   const [luggageRequests, setLuggageRequests] = useState<any>([]);
   const [isLoadingLuggageRequests, setIsLoadingLuggageRequests] = useState(false);
@@ -113,6 +113,9 @@ const TrackScreen: React.FC = () => {
     refetch: refetchBooked, 
     failureReason: failureReasonBooked 
   } = useBookedRides();
+
+  console.log();
+  
 
   // Initialize data only when switching to a tab that hasn't been initialized yet
   // This preserves loaded data when switching between tabs
@@ -255,6 +258,8 @@ const TrackScreen: React.FC = () => {
 
   const handleLoadMorePublished = async () => {
     if (!nextPageUrlPublished || isLoadingMorePublished) return;
+
+    console.log('Loading more published rides:', nextPageUrlPublished);
 
     setIsLoadingMorePublished(true);
     try {

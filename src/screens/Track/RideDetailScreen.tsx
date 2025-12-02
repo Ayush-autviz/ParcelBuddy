@@ -79,8 +79,7 @@ const RideDetailScreen: React.FC = () => {
         navigation.goBack();
       },
       onError: (error: any) => {
-        console.error('Delete ride error:', error);
-        showError(error?.response?.data?.message || 'Failed to delete ride. Please try again.');
+        showError(error?.response?.data || 'Failed to delete ride. Please try again.');
       },
     });
   };

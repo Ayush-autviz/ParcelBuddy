@@ -7,7 +7,7 @@ export const getLuggageRequests = async (pageUrl?: string) => {
         // Find the path after the domain (e.g., /luggage-requests/?page=2)
         // BaseURL is http://13.233.74.72:8000, so we need to extract everything after that
         try {
-            const baseUrl = 'http://13.233.74.72:8000';
+            const baseUrl = 'https://api.parcelbuddys.com';
             if (pageUrl.startsWith(baseUrl)) {
                 const pathWithQuery = pageUrl.substring(baseUrl.length);
                 const response = await apiClient.get(pathWithQuery);

@@ -4,7 +4,7 @@ import apiClient from "../apiClient";
 export const getMyRating = async (pageUrl?: string) => {
   if (pageUrl) {
     try {
-      const baseUrl = 'http://13.233.74.72:8000';
+      const baseUrl = 'https://api.parcelbuddys.com';
       if (pageUrl.startsWith(baseUrl)) {
         const pathWithQuery = pageUrl.substring(baseUrl.length);
         const response = await apiClient.get(pathWithQuery);
@@ -34,7 +34,7 @@ export const getMyRating = async (pageUrl?: string) => {
 export const getRatingGivenByMe = async (pageUrl?: string) => {
   if (pageUrl) {
     try {
-      const baseUrl = 'http://13.233.74.72:8000';
+      const baseUrl = 'https://api.parcelbuddys.com';
       if (pageUrl.startsWith(baseUrl)) {
         const pathWithQuery = pageUrl.substring(baseUrl.length);
         const response = await apiClient.get(pathWithQuery);

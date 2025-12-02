@@ -18,6 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PhoneInput from 'react-native-international-phone-number';
 import { SvgXml } from 'react-native-svg';
+import * as ImagePicker from 'react-native-image-picker';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton, DatePickerInput, TextArea } from '../../components';
@@ -135,6 +136,7 @@ const EditProfileScreen: React.FC = () => {
   const [countryCode, setCountryCode] = useState('');
   const [email, setEmail] = useState(currentProfile?.email || '');
   const [profilePhoto, setProfilePhoto] = useState(currentProfile?.profile?.profile_photo || null);
+  const [profileImageAsset, setProfileImageAsset] = useState<ImagePicker.Asset | null>(null);
   const [location, setLocation] = useState<LocationCoordinates | null>(null);
   const [country, setCountry] = useState<string>('');
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
@@ -174,8 +176,22 @@ const EditProfileScreen: React.FC = () => {
   };
 
   const handleImagePicker = () => {
-    // TODO: Implement image picker
-    Alert.alert('Image Picker', 'Image picker functionality will be implemented');
+    const options: ImagePicker.ImageLibraryOptions = {
+      mediaType: 'photo',
+      quality: 0.8,
+      maxWidth: 500,
+      maxHeight: 500,
+    };
+
+    ImagePicker.launchImageLibrary(options, (response) => {
+      if (response.assets && response.assets.length > 0) {
+        const asset = response.assets[0];
+        if (asset) {
+          setProfileImageAsset(asset);
+          setProfilePhoto(asset.uri || null);
+        }
+      }
+    });
   };
 
   const handleLocationFetch = async () => {
@@ -297,14 +313,18 @@ const EditProfileScreen: React.FC = () => {
       formData.append('profile.country', formattedCountry);
     }
 
-    // Note: Profile photo upload would go here if image picker is implemented
-    // if (profileImageAsset && profileImageAsset.uri) {
-    //   formData.append('profile.profile_photo', {
-    //     uri: profileImageAsset.uri,
-    //     type: profileImageAsset.type || 'image/jpeg',
-    //     name: profileImageAsset.fileName || 'profile_photo.jpg',
-    //   } as any);
-    // }
+    // Append profile photo if a new image was selected
+    if (profileImageAsset && profileImageAsset.uri) {
+      const fileExtension = profileImageAsset.uri.split('.').pop() || 'jpg';
+      const fileName = profileImageAsset.fileName || `profile_photo.${fileExtension}`;
+      const fileType = profileImageAsset.type || `image/${fileExtension}`;
+      
+      formData.append('profile.profile_photo', {
+        uri: profileImageAsset.uri,
+        type: fileType,
+        name: fileName,
+      } as any);
+    }
 
     console.log('📝 [EDIT PROFILE] Saving profile with FormData:', {
       first_name,
@@ -353,7 +373,11 @@ const EditProfileScreen: React.FC = () => {
         <View style={styles.profilePictureSection}>
           <View style={styles.avatarContainer}>
             {profilePhoto ? (
-              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+              <Image 
+                source={{ uri: profilePhoto }} 
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
             ) : (
               <LinearGradient
                 colors={[Colors.gradientStart, Colors.gradientEnd]}
