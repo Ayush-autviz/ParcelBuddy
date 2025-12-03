@@ -293,12 +293,13 @@ const LuggageRequestDetailScreen: React.FC = () => {
               containerStyle={styles.input}
             />
           </View>
+          <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8}}>Dimensions (cm)</Text>
           <View style={styles.dimensionsRow}>
             <View style={styles.dimensionItem}>
-              <Text style={styles.label}>Height (cm)</Text>
+              <Text style={styles.label}>Height</Text>
               <SearchInput
                 lucideIcon={Package}
-                placeholder="Height"
+                placeholder="eg: 1"
                 inputStyle={{fontSize: Fonts.sm}}
                 value={height || ''}
                 editable={false}
@@ -306,10 +307,10 @@ const LuggageRequestDetailScreen: React.FC = () => {
               />
             </View>
             <View style={styles.dimensionItem}>
-              <Text style={styles.label}>Width (cm)</Text>
+              <Text style={styles.label}>Width</Text>
               <SearchInput
                 lucideIcon={Package}
-                placeholder="Width"
+                placeholder="eg: 1"
                 inputStyle={{fontSize: Fonts.sm}}
                 value={width || ''}
                 editable={false}
@@ -317,10 +318,10 @@ const LuggageRequestDetailScreen: React.FC = () => {
               />
             </View>
             <View style={styles.dimensionItem}>
-              <Text style={styles.label}>Length (cm)</Text>
+              <Text style={styles.label}>Length</Text>
               <SearchInput
                 lucideIcon={Package}
-                placeholder="Length"
+                placeholder="eg: 1"
                 inputStyle={{fontSize: Fonts.sm}}
                 value={length || ''}
                 editable={false}

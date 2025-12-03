@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   approvedText: {
     fontSize: Fonts.base,
-    fontWeight: Fonts.weightSemiBold,
+    fontWeight: Fonts.weightBold,
     color: Colors.primaryTeal,
     marginTop: 16,
   },

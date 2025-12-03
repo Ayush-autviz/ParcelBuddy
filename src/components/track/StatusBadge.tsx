@@ -30,42 +30,42 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
         return {
           label: 'Full',
           showIcon: false,
-          showDot: true,
+          showDot: false,
           dotColor: Colors.primaryCyan,
         };
       case 'completed':
         return {
           label: 'Completed',
           showIcon: false,
-          showDot: true,
+          showDot: false,
           dotColor: Colors.primaryTeal,
         };
         case 'cancelled':
         return {
           label: 'Cancelled',
           showIcon: false,
-          showDot: true,
+          showDot: false,
           dotColor: Colors.error,
         };
       case 'pending':
         return {
-          label: 'Pending',
+          label: 'Waiting for Approval',
           showIcon: false,
-          showDot: true,
+          showDot: false,
           dotColor: Colors.primaryTeal,
         };
         case 'active':
         return {
           label: 'Active',
           showIcon: false,
-          showDot: true,
+          showDot: false,
           dotColor: Colors.primaryTeal,
         };
         case 'in_progress':
         return {
           label: 'In Progress',
           showIcon: false,
-          showDot: true,
+          showDot: false,
           dotColor: Colors.primaryTeal,
         };
       default:
@@ -139,9 +139,9 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weightSemiBold,
   },
   button: {
-    minWidth: 80,
+    minWidth: 130,
     justifyContent: 'center',
-    height: 20,
+    height: 21,
     borderRadius: 10,
   },
 

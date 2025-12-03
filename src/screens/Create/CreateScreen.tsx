@@ -325,42 +325,43 @@ const CreateScreen: React.FC = () => {
               containerStyle={styles.input}
             />
           </View>
-          <View style={styles.dimensionsRow}>
-            <View style={styles.dimensionItem}>
-              <Text style={styles.label}>Height (cm)</Text>
-              <SearchInput
-                lucideIcon={Package}
-                placeholder="eg: 10"
-                inputStyle={{fontSize: Fonts.sm}}
-                value={height}
-                onChangeText={setHeight}
-                keyboardType="numeric"
-                containerStyle={styles.input}
-              />
-            </View>
-            <View style={styles.dimensionItem}>
-              <Text style={styles.label}>Width (cm)</Text>
-              <SearchInput
-                lucideIcon={Package}
-                placeholder="eg: 10" 
-                inputStyle={{fontSize: Fonts.sm}}
-                value={width}
-                onChangeText={setWidth}
-                keyboardType="numeric"
-                containerStyle={styles.input}
-              />
-            </View>
-            <View style={styles.dimensionItem}>
-              <Text style={styles.label}>Length (cm)</Text>
-              <SearchInput
-                lucideIcon={Package}
-                placeholder="eg: 10"
-                inputStyle={{fontSize: Fonts.sm}}
-                value={length}
-                onChangeText={setLength}
-                keyboardType="numeric"
-                containerStyle={styles.input}
-              />
+          <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8}}>Dimensions (cm)</Text>
+            <View style={styles.dimensionsRow}>
+              <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Height</Text>
+                <SearchInput
+                  lucideIcon={Package}
+                placeholder="eg: 1"
+                  inputStyle={{fontSize: Fonts.sm}}
+                  value={height}
+                  onChangeText={setHeight}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
+              </View>
+              <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Width</Text>
+                <SearchInput
+                  lucideIcon={Package}
+                placeholder="eg: 1" 
+                  inputStyle={{fontSize: Fonts.sm}}
+                  value={width}
+                  onChangeText={setWidth}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
+              </View>
+              <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Length</Text>
+                <SearchInput
+                  lucideIcon={Package}
+                placeholder="eg: 1"
+                  inputStyle={{fontSize: Fonts.sm}}
+                  value={length}
+                  onChangeText={setLength}
+                  keyboardType="numeric"
+                  containerStyle={styles.input}
+                />
             </View>
           </View>
         </SectionCard>
