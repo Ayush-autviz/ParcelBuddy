@@ -56,6 +56,8 @@ const BookingRequestDetailScreen: React.FC = () => {
     refetch: refetchRequestDetail
   } = useLuggageRequestDetail(actualRequestId);
 
+  console.log('luggageRequestDetail booking request detail screen', luggageRequestDetail);
+
   // Cancel luggage request mutation
   const cancelRequestMutation = useCancelLuggageRequest();
 
@@ -124,8 +126,8 @@ const BookingRequestDetailScreen: React.FC = () => {
         }, 1500);
       },
       onError: (error: any) => {
-        console.error('Cancel request error:', error);
-        showError(error?.response?.data?.message || error?.message || 'Failed to cancel request. Please try again.');
+        console.error('Cancel request error:', error?.response?.data?.error);
+        showError(error?.response?.data?.error || error?.message || 'Failed to cancel request. Please try again.');
       },
     });
   };
@@ -173,6 +175,7 @@ const BookingRequestDetailScreen: React.FC = () => {
   const travelerName = traveler 
     ? `${traveler.first_name || ''} ${traveler.last_name || ''}`.trim() 
     : 'Unknown Traveler';
+  const travelerProfilePhoto = traveler?.profile?.profile_photo;
 
   // Show loading state
   if (isLoading) {
@@ -210,6 +213,8 @@ const BookingRequestDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Status Card */}
+
+        {luggageRequestDetail?.status === 'pending' && (
         <Card style={styles.statusCard} padding={16}>
           <View style={styles.statusContent}>
             <View style={styles.iconContainer}>
@@ -225,6 +230,7 @@ const BookingRequestDetailScreen: React.FC = () => {
             </View>
           </View>
         </Card>
+        )}
 
         {/* Date Card */}
         {travelDate && (
@@ -277,9 +283,16 @@ const BookingRequestDetailScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.travelerLeft}>
-                <View style={styles.avatarPlaceholder}>
-                  <User size={20} color={Colors.primaryCyan} />
-                </View>
+                {travelerProfilePhoto ? (
+                  <Image
+                    source={{ uri: travelerProfilePhoto }}
+                    style={styles.travelerAvatar}
+                  />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <User size={20} color={Colors.primaryCyan} />
+                  </View>
+                )}
                 <View style={styles.travelerInfo}>
                   <Text style={styles.travelerName}>{travelerName}</Text>
                   {/* <Text style={styles.itemCount}>({itemCount} {itemCount === 1 ? 'Item' : 'Items'})</Text> */}
@@ -529,6 +542,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryCyan + '20',
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 12,
+  },
+  travelerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.backgroundGray,
     marginRight: 12,
   },
   travelerInfo: {

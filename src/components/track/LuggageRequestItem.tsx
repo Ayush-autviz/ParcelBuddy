@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, Image } from 'react-native';
 import { User, ChevronRight } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -68,9 +68,16 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
             disabled={!onSenderPress}
             style={styles.avatarContainer}
           >
-            <View style={styles.avatar}>
-              <User size={20} color={Colors.primaryCyan} />
-            </View>
+            {request.senderProfilePhoto ? (
+              <Image
+                source={{ uri: request.senderProfilePhoto }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <User size={20} color={Colors.primaryCyan} />
+              </View>
+            )}
           </TouchableOpacity>
 
           {/* Name and Items - Clickable for sender detail */}
@@ -123,6 +130,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryTeal + '20', // Light blue background with opacity
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.backgroundGray,
   },
   textContainer: {
     flex: 1,

@@ -103,7 +103,7 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
         </View>
         {ride.showRateButton && (
           ride.isRated ? (
-            <Text style={styles.ratedText}>Rated</Text>
+            <></>
           ) : onRatePress ? (
             <GradientButton
               title="Rate"
