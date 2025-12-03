@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -53,6 +53,52 @@ const PlacesSearchScreen: React.FC = () => {
       setSearchQuery(query.trim());
     }
   };
+
+  const handleBackPress = () => {
+    if (!isSearchStore) {
+      // If coming from Create screen, navigate back to Create tab
+      const parent = navigation.getParent();
+      if (parent) {
+        // Pop to root of SearchNavigator stack (SearchList)
+        navigation.dispatch(StackActions.popToTop());
+        // Navigate to Create tab
+        parent.navigate('Create');
+      } else {
+        // Fallback: just navigate to Create
+        navigation.navigate('Create');
+      }
+    } else {
+      // Default behavior: go back in current navigator
+      navigation.goBack();
+    }
+  };
+
+  // Handle device back button (Android hardware back button and iOS swipe gesture)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // Only handle if it's a back action (not programmatic navigation)
+      if (e.data.action.type === 'GO_BACK') {
+        if (!isSearchStore) {
+          // Prevent default back action
+          e.preventDefault();
+          // Navigate back to Create tab
+          const parent = navigation.getParent();
+          if (parent) {
+            // Pop to root of SearchNavigator stack (SearchList)
+            navigation.dispatch(StackActions.popToTop());
+            // Navigate to Create tab
+            parent.navigate('Create');
+          } else {
+            // Fallback: just navigate to Create
+            navigation.navigate('Create');
+          }
+        }
+        // If isSearchStore, allow default behavior (navigation.goBack())
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, isSearchStore]);
 
   const handleSelectPlace = (place: PlaceResultItemData) => {
     // Store the selected place directly in the appropriate Zustand store
@@ -141,6 +187,7 @@ const PlacesSearchScreen: React.FC = () => {
             : 'Select Destination'
         }
         showBackButton
+        onBackPress={handleBackPress}
       />
 
       <View style={styles.searchContainer}>

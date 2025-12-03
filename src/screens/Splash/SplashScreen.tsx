@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -44,8 +44,6 @@ type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splas
 
 const SplashScreen: React.FC = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.3);
   const {token, setUser, user} = useAuthStore();
   const { clearSearchForm } = useSearchFormStore();
   const { clearCreateForm } = useCreateFormStore();
@@ -57,49 +55,59 @@ const SplashScreen: React.FC = () => {
   });
   console.log('profile', profile);
 
-  useEffect(() => { 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
+  const hasAnimated = useRef(false); // Track if animation has run
+  const hasNavigated = useRef(false); // Track if navigation has occurred
+  
+  // Run animation only once on mount, after a slight delay to let everything stabilize
+  useEffect(() => {
+    const animationTimer = setTimeout(() => {
+      if (!hasAnimated.current) {
+        hasAnimated.current = true;
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            tension: 10,
+            friction: 3,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    }, 300); // 100ms delay to let everything stabilize
 
-    // Start animations
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 10,
-        friction: 3,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Navigate based on authentication state after 3 seconds
-    // const timer = setTimeout(() => {
-    //   if (isAuthenticated) {
-    //     navigation.replace('MainApp');
-    //   } else {
-    //     navigation.replace('Auth');
-    //   }
-    // }, 3000);
-
-    // return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, navigation, clearSearchForm, clearCreateForm]);
+    return () => clearTimeout(animationTimer);
+  }, []); // Empty dependency array - runs only on mount
+  
 
   useEffect(() => {
-    // clearSearchForm();
-    // clearCreateForm();
+
+    clearSearchForm();
+    clearCreateForm();
+    
+    // Prevent multiple navigation attempts
+    if (hasNavigated.current) {
+      return;
+    }
+
     const timer = setTimeout(() => {
       // Check for pending deep link
       const deepLink = getPendingDeepLink();
       const isPaymentDeepLink = deepLink?.includes('parcelbuddy://payment') ?? false;
       
       if (!token?.access_token) {
+        hasNavigated.current = true;
         navigation.reset({
           index: 0,
           routes: [{ name: 'Auth' }],
         });
       } else if (profile) {
+        hasNavigated.current = true;
         setUser(profile);
         
         // If we have a payment deep link, navigate directly to PaymentHistory screen
@@ -136,22 +144,29 @@ const SplashScreen: React.FC = () => {
               },
             ],
           });
-        } else {
+        } else if (profile?.first_name) {
           // Normal navigation to MainApp
           navigation.reset({
-            index: 0,
-            routes: [{ name: 'MainApp' }],
-          });
-        }
-      } else if (!user?.profile_setup) {
+              index: 0,
+              routes: [{ name: 'MainApp' }],
+            });
+          } else {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
+            });
+          }
+        
+      } else {
+        hasNavigated.current = true;
         navigation.reset({
           index: 0,
-          routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
+          routes: [{ name: 'Auth' }],
         });
       }
     }, 1500);
     return () => clearTimeout(timer);
-  }, [profile]);
+  }, [profile, token, user]); // Keep necessary dependencies
 
   return (
     <View style={styles.container}>
