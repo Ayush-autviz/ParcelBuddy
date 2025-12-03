@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuthStore } from '../services/store';
 
-const BaseURL = 'http://13.233.74.72:8000';
+const BaseURL = 'https://api.parcelbuddys.com';
 const WS_BASE_URL = BaseURL.replace('http://', 'ws://').replace('https://', 'wss://');
 
     export interface ChatMessage {

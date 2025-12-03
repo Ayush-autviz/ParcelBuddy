@@ -26,7 +26,7 @@ export const createSubscription = async (data: CreateSubscriptionRequest): Promi
 export const getTransactionHistory = async (pageUrl?: string): Promise<any> => {
   if (pageUrl) {
     try {
-      const baseUrl = 'http://13.233.74.72:8000';
+      const baseUrl = 'https://api.parcelbuddys.com';
       if (pageUrl.startsWith(baseUrl)) {
         const pathWithQuery = pageUrl.substring(baseUrl.length);
         const response = await apiClient.get(pathWithQuery);

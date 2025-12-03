@@ -21,7 +21,7 @@ const AuthTermsPolicy: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Term & Policy" showBackButton />
+      <Header title="Terms & Conditions" showBackButton />
 
       <ScrollView
         style={styles.scrollView}

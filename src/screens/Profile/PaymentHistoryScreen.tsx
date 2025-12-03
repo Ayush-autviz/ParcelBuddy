@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
@@ -17,6 +17,8 @@ import { ProfileHeader, Card, EmptyStateCard, GradientButton } from '../../compo
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { useTransactionHistory, TransactionResponse } from '../../hooks/useSubscription';
 import { getTransactionHistory } from '../../services/api/subscription';
+import { getMyProfile } from '../../services/api/profile';
+import { useAuthStore } from '../../services/store';
 
 type PaymentHistoryScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'PaymentHistory'>;
 
@@ -51,7 +53,10 @@ const capitalizeFirst = (str: string): string => {
 const PaymentHistoryScreen: React.FC = () => {
   const navigation = useNavigation<PaymentHistoryScreenNavigationProp>();
   const { data: transactionData, isLoading, isError, isFetching, refetch } = useTransactionHistory();
+  const { setUser } = useAuthStore();
   
+
+  console.log('transactionData', transactionData);
   // State for pagination
   const [allTransactions, setAllTransactions] = useState<TransactionResponse[]>([]);
   const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
@@ -60,6 +65,23 @@ const PaymentHistoryScreen: React.FC = () => {
   const initializedRef = useRef(false);
   const initialPageSizeRef = useRef(0);
   const lastDataRef = useRef<string | null>(null);
+
+  // Fetch and update user profile when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      const fetchProfile = async () => {
+        try {
+          const profileData = await getMyProfile();
+          if (profileData) {
+            setUser(profileData);
+          }
+        } catch (error) {
+          console.error('Error fetching profile in PaymentHistoryScreen:', error);
+        }
+      };
+      fetchProfile();
+    }, [setUser])
+  );
 
   // Initialize data
   useEffect(() => {
@@ -120,7 +142,7 @@ const PaymentHistoryScreen: React.FC = () => {
   // Transform API data to PaymentEntry format
   const paymentEntries: PaymentEntry[] = allTransactions.map((transaction: TransactionResponse) => ({
     id: transaction.id,
-    planName: capitalizeFirst(transaction.subscription_plan_name || 'Plan'),
+    planName: capitalizeFirst(transaction.plan_name || 'Plan'),
     date: formatDate(transaction.created_on),
     amount: `${transaction.currency} ${transaction.amount}`,
     status: capitalizeFirst(transaction.status || ''),

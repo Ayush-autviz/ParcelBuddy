@@ -450,7 +450,7 @@ const EditProfileScreen: React.FC = () => {
 
           {/* Mobile Number */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Enter your mobile number</Text>
+            <Text style={styles.label}>Mobile Number</Text>
             <View style={styles.phoneInputWrapper}>
               <PhoneInput
                 ref={phoneInputRef}

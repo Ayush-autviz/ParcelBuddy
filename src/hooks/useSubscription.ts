@@ -51,7 +51,7 @@ export interface TransactionResponse {
   currency: string;
   status: string;
   created_on: string;
-  subscription_plan_name: string;
+  plan_name: string;
   subscription_plan_region: string;
 }
 

@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
+import { CheckCircle, Check } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton } from '../../components';
@@ -16,6 +17,7 @@ import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { kycVerification } from '../../services/api/kyc';
 import { useToast } from '../../components/Toast';
 import { DocumentIcon, SmileyIcon } from '../../assets/icons/svg/main';
+import { useAuthStore } from '../../services/store';
 
 type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'KYCVerification'>;
 
@@ -24,6 +26,9 @@ const KYCVerificationScreen: React.FC = () => {
   const navigation = useNavigation<KYCVerificationScreenNavigationProp>();
   const { showError, showSuccess } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuthStore();
+  
+  const isKYCApproved = user?.kyc_status === 'Approved';
 
   const handleContinue = async () => {
     try {
@@ -93,15 +98,24 @@ const KYCVerificationScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Continue Button */}
+      {/* Continue Button or Approved Status */}
       <View style={styles.buttonContainer}>
-        <GradientButton
-          title={isLoading ? 'Loading...' : 'Continue'}
-          onPress={handleContinue}
-          style={styles.continueButton}
-          disabled={isLoading}
-          loading={isLoading}
-        />
+        {isKYCApproved ? (
+          <View style={styles.approvedContainer}>
+            <View style={styles.checkIconContainer}>
+              <Check size={20} color={Colors.backgroundWhite} strokeWidth={3} />
+            </View>
+            <Text style={styles.approvedText}>KYC Verification Approved</Text>
+          </View>
+        ) : (
+          <GradientButton
+            title={isLoading ? 'Loading...' : 'Continue'}
+            onPress={handleContinue}
+            style={styles.continueButton}
+            disabled={isLoading}
+            loading={isLoading}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -176,6 +190,33 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     marginTop: 0,
+  },
+  approvedContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  checkIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.primaryTeal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.textPrimary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  approvedText: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.primaryTeal,
+    marginTop: 16,
   },
 });
 

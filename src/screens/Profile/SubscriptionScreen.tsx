@@ -244,7 +244,7 @@ const SubscriptionScreen: React.FC = () => {
                   </View>
                   {plan.showUpgrade && (
                     <GradientButton
-                      title="Upgrade"
+                      title="Buy"
                       onPress={() => handleUpgrade(plan.id)}
                       style={styles.upgradeButton}
                       loading={loadingPlanId === plan.id}

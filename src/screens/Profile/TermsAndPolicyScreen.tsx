@@ -21,7 +21,7 @@ const TermsAndPolicyScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ProfileHeader title="Term & Policy" />
+    <ProfileHeader title="Terms & Conditions" />
 
       <ScrollView
         style={styles.scrollView}

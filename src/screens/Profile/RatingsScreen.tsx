@@ -20,6 +20,7 @@ import { useMyRatings, useRatingsGivenByMe, useRatingChart, RatingResponse } fro
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
 import { SvgXml } from 'react-native-svg';
 import { getMyRating, getRatingGivenByMe } from '../../services/api/rating';
+import { Image } from 'react-native';
 
 type RatingsScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Ratings'>;
 
@@ -32,6 +33,7 @@ interface Review {
   rating: number;
   reviewText: string;
   userId?: string; // Store user ID for potential profile fetching
+  profileImage?: string | null; // Profile image URL
 }
 
 interface RatingDistribution {
@@ -242,6 +244,7 @@ const RatingsScreen: React.FC = () => {
       rating: rating.rating,
       reviewText: rating.review || '',
       userId: rating.rated_by,
+      profileImage: rating.rated_by_image || null, // Profile image of the person who gave the rating
     }));
   }, [allReceivedRatings]);
 
@@ -253,6 +256,7 @@ const RatingsScreen: React.FC = () => {
       rating: rating.rating,
       reviewText: rating.review || '',
       userId: rating.rated_to,
+      profileImage: rating.rated_to_image || null, // Profile image of the person who received the rating
     }));
   }, [allGivenRatings]);
 
@@ -428,7 +432,14 @@ const RatingsScreen: React.FC = () => {
                     <View style={styles.reviewHeader}>
                       <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
                         <View style={styles.reviewerAvatar}>
-                          <SvgXml xml={ProfileUserIcon} height={20} width={20} />
+                          {review.profileImage ? (
+                            <Image 
+                              source={{ uri: review.profileImage }} 
+                              style={styles.reviewerAvatarImage}
+                            />
+                          ) : (
+                            <SvgXml xml={ProfileUserIcon} height={20} width={20} />
+                          )}
                         </View>
                       <View style={styles.reviewerInfo}>
                         <Text style={styles.reviewerName}>{review.reviewerName}</Text>
@@ -695,7 +706,7 @@ const styles = StyleSheet.create({
   reviewerAvatar: {
     width: 32,
     height: 32,
-    borderRadius: 100,
+    borderRadius: 16,
     backgroundColor: Colors.backgroundWhite,
     alignItems: 'center',
     justifyContent: 'center',
@@ -707,6 +718,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 5,
+    overflow: 'hidden',
+  },
+  reviewerAvatarImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
 });
 
