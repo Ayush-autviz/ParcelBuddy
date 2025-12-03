@@ -224,11 +224,11 @@ const ProfileSetupScreen: React.FC = () => {
   };
 
   const handleTermsPress = () => {
-    Alert.alert('Terms of Service', 'Read our terms of service here');
+    navigation.navigate('AuthTermsPolicy');
   };
 
   const handlePrivacyPress = () => {
-    Alert.alert('Privacy Policy', 'Read our privacy policy here');
+    navigation.navigate('AuthTermsPolicy');
   };
 
   const handleLocationFetch = async () => {
@@ -503,12 +503,9 @@ const ProfileSetupScreen: React.FC = () => {
             <Text style={styles.checkboxText}>
               By continuing, you agree to our{' '}
               <Text style={styles.linkText} onPress={handleTermsPress}>
-                Terms of Service
+                Terms & Conditions
               </Text>
-              {' and '}
-              <Text style={styles.linkText} onPress={handlePrivacyPress}>
-                Privacy Policy
-              </Text>
+              
             </Text>
           </View>
 

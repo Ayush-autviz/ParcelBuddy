@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   },
   locationCard: {
     marginBottom: 16,
-    backgroundColor: Colors.backgroundGray,
+    backgroundColor: Colors.backgroundWhite,
   },
   locationRow: {
     flexDirection: 'row',

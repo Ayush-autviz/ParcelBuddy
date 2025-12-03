@@ -6,6 +6,7 @@ import LoginScreen from '../screens/Auth/LoginScreen';
 import SignupScreen from '../screens/Auth/SignupScreen';
 import OTPScreen from '../screens/Auth/OTPScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
+import AuthTermsPolicy from '../screens/Auth/AuthTermsPolicy';
 
 // Define the auth stack navigator param list
 export type AuthStackParamList = {
@@ -15,6 +16,7 @@ export type AuthStackParamList = {
     phoneNumber: string;
   };
   ProfileSetup: undefined;
+  AuthTermsPolicy: undefined;
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
@@ -32,6 +34,7 @@ const AuthNavigator: React.FC = () => {
       <Stack.Screen name="Signup" component={SignupScreen} />
       <Stack.Screen name="OTPScreen" component={OTPScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      <Stack.Screen name="AuthTermsPolicy" component={AuthTermsPolicy} />
     </Stack.Navigator>
   );
 };

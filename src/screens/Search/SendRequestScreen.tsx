@@ -14,7 +14,7 @@ import { ChevronRight, Upload, Calendar, Package } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card, GradientButton, SectionCard, SearchInput, KYCVerificationModal } from '../../components';
+import { Header, Card, GradientButton, SectionCard, SearchInput, KYCVerificationModal, SubscriptionModal } from '../../components';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
 import { SvgXml } from 'react-native-svg';
@@ -37,6 +37,7 @@ const SendRequestScreen: React.FC = () => {
   const createLuggageRequestMutation = useCreateLuggageRequest();
   const { user } = useAuthStore();
   const [showKYCModal, setShowKYCModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
   const [height, setHeight] = useState('');
@@ -89,6 +90,12 @@ const SendRequestScreen: React.FC = () => {
      // Check KYC verification first
      if (user && !(user as any)?.is_kyc_verified) {
       setShowKYCModal(true);
+      return;
+    }
+
+    // Check subscription after KYC verification
+    if (user && !(user as any)?.is_subscribed) {
+      setShowSubscriptionModal(true);
       return;
     }
 
@@ -473,6 +480,21 @@ const SendRequestScreen: React.FC = () => {
           });
         }}
         onClose={() => setShowKYCModal(false)}
+      />
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        visible={showSubscriptionModal}
+        title="Subscription Required"
+        description="Please subscribe to a plan to send a request. Choose from our flexible subscription plans to unlock all features."
+        buttonText="Subscribe Now"
+        onButtonPress={() => {
+          setShowSubscriptionModal(false);
+          navigation.navigate('Profile', {
+            screen: 'Subscription',
+          });
+        }}
+        onClose={() => setShowSubscriptionModal(false)}
       />
 
     </SafeAreaView>

@@ -8,7 +8,7 @@ import {
 import {  Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast, KYCVerificationModal } from '../../components';
+import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast, KYCVerificationModal, SubscriptionModal } from '../../components';
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,6 +40,7 @@ const CreateScreen: React.FC = () => {
   const [length, setLength] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [showKYCModal, setShowKYCModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const { showWarning, showSuccess, showError } = useToast();
 
   // Use Zustand store for origin/destination
@@ -104,6 +105,12 @@ const CreateScreen: React.FC = () => {
     // Check KYC verification first
     if (user && !(user as any)?.is_kyc_verified) {
       setShowKYCModal(true);
+      return;
+    }
+
+    // Check subscription after KYC verification
+    if (user && !(user as any)?.is_subscribed) {
+      setShowSubscriptionModal(true);
       return;
     }
 
@@ -392,6 +399,22 @@ const CreateScreen: React.FC = () => {
           });
         }}
         onClose={() => setShowKYCModal(false)}
+      />
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        visible={showSubscriptionModal}
+        title="Subscription Required"
+        description="Please subscribe to a plan to create a ride. Choose from our flexible subscription plans to unlock all features."
+        buttonText="Subscribe Now"
+        onButtonPress={() => {
+          setShowSubscriptionModal(false);
+          // Navigate to Profile tab and then to Subscription screen
+          navigation.navigate('Profile', {
+            screen: 'Subscription',
+          });
+        }}
+        onClose={() => setShowSubscriptionModal(false)}
       />
     </SafeAreaView>
   );
