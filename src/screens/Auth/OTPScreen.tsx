@@ -318,9 +318,9 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weightMedium,
   },
   otpLabel: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.lg ,
     fontWeight: Fonts.weightSemiBold,
-    color: Colors.textPrimary,
+    color: Colors.primaryCyan,
     marginBottom: 16,
   },
   otpContainer: {

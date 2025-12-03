@@ -14,6 +14,7 @@ export interface AvailableRideData {
     profile?: {
       profile_photo?: string;
       id?: string;
+      average_rating?: number;
     };
   };
   profileId?: string; // Profile ID from traveler.profile.id
@@ -51,10 +52,9 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
   const driverName = `${ride.traveler.first_name} ${ride.traveler.last_name}`.trim();
   const formattedDate = formatDate(ride.travel_date);
   const availableWeight = parseFloat(ride.available_weight_kg).toFixed(0);
-  const rating = ride?.rating // Default rating if not provided
+  // Use average_rating from profile if available, otherwise fallback to rating field
+  const rating = ride.traveler.profile?.average_rating ?? ride?.rating ?? 0;
   const reviewCount = ride.review_count || 128; // Default review count if not provided
-
-  console.log('rating', rating);
 
   return (
  
@@ -90,11 +90,18 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
           {/* Right Side - Capacity and Rating */}
           <View style={styles.rightSection}>
             <View style={styles.capacityContainer}>
-              <Text style={styles.capacityValue}>{availableWeight}kg</Text>
+              {availableWeight !== '0' ? (
+                <>
+               <Text style={styles.capacityValue}>{availableWeight}kg</Text>
               <Text style={styles.capacityLabel}>Available Capacity</Text>
+              </>
+              ) : (
+                <Text style={styles.capacityValue}>Full</Text>
+              )}
+
             </View>
             <View style={styles.ratingContainer}>
-              <Text style={styles.ratingValue}>{rating}</Text>
+              <Text style={styles.ratingValue}>{rating.toFixed(1)}</Text>
               <Star size={14} color="#FFD700" fill="#FFD700" style={styles.starIcon} />
               {/* <Text style={styles.reviewCount}>({reviewCount})</Text> */}
             </View>

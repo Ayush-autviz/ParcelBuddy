@@ -13,7 +13,7 @@ import { useAuthStore } from '../../services/store';
 import { useToast } from '../../components/Toast';
 import { useChatWebSocket, ChatMessage } from '../../hooks/useChatWebSocket';
 import { getConversationMessages, markMessageAsRead } from '../../services/api/chat';
-import { useRespondToLuggageRequest, useUpdateLuggageRequestWeight } from '../../hooks/useLuggage';
+import { useRespondToLuggageRequest, useUpdateLuggageRequestWeight, useLuggageRequestDetail } from '../../hooks/useLuggage';
 import GradientButton from '../../components/GradientButton';
 import { SvgXml } from 'react-native-svg';
 import { FilledUserIcon } from '../../assets/icons/svg/main';
@@ -36,6 +36,9 @@ const ChatDetailScreen: React.FC = () => {
   const updateLuggageRequestWeightMutation = useUpdateLuggageRequestWeight();
   
   const { roomId, userName, userAvatar, origin, destination, luggage_request_id, luggage_request_status, luggage_request_weight, is_ride_created_by_me } = route.params;
+  
+  // Fetch luggage request detail to get ride information
+  const { data: luggageRequestDetail } = useLuggageRequestDetail(luggage_request_id);
   
   // Log luggage_request_id for debugging
   useEffect(() => {
@@ -446,6 +449,71 @@ const ChatDetailScreen: React.FC = () => {
     []
   );
 
+  // Handle route press - navigate to ride detail
+  const handleRoutePress = () => {
+    if (!luggage_request_id || !luggageRequestDetail?.ride) {
+      showError('Ride information not available');
+      return;
+    }
+
+    const ride = luggageRequestDetail.ride;
+    const rideId = ride.id;
+    
+    if (!rideId) {
+      showError('Ride ID not available');
+      return;
+    }
+
+    // Format date from "2025-11-28" to the format expected by RideDetail
+    const travelDate = ride.travel_date || '';
+    const formattedDate = travelDate; // RideDetail expects YYYY-MM-DD format
+    
+    // Format time from "18:00:00" to "06:00 PM"
+    const formatTime = (timeString: string | null): string => {
+      if (!timeString) return '';
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
+    };
+
+    const originTime = formatTime(ride.travel_time);
+    const destinationTime = formatTime(ride.destination_time);
+
+    // Navigate to RideDetail using parent navigator (Track navigator)
+    const parentNavigator = navigation.getParent();
+    if (parentNavigator) {
+      // Navigate to Track tab first, then to RideDetail
+      (parentNavigator as any).navigate('Track', {
+        screen: 'RideDetail',
+        params: {
+          rideId,
+          date: formattedDate,
+          origin: ride.origin_name || origin || 'Unknown',
+          originTime,
+          destination: ride.destination_name || destination || 'Unknown',
+          destinationTime,
+          status: 'published', // Default status
+        },
+      });
+    } else {
+      // Fallback: try direct navigation
+      (navigation as any).navigate('Track', {
+        screen: 'RideDetail',
+        params: {
+          rideId,
+          date: formattedDate,
+          origin: ride.origin_name || origin || 'Unknown',
+          originTime,
+          destination: ride.destination_name || destination || 'Unknown',
+          destinationTime,
+          status: 'published',
+        },
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={[styles.safeArea, !is_ride_created_by_me ? {marginBottom: 20} : {}]} edges={['top']}>
@@ -476,11 +544,15 @@ const ChatDetailScreen: React.FC = () => {
 
       {/* Context Bar */}
       {(origin || destination) && (
-        <TouchableOpacity style={styles.contextBar} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.contextBar} 
+          activeOpacity={0.7}
+          onPress={handleRoutePress}
+        >
           <Text style={styles.contextText}>
             From: {origin || 'Unknown'} to {destination || 'Unknown'}
           </Text>
-          {/* <ChevronRight size={20} color={Colors.textTertiary} /> */}
+          <ChevronRight size={20} color={Colors.textTertiary} />
         </TouchableOpacity>
       )}
 

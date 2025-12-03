@@ -160,7 +160,7 @@ const SearchScreen: React.FC = () => {
               last_name: ride.traveler?.last_name || '',
               profile: {
                 profile_photo: ride.traveler?.profile?.profile_photo,
-                rating: ride.traveler?.profile?.average_rating,
+                average_rating: ride.traveler?.profile?.average_rating,
                 id: ride.traveler?.profile?.id,
               },
             },
@@ -171,8 +171,8 @@ const SearchScreen: React.FC = () => {
             available_weight_kg: ride.available_weight_kg,
             price_per_kg: ride.price_per_kg,
             // Rating and review_count would come from traveler profile if available
-            rating: ride.traveler?.profile?.rating || 0,
-            review_count: ride.traveler?.profile?.review_count || 128,
+            rating: ride.traveler?.profile?.average_rating || 0,
+            review_count: ride.traveler?.total_rating || 128,
           };
         });
         
@@ -238,7 +238,7 @@ const SearchScreen: React.FC = () => {
                 last_name: ride.traveler?.last_name || '',
                 profile: {
                   profile_photo: ride.traveler?.profile?.profile_photo,
-                  rating: ride.traveler?.profile?.average_rating,
+                  average_rating: ride.traveler?.profile?.average_rating,
                   id: ride.traveler?.profile?.id,
                 },
               },
@@ -248,8 +248,8 @@ const SearchScreen: React.FC = () => {
               destination_name: ride.destination_name,
               available_weight_kg: ride.available_weight_kg,
               price_per_kg: ride.price_per_kg,
-              rating: ride.traveler?.profile?.rating || 0,
-              review_count: ride.traveler?.profile?.review_count || 128,
+              rating: ride.traveler?.profile?.average_rating || 0,
+              review_count: ride.traveler?.total_rating || 0,
             };
           });
           

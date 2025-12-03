@@ -30,19 +30,19 @@ const TermsAndPolicyScreen: React.FC = () => {
       >
         {/* Title Section */}
         <Card style={styles.titleCard} padding={20}>
-          <View style={styles.titleIconContainer}>
+          {/* <View style={styles.titleIconContainer}>
             <FileText size={32} color={Colors.primaryCyan} />
-          </View>
-          <Text style={styles.mainTitle}>ParcelBuddy</Text>
-          <Text style={styles.subtitle}>Terms and Conditions</Text>
-          <View style={styles.divider} />
+          </View> */}
+          {/* <Text style={styles.mainTitle}>Terms & Conditions</Text> */}
+          {/* <Text style={styles.subtitle}>Terms and Conditions</Text> */}
+          {/* <View style={styles.divider} /> */}
           <Text style={styles.introText}>
             Please read these terms carefully. By using our platform, you agree to be bound by these terms and conditions.
           </Text>
         </Card>
 
         {/* Table of Contents */}
-        <Card style={styles.tocCard} padding={20}>
+        {/* <Card style={styles.tocCard} padding={20}>
           <Text style={styles.tocTitle}>TABLE OF CONTENTS</Text>
           <View style={styles.tocContent}>
             <Text style={styles.tocItem}>1. Definitions</Text>
@@ -73,7 +73,7 @@ const TermsAndPolicyScreen: React.FC = () => {
             <Text style={styles.tocItem}>Annexure D – Subscription Plans & Terms</Text>
             <Text style={styles.tocItem}>Annexure E – Takedown / Complaints Procedure</Text>
           </View>
-        </Card>
+        </Card> */}
 
         {/* Section 1: Definitions */}
         <Card style={styles.sectionCard} padding={20}>
@@ -1025,7 +1025,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   introText: {
-    fontSize: Fonts.base,
+    fontSize: Fonts.sm,
     color: Colors.textSecondary,
     lineHeight: 22,
     textAlign: 'center',
