@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -58,8 +58,24 @@ const ChatDetailScreen: React.FC = () => {
   const readMessageIdsRef = useRef<Set<string>>(new Set());
   const bottomSheetRef = useRef<BottomSheet>(null);
   
+  // Track bottom sheet state
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  
   // Define snap points for bottom sheet
   const snapPoints = useMemo(() => ['75%'], []);
+
+  // Handle device back button to close bottom sheet
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isBottomSheetOpen) {
+        bottomSheetRef.current?.close();
+        return true; // Prevent default back behavior
+      }
+      return false; // Allow default back behavior
+    });
+
+    return () => backHandler.remove();
+  }, [isBottomSheetOpen]);
 
   // Get current user ID for Gifted Chat
   const currentUserId = (user as any)?.id || (user as any)?.user_id || 'current-user';
@@ -667,6 +683,18 @@ const ChatDetailScreen: React.FC = () => {
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.bottomSheetIndicator}
+        onChange={(index) => {
+          // Track bottom sheet state when it changes
+          if (index === -1) {
+            setIsBottomSheetOpen(false);
+          } else {
+            setIsBottomSheetOpen(true);
+          }
+        }}
+        onClose={() => {
+          // Update state when bottom sheet is closed
+          setIsBottomSheetOpen(false);
+        }}
       >
         <BottomSheetView style={styles.bottomSheetContent}>
           <Text style={styles.bottomSheetTitle}>Select Weight to Approve</Text>

@@ -10,6 +10,7 @@ import {
   Image,
   Platform,
   ScrollView,
+  BackHandler,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -510,6 +511,22 @@ const TrackScreen: React.FC = () => {
     }
   }, [selectedLuggageRequest, activeTab, expandSheet]);
 
+  // Track bottom sheet state
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+
+  // Handle device back button to close bottom sheet
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isBottomSheetOpen) {
+        bottomSheetModalRef.current?.dismiss();
+        return true; // Prevent default back behavior
+      }
+      return false; // Allow default back behavior
+    });
+
+    return () => backHandler.remove();
+  }, [isBottomSheetOpen]);
+
   const handleSubmitRating = () => {
     if (!selectedLuggageRequest || rating <= 0) {
       showError('Please select a rating');
@@ -691,6 +708,24 @@ const TrackScreen: React.FC = () => {
               bottomSheetModalRef.current?.snapToIndex(1);
             }, 10);
           }
+          // Track bottom sheet state
+          if (toIndex === -1) {
+            setIsBottomSheetOpen(false);
+          } else {
+            setIsBottomSheetOpen(true);
+          }
+        }}
+        onChange={(index) => {
+          // Track bottom sheet state when it changes
+          if (index === -1) {
+            setIsBottomSheetOpen(false);
+          } else {
+            setIsBottomSheetOpen(true);
+          }
+        }}
+        onDismiss={() => {
+          // Update state when bottom sheet is dismissed
+          setIsBottomSheetOpen(false);
         }}
       >
         <BottomSheetView style={[styles.bottomSheetContent, {flex: 1} ]}>

@@ -27,7 +27,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, GradientButton } from '../../components';
 import { useAuthStore } from '../../services/store';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProfile } from '../../services/api/profile';
 import { useToast } from '../../components/Toast';
 import ConfirmationModal from '../../components/Modal/ConfirmationModal';
@@ -52,6 +52,7 @@ const ProfileScreen: React.FC = () => {
   const { showSuccess } = useToast();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   console.log('user', user);
+  const queryClient = useQueryClient();
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -59,6 +60,7 @@ const ProfileScreen: React.FC = () => {
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
+    queryClient.clear();
     await logout();
     showSuccess('Logged out successfully');
     // Navigate to root Auth screen
