@@ -172,10 +172,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     shadowColor: '#000',
     shadowOffset: {
-      width: 0,
+      width: 1,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
   },

@@ -199,7 +199,7 @@ const UserProfileScreen: React.FC = () => {
               <View style={styles.checkIconContainer}>
                 <Check size={14} color={Colors.backgroundWhite} strokeWidth={3} />
               </View>
-              <Text style={styles.verificationText}>Government ID Verified</Text>
+              <Text style={styles.verificationText}>ID Verified</Text>
             </View>
           </Card>
         )}

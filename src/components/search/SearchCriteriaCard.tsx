@@ -22,7 +22,7 @@ const SearchCriteriaCard: React.FC<SearchCriteriaCardProps> = ({
   onClear,
 }) => {
   return (
-    <Card style={styles.card} padding={16}>
+    <Card style={styles.card} padding={10}>
       <View style={styles.header}>
         {/* <Text style={styles.title}>Search Criteria</Text> */}
         {onClear && (

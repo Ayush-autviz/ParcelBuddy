@@ -318,6 +318,8 @@ const SearchScreen: React.FC = () => {
             />
           </View>
 
+          <Text style={{fontSize: Fonts.xs, color: Colors.textTertiary, textAlign: 'center', marginBottom: 16, fontStyle: 'italic'}}>Currently we operate for India and Canada only</Text>
+
           {/* Input Fields */}
           <View style={styles.inputsContainer}>
             <TouchableOpacity onPress={handleFromFocus} activeOpacity={0.7}>
@@ -343,10 +345,11 @@ const SearchScreen: React.FC = () => {
             <DatePickerInput
               value={date}
               onChange={setDate}
-              placeholder="mm / yy"
+              placeholder="MM / YY"
               minimumDate={new Date()}
               containerStyle={styles.input}
               iconContainerStyle={styles.iconContainer}
+              displayFormat="month-year"
             />
           </View>
 

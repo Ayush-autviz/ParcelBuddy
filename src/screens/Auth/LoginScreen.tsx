@@ -201,7 +201,7 @@ const LoginScreen: React.FC = () => {
           />
 
           {/* Terms and Privacy Policy */}
-          <Text style={styles.termsText}>
+          {/* <Text style={styles.termsText}>
             By continuing, you agree to our{' '}
             <Text style={styles.linkText} onPress={handleTermsPress}>
               Terms of Service
@@ -210,7 +210,7 @@ const LoginScreen: React.FC = () => {
             <Text style={styles.linkText} onPress={handlePrivacyPress}>
               Privacy Policy
             </Text>
-          </Text>
+          </Text> */}
         </View>
     </KeyboardAwareScrollView>
   );
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     fontSize: Fonts.xl,
     marginTop:10,
     marginBottom:30,
-    fontWeight: Fonts.weightMedium,
+    fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     textAlign: 'center',
   },

@@ -14,6 +14,7 @@ interface DatePickerInputProps {
   maximumDate?: Date;
   containerStyle?: any;
   iconContainerStyle?: any;
+  displayFormat?: 'default' | 'month-year';
 }
 
 const DatePickerInput: React.FC<DatePickerInputProps> = ({
@@ -24,10 +25,19 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
   maximumDate,
   containerStyle,
   iconContainerStyle,
+  displayFormat = 'default',
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
   const formatDate = (date: Date): string => {
+    if (displayFormat === 'month-year') {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[date.getMonth()];
+      const year = date.getFullYear().toString().slice(-2); // Last 2 digits of year
+      return `${month} ${year}`;
+    }
+    // Default format
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
