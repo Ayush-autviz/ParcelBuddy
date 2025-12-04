@@ -21,6 +21,7 @@ export interface RideCardData {
   showRateButton?: boolean;
   isRated?: boolean;
   requestCount?: number;
+  pendingRequestCount?: number;
 }
 
 interface RideCardProps {
@@ -60,7 +61,12 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <StatusBadge status={ride.status} />
+        <View style={styles.statusContainer}>
+          <StatusBadge status={ride.status} />
+          {ride.pendingRequestCount !== undefined && ride.pendingRequestCount > 0 && (
+            <Text style={styles.pendingText}>{ride.pendingRequestCount} pending</Text>
+          )}
+        </View>
         <View></View>
         <Text style={styles.date}>{ride.date}</Text>
       </View>
@@ -138,6 +144,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pendingText: {
+    fontSize: Fonts.sm,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weightMedium,
   },
   date: {
     fontSize: Fonts.sm,

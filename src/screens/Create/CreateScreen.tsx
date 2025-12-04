@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -61,6 +61,20 @@ const CreateScreen: React.FC = () => {
   const createRideMutation = useCreateRide();
 
   const isDomestic = activeTab === 'Domestic';
+
+  // Clear all form data when tab changes
+  useEffect(() => {
+    setDepartureDate(null);
+    setDepartureTime(null);
+    setArrivalDate(null);
+    setArrivalTime(null);
+    setMaxWeight('');
+    setHeight('');
+    setWidth('');
+    setLength('');
+    setAdditionalNotes('');
+    clearCreateForm(); // Clear origin and destination from store
+  }, [activeTab, clearCreateForm]);
 
   const handleOriginFocus = () => {
     // Navigate to PlacesSearchScreen through Search tab
@@ -301,7 +315,7 @@ const CreateScreen: React.FC = () => {
                   value={arrivalDate}
                   onChange={setArrivalDate}
                   placeholder="Select Date"
-                  minimumDate={departureDate || new Date()}
+                  minimumDate={isDomestic ? (departureDate || new Date()) : undefined}
                   containerStyle={styles.input}
                 />
               </View>

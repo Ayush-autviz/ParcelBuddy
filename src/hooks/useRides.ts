@@ -22,6 +22,9 @@ export interface PublishedRideResponse {
   created_on: string;
   destination_date: string;
   destination_time: string;
+  total_request_count?: number;
+  pending_request_count?: number;
+  all_sender_rated?: boolean;
 }
 
 // Interface for paginated published rides response
@@ -86,9 +89,13 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
           return `${displayHour}:${displayMinutes} ${ampm}`;
         };
 
-        const showRate = ride.status === 'completed' ? true : false;
-
-
+        // Show rate button only if:
+        // 1. Status is 'completed' AND
+        // 2. all_sender_rated is false AND
+        // 3. total_request_count > 0
+        const showRate = ride.status === 'completed' 
+          && !ride.all_sender_rated 
+          && (ride.total_request_count || 0) > 0;
 
         return {
           id: ride.id || '',
@@ -101,6 +108,7 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
           passengers: 0, // Not available in API, set to 0 or calculate if needed
           showRateButton: showRate,
           requestCount: ride.total_request_count || 0,
+          pendingRequestCount: ride.pending_request_count || 0,
         } as RideCardData;
       });
 

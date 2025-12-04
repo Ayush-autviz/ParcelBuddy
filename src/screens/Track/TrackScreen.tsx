@@ -295,18 +295,29 @@ const TrackScreen: React.FC = () => {
           return `${displayHour}:${displayMinutes} ${ampm}`;
         };
 
-        const newRides = ridesArray.map((ride: any) => ({
-          id: ride.id || '',
-          status: ride.status,
-          date: formatDate(ride.travel_date),
-          origin: ride.origin_name || 'Unknown Origin',
-          originTime: formatTime(ride.travel_time),
-          destination: ride.destination_name || 'Unknown Destination',
-          destinationTime: formatTime(ride.destination_time),
-          passengers: 0,
-          showRateButton: ride.status === 'completed',
-          requestCount: ride.total_request_count || 0,
-        } as RideCardData));
+        const newRides = ridesArray.map((ride: any) => {
+          // Show rate button only if:
+          // 1. Status is 'completed' AND
+          // 2. all_sender_rated is false AND
+          // 3. total_request_count > 0
+          const showRate = ride.status === 'completed' 
+            && !ride.all_sender_rated 
+            && (ride.total_request_count || 0) > 0;
+
+          return {
+            id: ride.id || '',
+            status: ride.status,
+            date: formatDate(ride.travel_date),
+            origin: ride.origin_name || 'Unknown Origin',
+            originTime: formatTime(ride.travel_time),
+            destination: ride.destination_name || 'Unknown Destination',
+            destinationTime: formatTime(ride.destination_time),
+            passengers: 0,
+            showRateButton: showRate,
+            requestCount: ride.total_request_count || 0,
+            pendingRequestCount: ride.pending_request_count || 0,
+          } as RideCardData;
+        });
 
         setAllPublishedRides(prev => [...prev, ...newRides]);
         setNextPageUrlPublished(hasPagination ? response.pagination.next_page : null);
@@ -820,9 +831,25 @@ const TrackScreen: React.FC = () => {
                   </View>
                   <Text style={styles.ratingProfileName}>{selectedLuggageRequest.senderName || `${selectedLuggageRequest.sender?.first_name || ''} ${selectedLuggageRequest.sender?.last_name || ''}`.trim() || 'Unknown'}</Text>
                 </View>
+                <View style={styles.starsContainer}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => setRating(star)}
+                    activeOpacity={0.7}
+                  >
+                    <Star
+                      size={24}
+                      color={star <= rating ? '#FFD700' : '#E0E0E0'}
+                      fill={star <= rating ? '#FFD700' : 'transparent'}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
                 </View>
               )}
               
+              {activeTab === 'Booked' && (
               <View style={styles.starsContainer}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity
@@ -838,6 +865,7 @@ const TrackScreen: React.FC = () => {
                   </TouchableOpacity>
                 ))}
               </View>
+              )}
               
               <TextInput
                 style={styles.feedbackInput}

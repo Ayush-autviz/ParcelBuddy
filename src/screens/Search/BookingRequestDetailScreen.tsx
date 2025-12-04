@@ -382,7 +382,7 @@ const BookingRequestDetailScreen: React.FC = () => {
         {/* Notes Section */}
         {itemDescription && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes</Text>
+            <Text style={styles.sectionTitle}>Item Description</Text>
             <View style={styles.notesCard}>
               <Text style={styles.notesText}>
                 {itemDescription}
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   },
   notesText: {
     fontSize: Fonts.base,
-    color: Colors.textSecondary,
+    color: Colors.textPrimary,
     lineHeight: 24,
   },
   cancelButton: {
