@@ -9,6 +9,7 @@ import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { Colors } from '../../constants/colors';
 import { useToast } from '../../components/Toast';
 import { useAuthStore } from '../../services/store';
+import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 
 type KYCWebViewScreenRouteProp = {
   key: string;
@@ -54,11 +55,29 @@ const KYCWebViewScreen: React.FC = () => {
     if (urlToCheck.includes('status=Approved')) {
       console.log('✅ [KYC WebView] Status detected: Approved');
       statusCheckedRef.current = true;
-      setUser({ ...user, is_kyc_verified: true });
       showSuccess('Your KYC verification has been approved!');
-      setTimeout(() => {
-        navigation.goBack();
-      }, 2000);
+      
+      // Fetch updated profile and check subscription status
+      fetchAndUpdateProfile().then(() => {
+        // Wait a bit for the profile to update, then check subscription
+        setTimeout(async () => {
+          const updatedUser = useAuthStore.getState().user;
+          
+          // If user is not subscribed, navigate to subscription screen
+          if (updatedUser && !updatedUser.is_subscribed) {
+            navigation.navigate('Subscription');
+          } else {
+            // If subscribed, go back to previous screen
+            navigation.goBack();
+          }
+        }, 1000);
+      }).catch((error) => {
+        console.error('Error fetching profile after KYC approval:', error);
+        // On error, just go back
+        setTimeout(() => {
+          navigation.goBack();
+        }, 2000);
+      });
       return;
     }
   };

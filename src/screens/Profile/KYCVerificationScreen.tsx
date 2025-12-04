@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
-import { CheckCircle, Check } from 'lucide-react-native';
+import { CheckCircle, Check, Shield } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton } from '../../components';
@@ -18,6 +19,7 @@ import { kycVerification } from '../../services/api/kyc';
 import { useToast } from '../../components/Toast';
 import { DocumentIcon, SmileyIcon } from '../../assets/icons/svg/main';
 import { useAuthStore } from '../../services/store';
+import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 
 type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'KYCVerification'>;
 
@@ -27,6 +29,13 @@ const KYCVerificationScreen: React.FC = () => {
   const { showError, showSuccess } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuthStore();
+  
+  // Fetch and update profile when screen comes into focus to get latest KYC status
+  useFocusEffect(
+    useCallback(() => {
+      fetchAndUpdateProfile();
+    }, [])
+  );
   
   const isKYCApproved = user?.kyc_status === 'Approved';
 
@@ -68,46 +77,66 @@ const KYCVerificationScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Verification Steps */}
-        <View style={styles.stepsContainer}>
-          {/* Step 1: Document Upload */}
-          <View style={styles.stepCard}>
-            <View style={styles.iconContainer}>
-              <SvgXml xml={DocumentIcon} width={32} height={32} />
-            </View>
-            <View> 
-            <Text style={styles.stepTitle}>Step 1: Document Upload</Text>
-            <Text style={styles.stepDescription}>
-              Upload a valid government-issued ID (e.g., passport, driver's licence).
-            </Text>
-            </View>
-          </View>
-
-          {/* Step 2: Live Selfie */}
-          <View style={styles.stepCard}>
-            <View style={styles.iconContainer}>
-              <SvgXml xml={SmileyIcon} width={32} height={32} />
-            </View>
-            <View> 
-            <Text style={styles.stepTitle}>Step 2: Live Selfie</Text>
-            <Text style={styles.stepDescription}>
-              Take a live selfie to confirm your identity. Our system uses liveness detection to prevent fraud.
-            </Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Continue Button or Approved Status */}
-      <View style={styles.buttonContainer}>
+        {/* Approved Success Card */}
         {isKYCApproved ? (
-          <View style={styles.approvedContainer}>
-            <View style={styles.checkIconContainer}>
-              <Check size={20} color={Colors.backgroundWhite} strokeWidth={3} />
+          <View style={styles.successCard}>
+            <View style={styles.successGradient}>
+              <View style={styles.successContent}>
+                <View style={styles.bigCheckmarkContainer}>
+                  <LinearGradient
+                    colors={[Colors.gradientStart, Colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.bigCheckmarkCircle}
+                  >
+                    <Check size={56} color={Colors.backgroundWhite} strokeWidth={4} />
+                  </LinearGradient>
+                </View>
+                <Text style={styles.successTitle}>Verification Completed!</Text>
+                <Text style={styles.successDescription}>
+                  Your identity has been successfully verified.
+                </Text>
+                 
+              </View>
             </View>
-            <Text style={styles.approvedText}>KYC Verification Approved</Text>
           </View>
         ) : (
+          <>
+            {/* Verification Steps */}
+            <View style={styles.stepsContainer}>
+              {/* Step 1: Document Upload */}
+              <View style={styles.stepCard}>
+                <View style={styles.iconContainer}>
+                  <SvgXml xml={DocumentIcon} width={32} height={32} />
+                </View>
+                <View> 
+                <Text style={styles.stepTitle}>Step 1: Document Upload</Text>
+                <Text style={styles.stepDescription}>
+                  Upload a valid government-issued ID (e.g., passport, driver's licence).
+                </Text>
+                </View>
+              </View>
+
+              {/* Step 2: Live Selfie */}
+              <View style={styles.stepCard}>
+                <View style={styles.iconContainer}>
+                  <SvgXml xml={SmileyIcon} width={32} height={32} />
+                </View>
+                <View> 
+                <Text style={styles.stepTitle}>Step 2: Live Selfie</Text>
+                <Text style={styles.stepDescription}>
+                  Take a live selfie to confirm your identity. Our system uses liveness detection to prevent fraud.
+                </Text>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      {/* Continue Button */}
+      {!isKYCApproved && (
+        <View style={styles.buttonContainer}>
           <GradientButton
             title={isLoading ? 'Loading...' : 'Continue'}
             onPress={handleContinue}
@@ -115,8 +144,8 @@ const KYCVerificationScreen: React.FC = () => {
             disabled={isLoading}
             loading={isLoading}
           />
-        )}
-      </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -191,32 +220,75 @@ const styles = StyleSheet.create({
   continueButton: {
     marginTop: 0,
   },
-  approvedContainer: {
+  successCard: {
+    marginTop: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: Colors.textPrimary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  successGradient: {
+    borderRadius: 16,
+  },
+  successContent: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  bigCheckmarkContainer: {
+    marginBottom: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
   },
-  checkIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.primaryTeal,
+  bigCheckmarkCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: Colors.textPrimary,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 6,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
   },
-  approvedText: {
-    fontSize: Fonts.base,
+  successTitle: {
+    fontSize: Fonts.xxl,
     fontWeight: Fonts.weightBold,
-    color: Colors.primaryTeal,
-    marginTop: 16,
+    color: Colors.textPrimary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  successDescription: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  successFeatures: {
+    width: '100%',
+    gap: 12,
+    marginTop: 8,
+  },
+  successFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  successFeatureText: {
+    fontSize: Fonts.base,
+    color: Colors.textWhite,
+    fontWeight: Fonts.weightMedium,
   },
 });
 

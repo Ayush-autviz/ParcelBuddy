@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,18 +8,20 @@ import {
 import {  Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast, KYCVerificationModal, SubscriptionModal } from '../../components';
+import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast } from '../../components';
+import VerificationRequiredModal from '../../components/Modal/VerificationRequiredModal';
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreateFormStore, useAuthStore } from '../../services/store';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { BottomTabParamList } from '../../navigation/BottomTabNavigator';
 import { useCreateRide } from '../../hooks/useRideMutations';
 import { Alert } from 'react-native';
 import { MapPinIcon, WeightIcon } from '../../assets/icons/svg/main';
 import { useQueryClient } from '@tanstack/react-query';
+import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 
 type TabType = 'Domestic' | 'International';
 
@@ -40,8 +42,7 @@ const CreateScreen: React.FC = () => {
   const [width, setWidth] = useState('');
   const [length, setLength] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
-  const [showKYCModal, setShowKYCModal] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const { showWarning, showSuccess, showError } = useToast();
 
   // Use Zustand store for origin/destination
@@ -117,15 +118,12 @@ const CreateScreen: React.FC = () => {
   };
 
   const handlePublish = () => {
-    // Check KYC verification first
-    if (user && !(user as any)?.is_kyc_verified) {
-      setShowKYCModal(true);
-      return;
-    }
+    const needsKYC = user && !(user as any)?.is_kyc_verified;
+    const needsSubscription = user && !(user as any)?.is_subscribed;
 
-    // Check subscription after KYC verification
-    if (user && !(user as any)?.is_subscribed) {
-      setShowSubscriptionModal(true);
+    // Show combined modal if either is needed
+    if (needsKYC || needsSubscription) {
+      setShowVerificationModal(true);
       return;
     }
 
@@ -405,36 +403,25 @@ const CreateScreen: React.FC = () => {
               />
       </KeyboardAwareScrollView>
 
-      {/* KYC Verification Modal */}
-      <KYCVerificationModal
-        visible={showKYCModal}
-        title="KYC Verification Required"
-        description="Please complete your KYC verification to create a ride. This helps us ensure the safety and security of our platform."
-        buttonText="Verify Now"
-        onButtonPress={() => {
-          setShowKYCModal(false);
-          // Navigate to Profile tab and then to KYC Verification screen
-          navigation.navigate('Profile', {
-            screen: 'KYCVerification',
-          });
+      {/* Verification Required Modal */}
+      <VerificationRequiredModal
+        visible={showVerificationModal}
+        needsKYC={!!(user && !(user as any)?.is_kyc_verified)}
+        needsSubscription={!!(user && !(user as any)?.is_subscribed)}
+        onContinue={() => {
+          setShowVerificationModal(false);
+          // Always navigate to KYC first if needed, otherwise to subscription
+          if (user && !(user as any)?.is_kyc_verified) {
+            navigation.navigate('Profile', {
+              screen: 'KYCVerification',
+            });
+          } else if (user && !(user as any)?.is_subscribed) {
+            navigation.navigate('Profile', {
+              screen: 'Subscription',
+            });
+          }
         }}
-        onClose={() => setShowKYCModal(false)}
-      />
-
-      {/* Subscription Modal */}
-      <SubscriptionModal
-        visible={showSubscriptionModal}
-        title="Subscription Required"
-        description="Please subscribe to a plan to create a ride. Choose from our flexible subscription plans to unlock all features."
-        buttonText="Subscribe Now"
-        onButtonPress={() => {
-          setShowSubscriptionModal(false);
-          // Navigate to Profile tab and then to Subscription screen
-          navigation.navigate('Profile', {
-            screen: 'Subscription',
-          });
-        }}
-        onClose={() => setShowSubscriptionModal(false)}
+        onClose={() => setShowVerificationModal(false)}
       />
     </SafeAreaView>
   );

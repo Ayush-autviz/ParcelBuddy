@@ -256,9 +256,9 @@ const styles = StyleSheet.create({
       width: 0,
       height: -2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 1,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 20,
     minHeight: height * 0.6,
   },
   cardTitle: {

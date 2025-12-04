@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,14 @@ import {
   TextInput,
   Image,
 } from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ChevronRight, Upload, Calendar, Package } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Header, Card, GradientButton, SectionCard, SearchInput, KYCVerificationModal, SubscriptionModal } from '../../components';
+import { Header, Card, GradientButton, SectionCard, SearchInput } from '../../components';
+import VerificationRequiredModal from '../../components/Modal/VerificationRequiredModal';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
 import { SvgXml } from 'react-native-svg';
@@ -24,6 +25,7 @@ import { User } from 'lucide-react-native';
 import { useCreateLuggageRequest } from '../../hooks/useLuggage';
 import { useToast } from '../../components/Toast';
 import { useAuthStore } from '../../services/store';
+import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 
 
 type SendRequestScreenRouteProp = RouteProp<SearchStackParamList, 'SendRequest'>;
@@ -36,8 +38,7 @@ const SendRequestScreen: React.FC = () => {
   const { showWarning, showError, showSuccess } = useToast();
   const createLuggageRequestMutation = useCreateLuggageRequest();
   const { user } = useAuthStore();
-  const [showKYCModal, setShowKYCModal] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
   const [height, setHeight] = useState('');
@@ -86,16 +87,12 @@ const SendRequestScreen: React.FC = () => {
   };
 
   const handleBookNow = () => {
+    const needsKYC = user && !(user as any)?.is_kyc_verified;
+    const needsSubscription = user && !(user as any)?.is_subscribed;
 
-     // Check KYC verification first
-     if (user && !(user as any)?.is_kyc_verified) {
-      setShowKYCModal(true);
-      return;
-    }
-
-    // Check subscription after KYC verification
-    if (user && !(user as any)?.is_subscribed) {
-      setShowSubscriptionModal(true);
+    // Show combined modal if either is needed
+    if (needsKYC || needsSubscription) {
+      setShowVerificationModal(true);
       return;
     }
 
@@ -467,34 +464,27 @@ const SendRequestScreen: React.FC = () => {
         </Card>
       </ScrollView>
 
-{/* KYC Verification Modal */}
-<KYCVerificationModal
-        visible={showKYCModal}
-        title="KYC Verification Required"
-        description="Please complete your KYC verification to create a ride. This helps us ensure the safety and security of our platform."
-        buttonText="Verify Now"
-        onButtonPress={() => {
-          setShowKYCModal(false);
-          navigation.navigate('Profile', {
-            screen: 'KYCVerification',
-          });
+      {/* Verification Required Modal */}
+      <VerificationRequiredModal
+        visible={showVerificationModal}
+        needsKYC={!!(user && !(user as any)?.is_kyc_verified)}
+        needsSubscription={!!(user && !(user as any)?.is_subscribed)}
+        onContinue={() => {
+          setShowVerificationModal(false);
+          // Always navigate to KYC first if needed, otherwise to subscription
+          // Use getParent() to navigate to Profile tab from SearchNavigator
+          const parent = navigation.getParent();
+          if (user && !(user as any)?.is_kyc_verified) {
+            (parent as any)?.navigate('Profile', {
+              screen: 'KYCVerification',
+            });
+          } else if (user && !(user as any)?.is_subscribed) {
+            (parent as any)?.navigate('Profile', {
+              screen: 'Subscription',
+            });
+          }
         }}
-        onClose={() => setShowKYCModal(false)}
-      />
-
-      {/* Subscription Modal */}
-      <SubscriptionModal
-        visible={showSubscriptionModal}
-        title="Subscription Required"
-        description="Please subscribe to a plan to send a request. Choose from our flexible subscription plans to unlock all features."
-        buttonText="Subscribe Now"
-        onButtonPress={() => {
-          setShowSubscriptionModal(false);
-          navigation.navigate('Profile', {
-            screen: 'Subscription',
-          });
-        }}
-        onClose={() => setShowSubscriptionModal(false)}
+        onClose={() => setShowVerificationModal(false)}
       />
 
     </SafeAreaView>

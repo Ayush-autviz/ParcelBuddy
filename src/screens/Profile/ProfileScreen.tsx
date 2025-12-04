@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -35,6 +35,7 @@ import ConfirmationModal from '../../components/Modal/ConfirmationModal';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { SvgXml } from 'react-native-svg';
 import { ProfileKycIcon, ProfileRatingsIcon, ProfileSubscriptionIcon, ProfileUserIcon, ProfilePaymentHistoryIcon, ProfileTermsIcon, ProfileSupportIcon } from '../../assets/icons/svg/profileIcon';
+import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileList'>;
 
@@ -53,6 +54,13 @@ const ProfileScreen: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   console.log('user', user);
   const queryClient = useQueryClient();
+
+  // Fetch and update profile when screen comes into focus to get latest KYC status
+  useFocusEffect(
+    useCallback(() => {
+      fetchAndUpdateProfile();
+    }, [])
+  );
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -84,7 +92,7 @@ const ProfileScreen: React.FC = () => {
     {
       id: 'kyc',
       title: 'KYC Status',
-      subtitle: user?.is_kyc_verified ? 'Verified' : '',
+      subtitle: user?.kyc_status === 'Approved' ? 'Verified' : user?.kyc_status === 'In Review' ? 'In Review' : user?.kyc_status === 'Rejected' ? 'Rejected' : 'Not Verified',
       icon: ProfileKycIcon,
       onPress: () => {
         navigation.navigate('KYCVerification');
