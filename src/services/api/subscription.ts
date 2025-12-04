@@ -52,3 +52,8 @@ export const getTransactionHistory = async (pageUrl?: string): Promise<any> => {
   const response = await apiClient.get('/auth/payement-transaction/');
   return response.data;
 };
+
+export const cancelSubscription = async (): Promise<any> => {
+  const response = await apiClient.post('/auth/subscription/cancel/')
+  return response.data;
+};

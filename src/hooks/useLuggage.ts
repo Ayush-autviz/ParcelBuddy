@@ -269,6 +269,15 @@ export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, E
         const showRate = request.ride_info?.ride_status === 'completed';
         const isRated = request.is_rated === true;
         const requestCount = request.total_request_count || 0;
+        // Extract traveler name from ride_info
+        // Check both traveler_name and traveler.name as fallback
+        const travelerName = request.ride_info?.traveler_name?.trim() 
+          || (request.ride_info?.traveler?.first_name && request.ride_info?.traveler?.last_name 
+              ? `${request.ride_info.traveler.first_name} ${request.ride_info.traveler.last_name}`.trim()
+              : '')
+          || '';
+        
+
 
         return {
           id:  request.id,
@@ -282,6 +291,7 @@ export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, E
           showRateButton: showRate,
           isRated: isRated,
           requestCount: requestCount,
+          travelerName: travelerName,
           bookingRequest: request, // Store original booking request for detail screen
         } as BookedRideCardData;
       });

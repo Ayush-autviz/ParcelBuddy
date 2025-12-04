@@ -1,6 +1,6 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
 import { getPlans } from '../services/api/auth';
-import { createSubscription, CreateSubscriptionRequest, CreateSubscriptionResponse, getTransactionHistory } from '../services/api/subscription';
+import { createSubscription, CreateSubscriptionRequest, CreateSubscriptionResponse, getTransactionHistory, cancelSubscription } from '../services/api/subscription';
 
 export interface SubscriptionPlanResponse {
   id: string;
@@ -17,6 +17,10 @@ export interface SubscriptionPlanResponse {
   modified_on: string;
   features: string[];
   is_current_plan?: boolean;
+  current_plan_details?: {
+    start_date?: string;
+    end_date?: string;
+  };
 }
 
 export interface PlansResponse {
@@ -95,6 +99,12 @@ export const useTransactionHistory = (): UseQueryResult<PaginatedTransactionResp
     },
     staleTime: 30000,
     retry: 1,
+  });
+};
+
+export const useCancelSubscription = (): UseMutationResult<any, Error, void, unknown> => {
+  return useMutation({
+    mutationFn: () => cancelSubscription(),
   });
 };
 

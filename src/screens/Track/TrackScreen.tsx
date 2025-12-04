@@ -123,6 +123,7 @@ const TrackScreen: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'Booked' && bookedRidesData?.rides && !initializedTabsRef.current.has('Booked')) {
       // Initialize Booked tab data only if it hasn't been initialized yet
+      console.log('Initializing booked rides:', bookedRidesData.rides.map(r => ({ id: r.id, travelerName: r.travelerName })));
       setAllBookedRides(bookedRidesData.rides);
       setNextPageUrlBooked(bookedRidesData.pagination?.next_page || null);
       initializedTabsRef.current.add('Booked');
@@ -231,20 +232,26 @@ const TrackScreen: React.FC = () => {
 
         const newRides = requestsArray
           .filter((request: any) => request.status !== 'cancelled')
-          .map((request: any) => ({
-            id: request.id,
-            status: request.status,
-            date: formatDate(request.ride_info?.travel_date || ''),
-            origin: request.ride_info?.origin || request.ride_info?.origin_name || 'Unknown Origin',
-            originTime: formatTime(request.travel_time || request.ride_info?.travel_time),
-            destination: request.ride_info?.destination || request.ride_info?.destination_name || 'Unknown Destination',
-            destinationTime: formatTime(request.destination_time || request.ride_info?.destination_time),
-            passengers: 0,
-            showRateButton: request.ride_info?.ride_status === 'completed',
-            isRated: request.is_rated === true,
-            requestCount: request.total_request_count || 0,
-            bookingRequest: request,
-          } as BookedRideCardData));
+          .map((request: any) => {
+            // Extract traveler name from ride_info
+            const travelerName = request.ride_info?.traveler_name?.trim() || '';
+            
+            return {
+              id: request.id,
+              status: request.status,
+              date: formatDate(request.ride_info?.travel_date || ''),
+              origin: request.ride_info?.origin || request.ride_info?.origin_name || 'Unknown Origin',
+              originTime: formatTime(request.travel_time || request.ride_info?.travel_time),
+              destination: request.ride_info?.destination || request.ride_info?.destination_name || 'Unknown Destination',
+              destinationTime: formatTime(request.destination_time || request.ride_info?.destination_time),
+              passengers: 0,
+              showRateButton: request.ride_info?.ride_status === 'completed',
+              isRated: request.is_rated === true,
+              requestCount: request.total_request_count || 0,
+              travelerName: travelerName,
+              bookingRequest: request,
+            } as BookedRideCardData;
+          });
 
         setAllBookedRides(prev => [...prev, ...newRides]);
         setNextPageUrlBooked(hasPagination ? response.pagination.next_page : null);

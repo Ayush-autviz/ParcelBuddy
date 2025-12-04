@@ -18,9 +18,11 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
-import { useSubscriptionPlans, useCreateSubscription } from '../../hooks/useSubscription';
+import { useSubscriptionPlans, useCreateSubscription, useCancelSubscription } from '../../hooks/useSubscription';
 import { useToast } from '../../components/Toast';
 import { useAuthStore } from '../../services/store';
+import ConfirmationModal from '../../components/Modal/ConfirmationModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 type SubscriptionScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Subscription'>;
 
@@ -35,17 +37,24 @@ interface SubscriptionPlan {
   features: PlanFeature[];
   isCurrent: boolean;
   showUpgrade: boolean;
+  startDate?: string;
+  endDate?: string;
 }
 
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation<SubscriptionScreenNavigationProp>();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   // Get region from user profile, fallback to empty string if not available
   const region = user?.profile?.country || '';
   const { data: plansData, isLoading, isError, isFetching, refetch } = useSubscriptionPlans(region);
   const createSubscriptionMutation = useCreateSubscription();
+  const cancelSubscriptionMutation = useCancelSubscription();
   const { showSuccess, showError } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showAutoRenewalModal, setShowAutoRenewalModal] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   // Refetch data when screen comes into focus (e.g., from deep link)
   useFocusEffect(
@@ -90,23 +99,76 @@ const SubscriptionScreen: React.FC = () => {
           features,
           isCurrent: plan.is_current_plan || false,
           showUpgrade: !hasCurrentPlan, // Only show upgrade if no plan is current
+          startDate: plan.current_plan_details?.start_date,
+          endDate: plan.current_plan_details?.end_date,
         };
       });
   }, [plansData]);
 
   const currentPlan = subscriptionPlans.find((plan) => plan.isCurrent);
+  const currentPlanFromAPI = plansData?.plans?.find((plan) => plan.is_current_plan === true);
 
   console.log('currentPlan', currentPlan);
   console.log('subscriptionPlans', subscriptionPlans);
 
+  // Format date for display
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = months[date.getMonth()];
+      const day = date.getDate().toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${month} ${day}, ${year}`;
+    } catch {
+      return '';
+    }
+  };
+
+  const handleCancelPlan = () => {
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelModal(false);
+    cancelSubscriptionMutation.mutate(undefined, {
+      onSuccess: (response) => {
+        console.log('Subscription cancelled successfully:', response);
+        showSuccess('Subscription cancelled successfully');
+        // Refetch plans to update the UI
+        refetch();
+        // Invalidate user profile to update subscription status
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+      },
+      onError: (error: any) => {
+        console.error('Error cancelling subscription:', error);
+        const errorMessage = error?.response?.data?.message || 
+                            error?.response?.data?.error || 
+                            error?.message || 
+                            'Failed to cancel subscription. Please try again.';
+        showError(errorMessage);
+      },
+    });
+  };
+
   const handleUpgrade = (planId: string) => {
-    setLoadingPlanId(planId);
+    setSelectedPlanId(planId);
+    setShowAutoRenewalModal(true);
+  };
+
+  const handleConfirmPurchase = () => {
+    setShowAutoRenewalModal(false);
+    if (!selectedPlanId) return;
+    
+    setLoadingPlanId(selectedPlanId);
     createSubscriptionMutation.mutate(
-      { plan_id: planId },
+      { plan_id: selectedPlanId },
       {
         onSuccess: (response) => {
           console.log('Subscription created successfully:', response);
           setLoadingPlanId(null); // Clear loading state
+          setSelectedPlanId(null);
           if (response.checkout_url) {
             // Open checkout URL in device browser
             Linking.openURL(response.checkout_url).catch((err) => {
@@ -121,6 +183,7 @@ const SubscriptionScreen: React.FC = () => {
         onError: (error: any) => {
           console.error('Error creating subscription:', error);
           setLoadingPlanId(null); // Clear loading state on error
+          setSelectedPlanId(null);
           const errorMessage = error?.response?.data?.message || 
                               error?.response?.data?.error || 
                               error?.message || 
@@ -186,8 +249,31 @@ const SubscriptionScreen: React.FC = () => {
                 <Text style={styles.currentPlanDescription}>
                   You are on the <Text style={styles.currentPlanName}>{currentPlan.name}</Text> Plan.
                 </Text>
+                {(currentPlan.startDate || currentPlan.endDate) && (
+                  <View style={styles.dateContainer}>
+                    {currentPlan.startDate && (
+                      <Text style={styles.dateText}>
+                        Start: {formatDate(currentPlan.startDate)}
+                      </Text>
+                    )}
+                    {currentPlan.endDate && (
+                      <Text style={styles.dateText}>
+                        End: {formatDate(currentPlan.endDate)}
+                      </Text>
+                    )}
+                  </View>
+                )}
               </View>
             </View>
+          </View>
+        )}
+
+        {/* Notice for purchasing other plans */}
+        {currentPlan && (
+          <View style={styles.noticeContainer}>
+            <Text style={styles.noticeText}>
+              To purchase a different subscription plan, please cancel your current plan first.
+            </Text>
           </View>
         )}
 
@@ -221,10 +307,13 @@ const SubscriptionScreen: React.FC = () => {
                     ))}
                   </View>
                   <TouchableOpacity
-                    style={styles.currentPlanButton}
-                    disabled={true}
+                    style={styles.cancelPlanButton}
+                    onPress={handleCancelPlan}
+                    disabled={cancelSubscriptionMutation.isPending}
                   >
-                    <Text style={styles.currentPlanButtonText}>Current Plan</Text>
+                    <Text style={styles.cancelPlanButtonText}>
+                      {cancelSubscriptionMutation.isPending ? 'Cancelling...' : 'Cancel Plan'}
+                    </Text>
                   </TouchableOpacity>
                   </View>
                 </LinearGradient>
@@ -263,6 +352,33 @@ const SubscriptionScreen: React.FC = () => {
           All prices are exclusive of taxes and other fees. Payments are processed securely via Razorpay.
         </Text>
       </ScrollView>
+
+      {/* Cancel Subscription Confirmation Modal */}
+      <ConfirmationModal
+        visible={showCancelModal}
+        title="Cancel Subscription"
+        message="You are going to cancel your subscription. You will lose all your benefits and your money will not be refunded. This action cannot be undone. Are you sure you want to proceed?"
+        confirmText="Yes, Cancel"
+        cancelText="Back"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setShowCancelModal(false)}
+        type="destructive"
+      />
+
+      {/* Auto-Renewal Confirmation Modal */}
+      <ConfirmationModal
+        visible={showAutoRenewalModal}
+        title="Auto-Renewal Notice"
+        message="Your subscription will be automatically renewed at the end of each billing period. You can cancel anytime you want. Do you want to proceed with the purchase?"
+        confirmText="Yes, Proceed"
+        cancelText="Cancel"
+        onConfirm={handleConfirmPurchase}
+        onCancel={() => {
+          setShowAutoRenewalModal(false);
+          setSelectedPlanId(null);
+        }}
+        type="default"
+      />
     </SafeAreaView>
   );
 };
@@ -323,6 +439,29 @@ const styles = StyleSheet.create({
   currentPlanName: {
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
+  },
+  dateContainer: {
+    marginTop: 8,
+    gap: 4,
+  },
+  dateText: {
+    fontSize: Fonts.sm,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weightSemiBold,
+  },
+  noticeContainer: {
+    backgroundColor: '#FFF4E6',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primaryCyan,
+  },
+  noticeText: {
+    fontSize: Fonts.sm,
+    color: Colors.textPrimary,
+    lineHeight: 20,
+    textAlign: 'left',
   },
   plansContainer: {
     gap: 16,
@@ -407,18 +546,20 @@ const styles = StyleSheet.create({
   upgradeButton: {
     marginTop: 0,
   },
-  currentPlanButton: {
+  cancelPlanButton: {
     backgroundColor: Colors.backgroundWhite,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.error,
   },
-  currentPlanButtonText: {
+  cancelPlanButtonText: {
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
-    color: Colors.primaryCyan,
+    color: Colors.error,
   },
   disclaimer: {
     fontSize: Fonts.sm,

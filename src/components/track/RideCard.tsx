@@ -22,6 +22,7 @@ export interface RideCardData {
   isRated?: boolean;
   requestCount?: number;
   pendingRequestCount?: number;
+  travelerName?: string;
 }
 
 interface RideCardProps {
@@ -53,6 +54,8 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       </View>
     ));
   };
+
+console.log('ride.travelerName', ride.travelerName);
 
   return (
     <TouchableOpacity
@@ -106,6 +109,9 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       <View style={styles.footer}>
         <View style={styles.passengersContainer}>
           {renderPassengerIcons()}
+          {ride.travelerName && (
+            <Text style={styles.travelerName}>{ride.travelerName}</Text>
+          )}
         </View>
         {ride.showRateButton && (
           ride.isRated ? (
@@ -207,6 +213,13 @@ const styles = StyleSheet.create({
   passengersContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+  },
+  travelerName: {
+    fontSize: Fonts.base,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weightSemiBold,
+    marginLeft: 4,
   },
   passengerAvatar: {
     width: 32,
