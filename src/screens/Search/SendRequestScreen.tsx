@@ -105,15 +105,17 @@ const SendRequestScreen: React.FC = () => {
       return;
     }
 
+    if (!itemDescription || !itemDescription.trim()) {
+      showWarning('Please enter item description');
+      return;
+    }
+
     if (!images || images.length === 0) {
       showWarning('Please upload at least one image');
       return;
     }
 
-    if (!itemDescription || !itemDescription.trim()) {
-      showWarning('Please enter item description');
-      return;
-    }
+  
 
     // if (!specialInstructions || !specialInstructions.trim()) {
     //   showWarning('Please enter special instructions');
@@ -135,10 +137,7 @@ const SendRequestScreen: React.FC = () => {
     //   return;
     // }
 
-    if (!itemDescription || !itemDescription.trim()) {
-      showWarning('Please enter item description');
-      return;
-    }
+  
 
     const weightNum = parseFloat(weight);
     const lengthNum = parseFloat(length);

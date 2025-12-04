@@ -77,11 +77,11 @@ export interface ChatRoom {
   [key: string]: any;
 }
 
-export const useChatList = (pageUrl?: string): UseQueryResult<PaginatedChatListResponse, Error> => {
+export const useChatList = (pageUrl?: string, searchQuery?: string): UseQueryResult<PaginatedChatListResponse, Error> => {
   return useQuery({
-    queryKey: ['chatList', pageUrl],
+    queryKey: ['chatList', pageUrl, searchQuery],
     queryFn: async () => {
-      const response = await getChatMessagesList(pageUrl);
+      const response = await getChatMessagesList(pageUrl, searchQuery);
       return response;
     },
     staleTime: 30000, // Cache for 30 seconds

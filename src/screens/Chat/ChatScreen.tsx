@@ -41,6 +41,7 @@ type ChatScreenNavigationProp = StackNavigationProp<ChatStackParamList, 'ChatLis
 const ChatScreen: React.FC = () => {
   const navigation = useNavigation<ChatScreenNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchQuery, setActiveSearchQuery] = useState<string | undefined>(undefined);
   
   // Pagination state
   const [allChatRooms, setAllChatRooms] = useState<ChatRoom[]>([]);
@@ -50,8 +51,21 @@ const ChatScreen: React.FC = () => {
   const initialPageSizeRef = useRef<number>(0);
   const lastDataRef = useRef<string | null>(null);
   
-  // Fetch chat list from API
-  const { data: chatListResponse, isLoading, isError, error, refetch, isRefetching } = useChatList();
+  // Handle search on Enter press
+  const handleSearch = () => {
+    const trimmedQuery = searchQuery.trim();
+    // Only set active search query if there's a value, otherwise clear it
+    setActiveSearchQuery(trimmedQuery ? trimmedQuery : undefined);
+    // Reset pagination when search query changes
+    setAllChatRooms([]);
+    setNextPageUrl(null);
+    initializedRef.current = false;
+    initialPageSizeRef.current = 0;
+    lastDataRef.current = null;
+  };
+  
+  // Fetch chat list from API with search query (only if not empty)
+  const { data: chatListResponse, isLoading, isError, error, refetch, isRefetching } = useChatList(undefined, activeSearchQuery);
 
   console.log('chatListResponse', chatListResponse);
 
@@ -93,7 +107,8 @@ const ChatScreen: React.FC = () => {
 
     setIsLoadingMore(true);
     try {
-      const response = await getChatMessagesList(nextPageUrl);
+      // Pass active search query for pagination
+      const response = await getChatMessagesList(nextPageUrl, activeSearchQuery);
       if (response?.results) {
         setAllChatRooms(prev => [...prev, ...response.results]);
         setNextPageUrl(response.pagination?.next_page || null);
@@ -152,14 +167,12 @@ const ChatScreen: React.FC = () => {
     });
   }, [allChatRooms]);
 
-  // Filter messages based on search query
+  // Filter messages based on search query (client-side filtering only if no API search)
+  // Since we're using API search, we don't need client-side filtering anymore
   const filteredMessages = useMemo(() => {
-    return messages.filter((message: any) =>
-      message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      message.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      message.destination.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [messages, searchQuery]);
+    // API already filtered the results, so just return all messages
+    return messages;
+  }, [messages]);
 
   const handleMessagePress = (message: MessageItem) => {
     // Find the original room data to get user info
@@ -274,6 +287,8 @@ const ChatScreen: React.FC = () => {
           value={searchQuery}
           onChangeText={setSearchQuery}
           containerStyle={styles.searchInput}
+          returnKeyType="search"
+          onSubmitEditing={handleSearch}
         />
       </View>
 

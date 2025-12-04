@@ -1,7 +1,7 @@
 import apiClient from "../apiClient";
 
 //  get chat messages list
-export const getChatMessagesList = async (pageUrl?: string) => {
+export const getChatMessagesList = async (pageUrl?: string, searchQuery?: string) => {
     if (pageUrl) {
         // Extract the path and query from the full URL
         // pageUrl format: "http://13.233.74.72:8000/api/chat-rooms/?page=2"
@@ -13,7 +13,16 @@ export const getChatMessagesList = async (pageUrl?: string) => {
             return response.data;
         }
     }
-    const response = await apiClient.get('/api/chat-rooms/');
+    
+    // Build query parameters - only add search if it's not empty
+    const params = new URLSearchParams();
+    if (searchQuery && searchQuery.trim()) {
+        params.append('search', searchQuery.trim());
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/api/chat-rooms/?${queryString}` : '/api/chat-rooms/';
+    const response = await apiClient.get(url);
     return response.data;
 };
 

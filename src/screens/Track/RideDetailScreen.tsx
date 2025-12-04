@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Edit, Trash2, Package, Briefcase } from 'lucide-react-native';
+import { Edit, Trash2, Package, Briefcase, Calendar } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -105,9 +105,18 @@ const RideDetailScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+
+<Card style={{ marginBottom: 16 }} padding={16}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Calendar size={20} color={Colors.primaryCyan} />
+              <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{date}</Text>
+            </View>
+          </Card>
+
+
         {/* Ride Information Card */}
         <Card style={styles.rideCard} padding={20}>
-          <Text style={styles.date}>{date}</Text>
+          {/* <Text style={styles.date}>{date}</Text> */}
 
 
           {/* Pickup Location */}

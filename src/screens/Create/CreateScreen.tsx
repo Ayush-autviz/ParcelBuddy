@@ -11,7 +11,7 @@ import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast, KYCVerificationModal, SubscriptionModal } from '../../components';
 import GradientButton from '../../components/GradientButton';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreateFormStore, useAuthStore } from '../../services/store';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -29,6 +29,7 @@ const CreateScreen: React.FC = () => {
   const navigation = useNavigation<CreateScreenNavigationProp>();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>('Domestic');
   const [departureDate, setDepartureDate] = useState<Date | null>(null);
   const [departureTime, setDepartureTime] = useState<Date | null>(null);
@@ -212,6 +213,10 @@ const CreateScreen: React.FC = () => {
         enableOnAndroid={true}
         enableAutomaticScroll={true}
         keyboardShouldPersistTaps="handled"
+        extraScrollHeight={insets.bottom + 80}
+        extraHeight={insets.bottom + 80}
+        enableResetScrollToCoords={false}
+        scrollEnabled={true}
       >
         {/* Tabs */}
         <View style={styles.tabsContainer}>
@@ -432,6 +437,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 100,
+    flexGrow: 1,
   },
   tabsContainer: {
     flexDirection: 'row',

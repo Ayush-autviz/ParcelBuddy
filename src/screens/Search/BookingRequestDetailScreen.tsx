@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RefreshCw, User, ChevronRight } from 'lucide-react-native';
+import { RefreshCw, User, ChevronRight, Calendar } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -234,9 +234,12 @@ const BookingRequestDetailScreen: React.FC = () => {
 
         {/* Date Card */}
         {travelDate && (
-          <View style={styles.dateCard}>
-            <Text style={styles.dateText}>{formatDate(travelDate)}</Text>
+          <Card style={{ marginBottom: 16 }} padding={16}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Calendar size={20} color={Colors.primaryCyan} />
+            <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{formatDate(travelDate)}</Text>
           </View>
+        </Card>
         )}
 
         {/* Location Details Card */}
