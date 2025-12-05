@@ -11,6 +11,8 @@ import {
   Platform,
   ScrollView,
   BackHandler,
+  RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -346,6 +348,61 @@ const TrackScreen: React.FC = () => {
   const isError = activeTab === 'Booked' ? isErrorBooked : isErrorPublished;
   const refetch = activeTab === 'Booked' ? refetchBooked : refetchPublished;
 
+  // Custom handleRefresh that invalidates cache and forces fresh data
+  const handleRefresh = useCallback(async () => {
+    if (activeTab === 'Booked') {
+      // Invalidate cache to force fresh fetch
+      queryClient.invalidateQueries({ queryKey: ['bookedRides'] });
+      
+      // Reset pagination state
+      setNextPageUrlBooked(null);
+      setIsLoadingMoreBooked(false);
+      
+      // Reset data hash to force update
+      lastDataRef.current.booked = null;
+      
+      // Reset initial page size to force full refresh
+      initialPageSizeRef.current.booked = 0;
+      
+      // Refetch data
+      const result = await refetchBooked();
+      
+      // Update local state with fresh data
+      if (result.data?.rides) {
+        setAllBookedRides(result.data.rides);
+        setNextPageUrlBooked(result.data.pagination?.next_page || null);
+        // Update data hash
+        lastDataRef.current.booked = result.data.rides.map(r => r.id).join(',');
+        initialPageSizeRef.current.booked = result.data.rides.length;
+      }
+    } else {
+      // Invalidate cache to force fresh fetch
+      queryClient.invalidateQueries({ queryKey: ['publishedRides'] });
+      
+      // Reset pagination state
+      setNextPageUrlPublished(null);
+      setIsLoadingMorePublished(false);
+      
+      // Reset data hash to force update
+      lastDataRef.current.published = null;
+      
+      // Reset initial page size to force full refresh
+      initialPageSizeRef.current.published = 0;
+      
+      // Refetch data
+      const result = await refetchPublished();
+      
+      // Update local state with fresh data
+      if (result.data?.rides) {
+        setAllPublishedRides(result.data.rides);
+        setNextPageUrlPublished(result.data.pagination?.next_page || null);
+        // Update data hash
+        lastDataRef.current.published = result.data.rides.map(r => r.id).join(',');
+        initialPageSizeRef.current.published = result.data.rides.length;
+      }
+    }
+  }, [activeTab, queryClient, refetchBooked, refetchPublished]);
+
   const handleRidePress = (ride: RideCardData | BookedRideCardData) => {
     // If it's a booked ride, navigate to booking request detail screen
     if (activeTab === 'Booked' && 'bookingRequest' in ride && ride.bookingRequest) {
@@ -630,6 +687,9 @@ const TrackScreen: React.FC = () => {
     />
   );
 
+  // Get screen height for empty state to ensure pull-to-refresh works
+  const screenHeight = Dimensions.get('window').height;
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -657,56 +717,60 @@ const TrackScreen: React.FC = () => {
           <ActivityIndicator size="large" color={Colors.primaryTeal} />
           <Text style={styles.loadingText}>Loading rides...</Text>
         </View>
-      ) : isError ? (
-        <View style={styles.emptyContainer}>
-          <EmptyStateCard
-            title="Error loading rides"
-            description="Failed to load your rides. Please try again."
-          />
-        </View>
-      ) : rides && rides.length > 0 ? (
-        <>
-          <FlatList
-            data={rides}
-            renderItem={renderRideCard}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            refreshing={isFetching}
-            onRefresh={refetch}
-            ListFooterComponent={
-              nextPageUrl ? (
-                <View style={styles.loadMoreContainer}>
-                  {/* <GradientButton
-                    title="View More"
-                    onPress={handleLoadMore}
-                    style={styles.loadMoreButton}
-                    loading={isLoadingMore}
-                    disabled={isLoadingMore}
-                  /> */}
-                  <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
-                    {isLoadingMore ? (
-                      <ActivityIndicator size="small" color={Colors.textPrimary} />
-                    ) : (
-                      <Text style={{color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold}}>View More</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              ) : null
-            }
-          />
-        </>
       ) : (
-        <View style={styles.emptyContainer}>
-          <EmptyStateCard
-            title={`No ${activeTab.toLowerCase()} rides yet`}
-            description={
-              activeTab === 'Published'
-                ? "You haven't published any rides yet. Create your first ride to get started!"
-                : "You haven't booked any rides yet."
-            }
-          />
-        </View>
+        <FlatList
+          data={rides || []}
+          renderItem={renderRideCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={
+            rides && rides.length > 0 
+              ? styles.listContent 
+              : [styles.emptyListContent, { minHeight: screenHeight * 0.8 }]
+          }
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching}
+              onRefresh={handleRefresh}
+              colors={[Colors.primaryCyan]}
+              tintColor={Colors.primaryCyan}
+            />
+          }
+          ListEmptyComponent={
+            isError ? (
+              <View style={styles.emptyContainer}>
+                <EmptyStateCard
+                  title="Error loading rides"
+                  description="Failed to load your rides. Please try again."
+                />
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <EmptyStateCard
+                  title={`No ${activeTab.toLowerCase()} rides yet`}
+                  description={
+                    activeTab === 'Published'
+                      ? "You haven't published any rides yet. Create your first ride to get started!"
+                      : "You haven't booked any rides yet."
+                  }
+                />
+              </View>
+            )
+          }
+          ListFooterComponent={
+            rides && rides.length > 0 && nextPageUrl ? (
+              <View style={styles.loadMoreContainer}>
+                <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
+                  {isLoadingMore ? (
+                    <ActivityIndicator size="small" color={Colors.textPrimary} />
+                  ) : (
+                    <Text style={{color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold}}>View More</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : null
+          }
+        />
       )}
 
       {/* Bottom Sheet Modal */}
@@ -925,11 +989,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 100,
   },
+  emptyListContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    minHeight: '100%',
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    minHeight: 400,
   },
   loadingContainer: {
     flex: 1,

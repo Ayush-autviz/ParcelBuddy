@@ -18,6 +18,7 @@ import { Fonts } from '../../constants/fonts';
 import { Header, Card, SearchInput, EmptyStateCard } from '../../components';
 import { useChatList, ChatRoom } from '../../hooks/useChat';
 import { getChatMessagesList } from '../../services/api/chat';
+import { useQueryClient } from '@tanstack/react-query';
 import { SvgXml } from 'react-native-svg';
 import { FilledUserIcon } from '../../assets/icons/svg/main';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
@@ -66,8 +67,39 @@ const ChatScreen: React.FC = () => {
   
   // Fetch chat list from API with search query (only if not empty)
   const { data: chatListResponse, isLoading, isError, error, refetch, isRefetching } = useChatList(undefined, activeSearchQuery);
+  const queryClient = useQueryClient();
 
   console.log('chatListResponse', chatListResponse);
+  
+  // Custom handleRefresh that invalidates cache and forces fresh data
+  const handleRefresh = React.useCallback(async () => {
+    // Invalidate cache to force fresh fetch
+    queryClient.invalidateQueries({ queryKey: ['chatList'] });
+    
+    // Reset pagination state
+    setNextPageUrl(null);
+    setIsLoadingMore(false);
+    
+    // Reset data hash to force update
+    lastDataRef.current = null;
+    
+    // Reset initial page size to force full refresh
+    initialPageSizeRef.current = 0;
+    initializedRef.current = false;
+    
+    // Refetch data
+    const result = await refetch();
+    
+    // Update local state with fresh data
+    if (result.data?.results) {
+      setAllChatRooms(result.data.results);
+      setNextPageUrl(result.data.pagination?.next_page || null);
+      // Update data hash
+      lastDataRef.current = result.data.results.map(r => r.id).join(',');
+      initialPageSizeRef.current = result.data.results.length;
+      initializedRef.current = true;
+    }
+  }, [queryClient, refetch]);
 
   // Initialize data only once
   useEffect(() => {
@@ -313,7 +345,7 @@ const ChatScreen: React.FC = () => {
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
-              onRefresh={refetch}
+              onRefresh={handleRefresh}
               colors={[Colors.primaryCyan]}
               tintColor={Colors.primaryCyan}
             />

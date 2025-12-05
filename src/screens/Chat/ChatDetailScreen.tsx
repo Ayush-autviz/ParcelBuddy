@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput, BackHandler } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput, BackHandler, Keyboard } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -32,22 +32,65 @@ const ChatDetailScreen: React.FC = () => {
   const navigation = useNavigation<ChatDetailScreenNavigationProp>();
   const { showError, showSuccess } = useToast();
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
+  
+  // Dynamic keyboard height tracking
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  
+  // Listen to keyboard show/hide events
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+    
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+  
   const respondToLuggageRequestMutation = useRespondToLuggageRequest();
   const updateLuggageRequestWeightMutation = useUpdateLuggageRequestWeight();
   
   const { roomId, userName, userAvatar, origin, destination, luggage_request_id, luggage_request_status, luggage_request_weight, is_ride_created_by_me } = route.params;
   
+  // Store luggage request status in state to update UI immediately
+  const [luggageRequestStatus, setLuggageRequestStatus] = useState<string>(luggage_request_status || 'pending');
+  
+  // Update status when route params change (e.g., from navigation)
+  useEffect(() => {
+    if (luggage_request_status) {
+      setLuggageRequestStatus(luggage_request_status);
+    }
+  }, [luggage_request_status]);
+  
+  // Calculate dynamic bottom offset based on keyboard and action buttons
+  const ACTION_BAR_HEIGHT = (is_ride_created_by_me && luggageRequestStatus === 'pending') ? Platform.OS === 'ios' ? -45 : -70 : Platform.OS === 'ios' ? 25 : 5;
+  
+  // iOS: GiftedChat handles keyboard automatically via KeyboardAvoidingView internally
+  // We only need to account for safe area + action buttons when keyboard is hidden
+  // When keyboard is visible, GiftedChat adjusts automatically, so minimal offset needed
+  const bottomOffset = Platform.OS === 'ios'
+    ? (keyboardHeight > 0
+        ? 0  // iOS: GiftedChat handles keyboard automatically, no offset needed
+        : insets.bottom + ACTION_BAR_HEIGHT - 80)  // iOS: safe area + action buttons when keyboard hidden
+    : (keyboardHeight > 0
+        ? insets.bottom  // Android: safe area when keyboard visible
+        : insets.bottom + ACTION_BAR_HEIGHT - 20);  // Android: safe area + action buttons when keyboard hidden
+  
   // Fetch luggage request detail to get ride information
   const { data: luggageRequestDetail } = useLuggageRequestDetail(luggage_request_id);
-  
-  // Log luggage_request_id for debugging
-  useEffect(() => {
-    if (luggage_request_id) {
-      console.log('📦 [ChatDetailScreen] luggage_request_id:', luggage_request_id);
-      console.log('📦 [ChatDetailScreen] luggage_request_status:', luggage_request_status);
-      console.log('📦 [ChatDetailScreen] luggage_request_weight:', luggage_request_weight);
-    }
-  }, [luggage_request_id, luggage_request_status, luggage_request_weight]);
+
   
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -423,7 +466,7 @@ const ChatDetailScreen: React.FC = () => {
 
   const renderInputToolbar = (props: any) => {
     return (
-      <View style={styles.inputToolbarContainer}>
+      <View style={[styles.inputToolbarContainer, {paddingBottom: luggageRequestStatus === 'approved' ? Platform.OS === 'ios' ? 10 : 0 : 0}]}>
         <InputToolbar
           {...props}
           containerStyle={styles.inputToolbar}
@@ -600,7 +643,7 @@ const ChatDetailScreen: React.FC = () => {
           messages={messages}
           onSend={onSend}
           user={currentUser}
-          bottomOffset={ is_ride_created_by_me && luggage_request_status ? -100 : -30}
+          bottomOffset={bottomOffset}
           placeholder="Type a message..."
           isLoadingEarlier={isLoading}
           showUserAvatar={false}
@@ -620,7 +663,7 @@ const ChatDetailScreen: React.FC = () => {
       {/* </KeyboardAvoidingView> */}
 
       {/* Action Buttons - Only show if ride is created by me */}
-      {is_ride_created_by_me && luggage_request_status === 'pending' && (
+      {is_ride_created_by_me && luggageRequestStatus === 'pending' && (
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={styles.declineButton} 
@@ -638,6 +681,7 @@ const ChatDetailScreen: React.FC = () => {
                 },
                 {
                   onSuccess: () => {
+                    setLuggageRequestStatus('rejected');
                     showSuccess('Luggage request declined successfully');
                   },
                   onError: (error: any) => {
@@ -763,6 +807,7 @@ const ChatDetailScreen: React.FC = () => {
                   },
                   {
                     onSuccess: () => {
+                      setLuggageRequestStatus('approved');
                       showSuccess('Luggage request approved successfully');
                       bottomSheetRef.current?.close();
                       setWeight(''); // Reset weight
@@ -790,6 +835,7 @@ const ChatDetailScreen: React.FC = () => {
                         },
                         {
                           onSuccess: () => {
+                            setLuggageRequestStatus('approved');
                             showSuccess('Luggage request approved successfully');
                             bottomSheetRef.current?.close();
                             setWeight(''); // Reset weight
@@ -951,7 +997,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
     position: 'relative',
-    paddingBottom: Platform.OS === 'ios' ? 10 : 0,
+    paddingBottom: Platform.OS === 'ios' ? 0 : 10,
   },
   inputToolbar: {
     backgroundColor: Colors.backgroundLight,

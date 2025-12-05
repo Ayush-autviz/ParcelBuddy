@@ -40,7 +40,7 @@ const BookingStatusScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Booking Status" showBackButton />
+      <Header title="Booking Status" />
 
       <View style={styles.content}>
         {/* Booking Status Card */}
