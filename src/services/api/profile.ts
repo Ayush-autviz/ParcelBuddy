@@ -17,3 +17,9 @@ export const getProfileById = async (id: string) => {
   const response = await apiClient.get(`/auth/profiles/${id}/`);
   return response.data;
 };
+
+// delete account
+export const deleteAccount = async () => {
+  const response = await apiClient.delete('/auth/user/delete/');
+  return response.data;
+};

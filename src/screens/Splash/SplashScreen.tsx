@@ -101,6 +101,7 @@ const SplashScreen: React.FC = () => {
       const isPaymentDeepLink = deepLink?.includes('parcelbuddy://payment') ?? false;
       
       if (!token?.access_token) {
+        console.log('SplashScreen: Navigating to Auth no token');
         hasNavigated.current = true;
         navigation.reset({
           index: 0,
@@ -145,12 +146,14 @@ const SplashScreen: React.FC = () => {
             ],
           });
         } else if (profile?.first_name) {
+          console.log('SplashScreen: Navigating to MainApp');
           // Normal navigation to MainApp
           navigation.reset({
               index: 0,
               routes: [{ name: 'MainApp' }],
             });
           } else {
+            console.log('SplashScreen: Navigating to ProfileSetup');
             navigation.reset({
               index: 0,
               routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
@@ -158,6 +161,7 @@ const SplashScreen: React.FC = () => {
           }
         
       } else {
+        console.log('SplashScreen: Navigating to Auth else');
         hasNavigated.current = true;
         navigation.reset({
           index: 0,

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Dimensions,
   Image,
   TouchableOpacity,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,6 +23,7 @@ import { useSearchHistory, SearchHistoryItem as SearchHistoryItemType } from '..
 import { useToast } from '../../components/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPinIcon } from '../../assets/icons/svg/main';
+import messaging from '@react-native-firebase/messaging';
 
 const { width } = Dimensions.get('window');
 
@@ -34,7 +37,6 @@ const SearchScreen: React.FC = () => {
   const [date, setDate] = useState<Date | null>(null);
   const shouldClearOnFocus = useRef(false);
 
-  // Use Zustand store only for from/to values - data is stored directly in PlacesSearchScreen
   const { 
     from, 
     to, 
@@ -277,7 +279,53 @@ const SearchScreen: React.FC = () => {
     }
   };
 
-  console.log('searchHistory', searchHistory);
+  
+  // fcm token
+
+  const requestNotificationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Notification permission granted');
+        return true;
+      } else {
+        console.log('Notification permission denied');
+        return false;
+      }
+    }
+    return true; // iOS doesn't need explicit permission request here
+  };
+
+  const getFcmTokenAndSendToBackend = async () => {
+    try {
+      // Request permission first
+      const hasPermission = await requestNotificationPermission();
+      if (!hasPermission) {
+        console.log('Cannot get FCM token: permission denied');
+        return;
+      }
+
+      // Get FCM token from Firebase
+      await messaging().registerDeviceForRemoteMessages()
+      const token = await messaging().getToken();
+      console.log(' FCM TOKEN in Home:', token);
+    //   setFcmToken(token);
+// if(token) {
+//     sendFcmTokenToBackend.mutate({ token, device_type: 'ios' });
+// }
+//     } catch (error) {
+//       console.error('❌ Error getting FCM token:', error);
+//     }
+  } catch (error) {
+    console.error('❌ Error getting FCM token:', error);
+  }
+};
+
+useEffect(() => {
+  getFcmTokenAndSendToBackend();
+}, []);
 
   return (
     <SafeAreaView style={styles.container}>

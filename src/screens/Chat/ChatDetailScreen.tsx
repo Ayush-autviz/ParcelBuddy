@@ -603,16 +603,18 @@ const ChatDetailScreen: React.FC = () => {
 
       {/* Context Bar */}
       {(origin || destination) && (
-        <TouchableOpacity 
-          style={styles.contextBar} 
-          activeOpacity={0.7}
-          onPress={handleRoutePress}
-        >
+        // <TouchableOpacity 
+        //   style={styles.contextBar} 
+        //   activeOpacity={0.7}
+        //   onPress={handleRoutePress}
+        // >
+        <View style={styles.contextBar}>
           <Text style={styles.contextText}>
             From: {origin || 'Unknown'} to {destination || 'Unknown'}
           </Text>
-          <ChevronRight size={20} color={Colors.textTertiary} />
-        </TouchableOpacity>
+          {/* <ChevronRight size={20} color={Colors.textTertiary} /> */}
+          </View>
+        // </TouchableOpacity>
       )}
 
       {/* Connection Status Indicator */}

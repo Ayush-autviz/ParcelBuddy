@@ -21,6 +21,7 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
+  Trash2,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
@@ -28,7 +29,7 @@ import { Fonts } from '../../constants/fonts';
 import { Header, GradientButton } from '../../components';
 import { useAuthStore } from '../../services/store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getProfile } from '../../services/api/profile';
+import { getProfile, deleteAccount } from '../../services/api/profile';
 import { useToast } from '../../components/Toast';
 import ConfirmationModal from '../../components/Modal/ConfirmationModal';
 
@@ -50,8 +51,10 @@ interface MenuItem {
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { logout, user } = useAuthStore();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   console.log('user', user);
   const queryClient = useQueryClient();
 
@@ -78,6 +81,33 @@ const ProfileScreen: React.FC = () => {
         routes: [{ name: 'Auth' as never }],
       })
     );
+  };
+
+  const handleDeleteAccount = () => {
+    setShowDeleteAccountModal(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    setShowDeleteAccountModal(false);
+    setIsDeletingAccount(true);
+    try {
+      await deleteAccount();
+      queryClient.clear();
+      await logout();
+      showSuccess('Account deleted successfully');
+      // Navigate to root Auth screen
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Auth' as never }],
+        })
+      );
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      showError(error?.response?.data?.error || 'Failed to delete account. Please try again.');
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   const menuItems: MenuItem[] = [
@@ -205,6 +235,16 @@ const ProfileScreen: React.FC = () => {
           style={styles.logoutButton}
           icon={<LogOut size={20} color={Colors.textWhite} style={styles.logoutIcon} />}
         />
+
+        {/* Delete Account Button */}
+        <GradientButton
+          title="Delete Account"
+          onPress={handleDeleteAccount}
+          style={styles.deleteAccountButton}
+          icon={<Trash2 size={20} color={Colors.textWhite} style={styles.deleteAccountIcon} />}
+          loading={isDeletingAccount}
+          disabled={isDeletingAccount}
+        />
       </ScrollView>
 
       {/* Logout Confirmation Modal */}
@@ -216,6 +256,18 @@ const ProfileScreen: React.FC = () => {
         cancelText="Cancel"
         onConfirm={confirmLogout}
         onCancel={() => setShowLogoutModal(false)}
+      />
+
+      {/* Delete Account Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteAccountModal}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted."
+        confirmText="Delete Account"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteAccount}
+        onCancel={() => setShowDeleteAccountModal(false)}
+        type="destructive"
       />
     </SafeAreaView>
   );
@@ -336,6 +388,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   logoutIcon: {
+    marginRight: 0,
+  },
+  deleteAccountButton: {
+    marginTop: 12,
+  },
+  deleteAccountIcon: {
     marginRight: 0,
   },
 });

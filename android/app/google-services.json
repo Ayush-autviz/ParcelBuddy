@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "574406249546",
+    "project_id": "bagbuddy-a9ee7",
+    "storage_bucket": "bagbuddy-a9ee7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574406249546:android:bba63de57f097076122ab3",
+        "android_client_info": {
+          "package_name": "com.parcelbuddy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoyZrjXsRdB6nv2O06oZ2hR28XghiNdrg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
