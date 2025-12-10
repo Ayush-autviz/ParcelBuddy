@@ -1,5 +1,5 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getOtp, verifyOtp, profileSetup } from '../services/api/auth';
+import { getOtp, verifyOtp, profileSetup, sendFcmToken } from '../services/api/auth';
 
 export const useGetOtp = (): UseMutationResult<any, Error, { phone: string }, unknown> => {
   return useMutation({
@@ -16,6 +16,12 @@ export const useVerifyOtp = (): UseMutationResult<any, Error, { phone: string; o
 export const useProfileSetup = (): UseMutationResult<any, Error, FormData, unknown> => {
   return useMutation({
     mutationFn: (data: FormData) => profileSetup(data),
+  });
+};
+
+export const useSendFcmToken = (): UseMutationResult<any, Error, { token: string; device_type: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { token: string; device_type: string }) => sendFcmToken(data),
   });
 };
 

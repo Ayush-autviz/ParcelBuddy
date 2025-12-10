@@ -20,6 +20,7 @@ import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { useSearchFormStore } from '../../services/store';
 import { useSearchRides } from '../../hooks/useSearchRides';
 import { useSearchHistory, SearchHistoryItem as SearchHistoryItemType } from '../../hooks/useSearchHistory';
+import { useSendFcmToken } from '../../hooks/useAuthMutations';
 import { useToast } from '../../components/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPinIcon } from '../../assets/icons/svg/main';
@@ -58,6 +59,9 @@ const SearchScreen: React.FC = () => {
 
   // Fetch search history from API
   const { data: searchHistory = [], isLoading: isHistoryLoading, refetch: refetchHistory } = useSearchHistory();
+
+  // FCM token mutation
+  const sendFcmTokenMutation = useSendFcmToken();
 
   // Toast hook
   const { showWarning } = useToast();
@@ -308,20 +312,28 @@ const SearchScreen: React.FC = () => {
       }
 
       // Get FCM token from Firebase
-      await messaging().registerDeviceForRemoteMessages()
+      await messaging().registerDeviceForRemoteMessages();
       const token = await messaging().getToken();
-      console.log(' FCM TOKEN in Home:', token);
-    //   setFcmToken(token);
-// if(token) {
-//     sendFcmTokenToBackend.mutate({ token, device_type: 'ios' });
-// }
-//     } catch (error) {
-//       console.error('❌ Error getting FCM token:', error);
-//     }
-  } catch (error) {
-    console.error('❌ Error getting FCM token:', error);
-  }
-};
+      console.log('FCM TOKEN in SearchScreen:', token);
+      
+      // Send token to backend
+      if (token) {
+        sendFcmTokenMutation.mutate(
+          { token, device_type: 'ios' },
+          {
+            onSuccess: () => {
+              console.log('✅ FCM token sent to backend successfully');
+            },
+            onError: (error: any) => {
+              console.error('❌ Error sending FCM token to backend:', error);
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error getting FCM token:', error);
+    }
+  };
 
 useEffect(() => {
   getFcmTokenAndSendToBackend();

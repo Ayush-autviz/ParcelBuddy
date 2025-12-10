@@ -50,3 +50,9 @@ export const getPlans = async (region?: string) => {
   const response = await apiClient.get(url);
   return response.data;
 };
+
+// send fcm token
+export const sendFcmToken = async (data: any) => {
+  const response = await apiClient.post('/notifications/fcm-token/', data);
+  return response.data;
+};

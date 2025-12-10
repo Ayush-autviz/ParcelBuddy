@@ -508,68 +508,97 @@ const ChatDetailScreen: React.FC = () => {
     []
   );
 
-  // Handle route press - navigate to ride detail
+  // Handle route press - navigate to ride detail or booking detail based on who created the ride
   const handleRoutePress = () => {
-    if (!luggage_request_id || !luggageRequestDetail?.ride) {
-      showError('Ride information not available');
-      return;
-    }
+    // If ride is created by me, navigate to RideDetailScreen
+    if (is_ride_created_by_me) {
+      if (!luggage_request_id || !luggageRequestDetail?.ride) {
+        showError('Ride information not available');
+        return;
+      }
 
-    const ride = luggageRequestDetail.ride;
-    const rideId = ride.id;
-    
-    if (!rideId) {
-      showError('Ride ID not available');
-      return;
-    }
+      const ride = luggageRequestDetail.ride;
+      const rideId = ride.id;
+      
+      if (!rideId) {
+        showError('Ride ID not available');
+        return;
+      }
 
-    // Format date from "2025-11-28" to the format expected by RideDetail
-    const travelDate = ride.travel_date || '';
-    const formattedDate = travelDate; // RideDetail expects YYYY-MM-DD format
-    
-    // Format time from "18:00:00" to "06:00 PM"
-    const formatTime = (timeString: string | null): string => {
-      if (!timeString) return '';
-      const [hours, minutes] = timeString.split(':');
-      const hour = parseInt(hours, 10);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const displayHour = hour % 12 || 12;
-      return `${displayHour}:${minutes} ${ampm}`;
-    };
+      // Format date from "2025-11-28" to the format expected by RideDetail
+      const travelDate = ride.travel_date || '';
+      const formattedDate = travelDate; // RideDetail expects YYYY-MM-DD format
+      
+      // Format time from "18:00:00" to "06:00 PM"
+      const formatTime = (timeString: string | null): string => {
+        if (!timeString) return '';
+        const [hours, minutes] = timeString.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        return `${displayHour}:${minutes} ${ampm}`;
+      };
 
-    const originTime = formatTime(ride.travel_time);
-    const destinationTime = formatTime(ride.destination_time);
+      const originTime = formatTime(ride.travel_time);
+      const destinationTime = formatTime(ride.destination_time);
 
-    // Navigate to RideDetail using parent navigator (Track navigator)
-    const parentNavigator = navigation.getParent();
-    if (parentNavigator) {
-      // Navigate to Track tab first, then to RideDetail
-      (parentNavigator as any).navigate('Track', {
-        screen: 'RideDetail',
-        params: {
-          rideId,
-          date: formattedDate,
-          origin: ride.origin_name || origin || 'Unknown',
-          originTime,
-          destination: ride.destination_name || destination || 'Unknown',
-          destinationTime,
-          status: 'published', // Default status
-        },
-      });
+      // Navigate to RideDetail using parent navigator (Track navigator)
+      const parentNavigator = navigation.getParent();
+      if (parentNavigator) {
+        // Navigate to Track tab first, then to RideDetail
+        (parentNavigator as any).navigate('Track', {
+          screen: 'RideDetail',
+          params: {
+            rideId,
+            date: formattedDate,
+            origin: ride.origin_name || origin || 'Unknown',
+            originTime,
+            destination: ride.destination_name || destination || 'Unknown',
+            destinationTime,
+            status: 'published', // Default status
+          },
+        });
+      } else {
+        // Fallback: try direct navigation
+        (navigation as any).navigate('Track', {
+          screen: 'RideDetail',
+          params: {
+            rideId,
+            date: formattedDate,
+            origin: ride.origin_name || origin || 'Unknown',
+            originTime,
+            destination: ride.destination_name || destination || 'Unknown',
+            destinationTime,
+            status: 'published',
+          },
+        });
+      }
     } else {
-      // Fallback: try direct navigation
-      (navigation as any).navigate('Track', {
-        screen: 'RideDetail',
-        params: {
-          rideId,
-          date: formattedDate,
-          origin: ride.origin_name || origin || 'Unknown',
-          originTime,
-          destination: ride.destination_name || destination || 'Unknown',
-          destinationTime,
-          status: 'published',
-        },
-      });
+      // If ride is not created by me, navigate to BookingRequestDetailScreen
+      if (!luggage_request_id) {
+        showError('Booking request information not available');
+        return;
+      }
+
+      // Navigate to BookingRequestDetail using parent navigator (Track navigator)
+      const parentNavigator = navigation.getParent();
+      if (parentNavigator) {
+        // Navigate to Track tab first, then to BookingRequestDetail
+        (parentNavigator as any).navigate('Track', {
+          screen: 'BookingRequestDetail',
+          params: {
+            requestId: luggage_request_id,
+          },
+        });
+      } else {
+        // Fallback: try direct navigation
+        (navigation as any).navigate('Track', {
+          screen: 'BookingRequestDetail',
+          params: {
+            requestId: luggage_request_id,
+          },
+        });
+      }
     }
   };
 
@@ -603,18 +632,16 @@ const ChatDetailScreen: React.FC = () => {
 
       {/* Context Bar */}
       {(origin || destination) && (
-        // <TouchableOpacity 
-        //   style={styles.contextBar} 
-        //   activeOpacity={0.7}
-        //   onPress={handleRoutePress}
-        // >
-        <View style={styles.contextBar}>
+        <TouchableOpacity 
+          style={styles.contextBar} 
+          activeOpacity={0.7}
+          onPress={handleRoutePress}
+        >
           <Text style={styles.contextText}>
             From: {origin || 'Unknown'} to {destination || 'Unknown'}
           </Text>
-          {/* <ChevronRight size={20} color={Colors.textTertiary} /> */}
-          </View>
-        // </TouchableOpacity>
+          <ChevronRight size={20} color={Colors.textTertiary} />
+        </TouchableOpacity>
       )}
 
       {/* Connection Status Indicator */}

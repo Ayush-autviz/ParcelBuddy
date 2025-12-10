@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   },
   pendingText: {
     fontSize: Fonts.sm,
-    color: Colors.textSecondary,
+    color: '#FF5C5C',
     fontWeight: Fonts.weightMedium,
   },
   date: {

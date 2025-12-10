@@ -403,6 +403,7 @@ const BookingRequestDetailScreen: React.FC = () => {
         )}
 
         {/* Cancel Request Button */}
+        {luggageRequestDetail?.status === 'pending' && (
         <GradientButton
           title="Cancel Request"
           onPress={handleCancelRequest}
@@ -410,6 +411,7 @@ const BookingRequestDetailScreen: React.FC = () => {
           disabled={cancelRequestMutation.isPending}
           loading={cancelRequestMutation.isPending}
         />
+        )}
         {/* <Text style={styles.cancelNote}>
           (Allowed for 15 minutes only)
         </Text> */}
