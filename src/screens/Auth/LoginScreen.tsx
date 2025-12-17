@@ -14,12 +14,13 @@ import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import PhoneInput from 'react-native-international-phone-number';
-import { ChevronDown } from 'lucide-react-native';
+import { ChevronDown, ArrowLeft } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
 import { useGetOtp } from '../../hooks/useAuthMutations';
 import { useToast } from '../../components/Toast';
+import AuthMethodButtons from '../../components/AuthMethodButtons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ const LoginScreen: React.FC = () => {
   const phoneInputRef = useRef<any>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('');
+  const [step, setStep] = useState<'auth-methods' | 'email-login'>('auth-methods');
   
   const getOtpMutation = useGetOtp();
   const { showWarning, showError } = useToast();
@@ -91,6 +93,24 @@ const LoginScreen: React.FC = () => {
     console.log('Privacy Policy');
   };
 
+  const handleGooglePress = () => {
+    // TODO: Implement Google authentication
+    console.log('Google login');
+  };
+
+  const handleEmailPress = () => {
+    setStep('email-login');
+  };
+
+  const handleApplePress = () => {
+    // TODO: Implement Apple authentication
+    console.log('Apple login');
+  };
+
+  const handleBackPress = () => {
+    setStep('auth-methods');
+  };
+
   return (
     <KeyboardAwareScrollView
       style={styles.container}
@@ -118,99 +138,124 @@ const LoginScreen: React.FC = () => {
 
         {/* White Card Section */}
         <View style={styles.card}>
-          {/* Welcome Title */}
-          <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
-
-          {/* Input Label */}
-          <Text style={styles.inputLabel}>Enter your mobile number</Text>
-
-          {/* Phone Number Input */}
-          <View style={styles.phoneInputContainer}>
-            <View style={styles.phoneInputWrapper}>
-              <PhoneInput
-                ref={phoneInputRef}
-                defaultValue={phoneNumber}
-                value={phoneNumber}
-                defaultCountry="US"
-                onChangePhoneNumber={(number) => {
-                  setPhoneNumber(number);
-                }}
-                onChangeSelectedCountry={(country: any) => {
-                    setCountryCode(country?.idd?.root);
-                }}
-                customCaret={() => <ChevronDown size={16} color="#666" />}
-                phoneInputStyles={
-                  {
-                    container: {
-                      borderWidth: 0,
-                      borderRadius: 12,
-                      backgroundColor: "#FFFFFF",
-                      height: 55,
-                    },
-                    flagContainer: {
-                      borderWidth: 0,
-                      borderRadius: 12,
-                      backgroundColor: "#FFFFFF",
-                    },
-                    divider: {
-                      display: 'none',
-                    },
-                    callingCode: {
-                      display: 'none',
-                    },
-                    input: {
-                      paddingLeft: -10,
-                    }
-
-         
-                  }
-                }
-                modalStyles={{
-                  searchContainer: {
-        
-                  },
-                  searchInput: {
-                    backgroundColor: 'white',
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: '#E0E0E0',
-                    padding: 14,
-                    fontSize: 16,
-                    color: '#203049',
-                    fontWeight: '500',
-                  },
-                  countryItem: {
-                    padding: 14,
-                    borderColor: '#E0E0E0',
-                    borderWidth: 1,
-                    borderRadius: 14,
-                  },
-                }}
-                placeholder="Enter mobile number"
+          {step === 'auth-methods' ? (
+            <>
+              {/* Welcome Title */}
+              <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
+              
+              {/* Auth Method Buttons */}
+              <AuthMethodButtons
+                onGooglePress={handleGooglePress}
+                onEmailPress={handleEmailPress}
+                onApplePress={handleApplePress}
               />
-            </View>
-          </View>
+            </>
+          ) : (
+            <>
+              {/* Back Button */}
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={handleBackPress}
+                activeOpacity={0.7}
+              >
+                <ArrowLeft size={24} color={Colors.textPrimary} />
+              </TouchableOpacity>
 
-          {/* Get OTP Button with Gradient */}
-          <GradientButton
-            title={getOtpMutation.isPending ? 'Sending OTP...' : 'Get OTP'}
-            onPress={handleGetOTP}
-            loading={getOtpMutation.isPending}
-            style={styles.otpButton}
-            disabled={getOtpMutation.isPending}
-          />
+              {/* Welcome Title */}
+              <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
 
-          {/* Terms and Privacy Policy */}
-          {/* <Text style={styles.termsText}>
-            By continuing, you agree to our{' '}
-            <Text style={styles.linkText} onPress={handleTermsPress}>
-              Terms of Service
-            </Text>
-            {' and '}
-            <Text style={styles.linkText} onPress={handlePrivacyPress}>
-              Privacy Policy
-            </Text>
-          </Text> */}
+              {/* Input Label */}
+              <Text style={styles.inputLabel}>Enter your mobile number</Text>
+
+              {/* Phone Number Input */}
+              <View style={styles.phoneInputContainer}>
+                <View style={styles.phoneInputWrapper}>
+                  <PhoneInput
+                    ref={phoneInputRef}
+                    defaultValue={phoneNumber}
+                    value={phoneNumber}
+                    defaultCountry="US"
+                    onChangePhoneNumber={(number) => {
+                      setPhoneNumber(number);
+                    }}
+                    onChangeSelectedCountry={(country: any) => {
+                        setCountryCode(country?.idd?.root);
+                    }}
+                    customCaret={() => <ChevronDown size={16} color="#666" />}
+                    phoneInputStyles={
+                      {
+                        container: {
+                          borderWidth: 0,
+                          borderRadius: 12,
+                          backgroundColor: "#FFFFFF",
+                          height: 55,
+                        },
+                        flagContainer: {
+                          borderWidth: 0,
+                          borderRadius: 12,
+                          backgroundColor: "#FFFFFF",
+                        },
+                        divider: {
+                          display: 'none',
+                        },
+                        callingCode: {
+                          display: 'none',
+                        },
+                        input: {
+                          paddingLeft: -10,
+                        }
+
+             
+                      }
+                    }
+                    modalStyles={{
+                      searchContainer: {
+            
+                      },
+                      searchInput: {
+                        backgroundColor: 'white',
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: '#E0E0E0',
+                        padding: 14,
+                        fontSize: 16,
+                        color: '#203049',
+                        fontWeight: '500',
+                      },
+                      countryItem: {
+                        padding: 14,
+                        borderColor: '#E0E0E0',
+                        borderWidth: 1,
+                        borderRadius: 14,
+                      },
+                    }}
+                    placeholder="Enter mobile number"
+                  />
+                </View>
+              </View>
+
+              {/* Get OTP Button with Gradient */}
+              <GradientButton
+                title={getOtpMutation.isPending ? 'Sending OTP...' : 'Get OTP'}
+                onPress={handleGetOTP}
+                loading={getOtpMutation.isPending}
+                style={styles.otpButton}
+                disabled={getOtpMutation.isPending}
+              />
+
+              {/* Terms and Privacy Policy */}
+              {/* <Text style={styles.termsText}>
+                By continuing, you agree to our{' '}
+                <Text style={styles.linkText} onPress={handleTermsPress}>
+                  Terms of Service
+                </Text>
+                {' and '}
+                <Text style={styles.linkText} onPress={handlePrivacyPress}>
+                  Privacy Policy
+                </Text>
+              </Text> */}
+            </>
+          )}
         </View>
     </KeyboardAwareScrollView>
   );
@@ -328,6 +373,13 @@ const styles = StyleSheet.create({
   logo: {
     width: 130,
     height: 140,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
 });
 
