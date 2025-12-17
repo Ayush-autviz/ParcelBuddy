@@ -33,7 +33,15 @@ interface RideCardProps {
 }
 
 const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }) => {
+  // Check if this is a booked ride (has bookingRequest property)
+  const isBookedRide = 'bookingRequest' in ride && (ride as any).bookingRequest !== undefined;
+
   const renderPassengerIcons = () => {
+    // Don't show passenger icons for booked rides
+    if (isBookedRide) {
+      return null;
+    }
+
     // Use requestCount if available, otherwise fall back to passengers or default to 0
     const count = ride.requestCount !== undefined ? ride.requestCount : (ride.passengers || 0);
     const displayCount = Math.min(count, 3); // Show max 3 icons
