@@ -21,6 +21,7 @@ import GradientButton from '../../components/GradientButton';
 import { useGetOtp } from '../../hooks/useAuthMutations';
 import { useToast } from '../../components/Toast';
 import AuthMethodButtons from '../../components/AuthMethodButtons';
+import { useGoogleSignIn } from '../../hooks/useGoogleSignIn';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,6 +36,7 @@ const LoginScreen: React.FC = () => {
   
   const getOtpMutation = useGetOtp();
   const { showWarning, showError } = useToast();
+  const { signIn: signInWithGoogle, isLoading: isGoogleSignInLoading } = useGoogleSignIn();
 
   const handleGetOTP = () => {
     if (!phoneNumber.trim()) {
@@ -93,9 +95,16 @@ const LoginScreen: React.FC = () => {
     console.log('Privacy Policy');
   };
 
-  const handleGooglePress = () => {
-    // TODO: Implement Google authentication
-    console.log('Google login');
+  const handleGooglePress = async () => {
+    try {
+      const result = await signInWithGoogle();
+      if (result && result.idToken) {
+        console.log('Google Sign-In Token:', result.idToken);
+      }
+    } catch (error) {
+      // Error is already handled in the hook
+      console.error('Google Sign-In failed:', error);
+    }
   };
 
   const handleEmailPress = () => {

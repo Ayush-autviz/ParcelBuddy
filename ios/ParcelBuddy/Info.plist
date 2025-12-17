@@ -78,6 +78,12 @@
 					<string>parcelbuddy</string>
 				</array>
 			</dict>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.239698794881-mc60nuu984mpqqtne2eedf3v756he0oa</string>
+				</array>
+			</dict>
 		</array>
 	</dict>
 </plist>
