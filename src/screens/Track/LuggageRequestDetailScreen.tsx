@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  TextInput,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -39,6 +42,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const queryClient = useQueryClient();
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Respond to luggage request mutation
   const respondToRequestMutation = useRespondToLuggageRequest();
@@ -77,12 +81,18 @@ const LuggageRequestDetailScreen: React.FC = () => {
   };
 
   const handleConfirmReject = () => {
+    if (!rejectionReason.trim()) {
+      showError('Please provide a reason for rejection');
+      return;
+    }
+    
     setShowRejectModal(false);
     respondToRequestMutation.mutate(
-      { requestId, status: 'rejected' },
+      { requestId, status: 'rejected', rejection_reason: rejectionReason.trim() },
       {
         onSuccess: () => {
           showSuccess('Luggage request rejected successfully');
+          setRejectionReason(''); // Clear rejection reason
           // Invalidate and refetch relevant queries
           queryClient.invalidateQueries({ queryKey: ['luggageRequestDetail', requestId] });
           queryClient.invalidateQueries({ queryKey: ['luggageRequests'] });
@@ -99,6 +109,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
 
   const handleCancelReject = () => {
     setShowRejectModal(false);
+    setRejectionReason(''); // Clear rejection reason when canceling
   };
 
   const handleChat = () => {
@@ -383,6 +394,18 @@ const LuggageRequestDetailScreen: React.FC = () => {
           </View>
         )}
 
+        {/* Rejection Reason Section - Show if request is rejected */}
+        {luggageRequestDetail?.status === 'rejected' && luggageRequestDetail?.rejection_reason && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Rejection Reason</Text>
+            <View style={[styles.notesCard, styles.rejectionReasonCard]}>
+              <Text style={styles.notesText}>
+                {luggageRequestDetail.rejection_reason}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Action Buttons */}
         {luggageRequestDetail?.status === 'pending' && (
         <View style={styles.actionButtonsContainer}>
@@ -412,17 +435,55 @@ const LuggageRequestDetailScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Reject Confirmation Modal */}
-      <ConfirmationModal
+      {/* Reject Confirmation Modal with Rejection Reason */}
+      <Modal
         visible={showRejectModal}
-        title="Reject Request"
-        message="Are you sure you want to reject this luggage request? This action cannot be undone."
-        confirmText="Reject"
-        cancelText="Cancel"
-        onConfirm={handleConfirmReject}
-        onCancel={handleCancelReject}
-        type="destructive"
-      />
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelReject}
+      >
+        <TouchableWithoutFeedback onPress={handleCancelReject}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.rejectModalContainer}>
+                <Text style={styles.rejectModalTitle}>Reject Request</Text>
+                <Text style={styles.rejectModalMessage}>
+                  Please provide a reason for rejecting this luggage request.
+                </Text>
+                
+                <TextInput
+                  style={styles.rejectionReasonInput}
+                  placeholder="e.g. Sorry, not enough space available for this size."
+                  placeholderTextColor={Colors.textTertiary}
+                  value={rejectionReason}
+                  onChangeText={setRejectionReason}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+                
+                <View style={styles.rejectModalButtons}>
+                  <GradientButton
+                    title="Reject"
+                    onPress={handleConfirmReject}
+                    style={styles.rejectConfirmButton}
+                    loading={respondToRequestMutation.isPending}
+                    disabled={respondToRequestMutation.isPending || !rejectionReason.trim()}
+                  />
+                  <TouchableOpacity
+                    style={styles.rejectCancelButton}
+                    onPress={handleCancelReject}
+                    activeOpacity={0.7}
+                    disabled={respondToRequestMutation.isPending}
+                  >
+                    <Text style={styles.rejectCancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -672,6 +733,81 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     color: Colors.textTertiary,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  rejectModalContainer: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  rejectModalTitle: {
+    fontSize: Fonts.xl,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textPrimary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  rejectModalMessage: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  rejectionReasonInput: {
+    backgroundColor: Colors.backgroundGray,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    minHeight: 100,
+    marginBottom: 24,
+    textAlignVertical: 'top',
+  },
+  rejectModalButtons: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
+  },
+  rejectConfirmButton: {
+    flex: 1,
+  },
+  rejectCancelButton: {
+    flex: 1,
+    backgroundColor: Colors.backgroundWhite,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rejectCancelButtonText: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+  },
+  rejectionReasonCard: {
+    backgroundColor: Colors.error + '10',
+    borderColor: Colors.error + '30',
   },
 });
 

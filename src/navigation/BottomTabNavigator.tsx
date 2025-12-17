@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigatorScreenParams, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Search, PlusCircle, ShoppingCart, MessageCircle, User, MessageSquare } from 'lucide-react-native';
+import { useUnreadChatCount } from '../hooks/useChat';
 
 // Import screens
 import SearchNavigator from './SearchNavigator';
@@ -35,7 +36,7 @@ export type BottomTabParamList = {
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 // Custom tab bar icon component
-const TabBarIcon: React.FC<{ focused: boolean; iconName: string }> = ({ focused, iconName }) => {
+const TabBarIcon: React.FC<{ focused: boolean; iconName: string; unreadCount?: number }> = ({ focused, iconName, unreadCount }) => {
   const iconColor = focused ? Colors.primaryCyan : Colors.textLight;
   const iconSize = 18;
 
@@ -61,10 +62,25 @@ const TabBarIcon: React.FC<{ focused: boolean; iconName: string }> = ({ focused,
     }
   };
 
-  return <View style={styles.tabIcon}>{renderIcon()}</View>;
+  return (
+    <View style={styles.tabIcon}>
+      {renderIcon()}
+      {iconName === 'Chat' && unreadCount !== undefined && unreadCount > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
 };
 
 const BottomTabNavigator: React.FC = () => {
+  // Fetch unread chat count
+  const { data: unreadCountData } = useUnreadChatCount();
+  const unreadCount = unreadCountData?.total_unread || 0;
+
   // Main screen names where tabs should be visible
   const mainScreens: { [key: string]: string } = {
     Search: 'SearchList',
@@ -105,7 +121,11 @@ const BottomTabNavigator: React.FC = () => {
         
         return {
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} iconName={route.name} />
+            <TabBarIcon 
+              focused={focused} 
+              iconName={route.name} 
+              unreadCount={route.name === 'Chat' ? unreadCount : undefined}
+            />
           ),
           tabBarLabel: ({ focused }) => (
             <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
@@ -193,6 +213,25 @@ const styles = StyleSheet.create({
   },
   tabLabelFocused: {
     color: Colors.primaryCyan,
+    fontWeight: Fonts.weightSemiBold,
+  },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -22,
+    backgroundColor: Colors.error || '#FF3B30',
+    borderRadius: 100,
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.backgroundWhite,
+  },
+  badgeText: {
+    color: Colors.textWhite,
+    fontSize: 10,
     fontWeight: Fonts.weightSemiBold,
   },
 });

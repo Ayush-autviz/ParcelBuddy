@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult, useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getChatMessagesList, createChatRoom } from '../services/api/chat';
+import { getChatMessagesList, createChatRoom, unreadChatMessagesCount } from '../services/api/chat';
 
 export interface PaginatedChatListResponse {
   pagination: {
@@ -95,6 +95,20 @@ export const useCreateChatRoom = (): UseMutationResult<any, Error, { luggage_req
     mutationFn: ({ luggage_request_id }) => {
       return createChatRoom({ luggage_request_id });
     },
+  });
+};
+
+// Hook to get unread chat messages count
+export const useUnreadChatCount = (): UseQueryResult<{ total_unread: number }, Error> => {
+  return useQuery({
+    queryKey: ['unreadCount'],
+    queryFn: async () => {
+      const response = await unreadChatMessagesCount();
+      return response;
+    },
+    staleTime: 30000, // Cache for 30 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds
+    retry: 1,
   });
 };
 

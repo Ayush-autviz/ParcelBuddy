@@ -90,9 +90,15 @@ export const useCreateLuggageRequest = (): UseMutationResult<any, Error, FormDat
 };
 
 // Hook to respond to a luggage request (approve or reject)
-export const useRespondToLuggageRequest = (): UseMutationResult<any, Error, { requestId: string; status: 'approved' | 'rejected' }, unknown> => {
+export const useRespondToLuggageRequest = (): UseMutationResult<any, Error, { requestId: string; status: 'approved' | 'rejected'; rejection_reason?: string }, unknown> => {
   return useMutation({
-    mutationFn: ({ requestId, status }) => respondToLuggageRequest(requestId, { status }),
+    mutationFn: ({ requestId, status, rejection_reason }) => {
+      const data: any = { status };
+      if (status === 'rejected' && rejection_reason) {
+        data.rejection_reason = rejection_reason;
+      }
+      return respondToLuggageRequest(requestId, data);
+    },
   });
 };
 

@@ -43,3 +43,9 @@ export const markMessageAsRead = async (chat_id: string) => {
     const response = await apiClient.post(`/api/chat-rooms/${chat_id}/mark_read/`);
     return response.data;
 };
+
+
+export const unreadChatMessagesCount = async () => {
+    const response = await apiClient.get(`/api/chat-rooms/unread_count/`);
+    return response.data;
+};
