@@ -5,7 +5,8 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Image
+  Image,
+  TextInput
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -13,8 +14,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import PhoneInput from 'react-native-international-phone-number';
-import { ChevronDown, ArrowLeft } from 'lucide-react-native';
+// import PhoneInput from 'react-native-international-phone-number';
+import { ArrowLeft } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
@@ -29,9 +30,10 @@ type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const phoneInputRef = useRef<any>(null);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('');
+  // const phoneInputRef = useRef<any>(null);
+  // const [phoneNumber, setPhoneNumber] = useState('');
+  // const [countryCode, setCountryCode] = useState('');
+  const [email, setEmail] = useState('');
   const [step, setStep] = useState<'auth-methods' | 'email-login'>('auth-methods');
   
   const getOtpMutation = useGetOtp();
@@ -39,50 +41,61 @@ const LoginScreen: React.FC = () => {
   const { signIn: signInWithGoogle, isLoading: isGoogleSignInLoading } = useGoogleSignIn();
 
   const handleGetOTP = () => {
-    if (!phoneNumber.trim()) {
-      showWarning('Please enter your mobile number');
+    if (!email.trim()) {
+      showWarning('Please enter your email address');
       return;
     }
 
-    let fullPhoneNumber: string;
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      showWarning('Please enter a valid email address');
+      return;
+    }
+
+    // TODO: Replace with email-based OTP API call
+    console.log('Email for login:', email.trim());
     
-    if (phoneInputRef.current?.getPhoneNumber) {
-      fullPhoneNumber = phoneInputRef.current.getPhoneNumber();
-    } else {
-      const cleanedPhoneNumber = phoneNumber.replace(/\D/g, '');
-      const countryCodeClean = countryCode.replace(/^\+/, '');
-      fullPhoneNumber = `+${countryCodeClean}${cleanedPhoneNumber}`;
-    }
-
-    if (!fullPhoneNumber.startsWith('+')) {
-      fullPhoneNumber = `+${fullPhoneNumber}`;
-    }
-
-    fullPhoneNumber = fullPhoneNumber.replace(/[^\d+]/g, '');
-
-    if (!fullPhoneNumber || fullPhoneNumber.length < 10) {
-      showWarning('Please enter a valid phone number');
-      return;
-    }
-
-    getOtpMutation.mutate(
-      { phone: fullPhoneNumber },
-      {
-        onSuccess: (response: any) => {
-          console.log('response', response);
-          
-          navigation.navigate('OTPScreen', { phoneNumber: fullPhoneNumber });
-        },
-        onError: (error: any) => {
-          console.log('Error sending OTP:', error);
-          const errorMessage = error?.response?.data?.message || 
-                              error?.response?.data?.error || 
-                              error?.message || 
-                              'Failed to send OTP. Please try again.';
-          showError(errorMessage);
-        },
-      }
-    );
+    // Commented out phone-based OTP code
+    // let fullPhoneNumber: string;
+    // 
+    // if (phoneInputRef.current?.getPhoneNumber) {
+    //   fullPhoneNumber = phoneInputRef.current.getPhoneNumber();
+    // } else {
+    //   const cleanedPhoneNumber = phoneNumber.replace(/\D/g, '');
+    //   const countryCodeClean = countryCode.replace(/^\+/, '');
+    //   fullPhoneNumber = `+${countryCodeClean}${cleanedPhoneNumber}`;
+    // }
+    //
+    // if (!fullPhoneNumber.startsWith('+')) {
+    //   fullPhoneNumber = `+${fullPhoneNumber}`;
+    // }
+    //
+    // fullPhoneNumber = fullPhoneNumber.replace(/[^\d+]/g, '');
+    //
+    // if (!fullPhoneNumber || fullPhoneNumber.length < 10) {
+    //   showWarning('Please enter a valid phone number');
+    //   return;
+    // }
+    //
+    // getOtpMutation.mutate(
+    //   { phone: fullPhoneNumber },
+    //   {
+    //     onSuccess: (response: any) => {
+    //       console.log('response', response);
+    //       
+    //       navigation.navigate('OTPScreen', { phoneNumber: fullPhoneNumber });
+    //     },
+    //     onError: (error: any) => {
+    //       console.log('Error sending OTP:', error);
+    //       const errorMessage = error?.response?.data?.message || 
+    //                           error?.response?.data?.error || 
+    //                           error?.message || 
+    //                           'Failed to send OTP. Please try again.';
+    //       showError(errorMessage);
+    //     },
+    //   }
+    // );
   };
 
   const handleTermsPress = () => {
@@ -161,6 +174,7 @@ const LoginScreen: React.FC = () => {
             </>
           ) : (
             <>
+            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 12}}>
               {/* Back Button */}
               <TouchableOpacity
                 style={styles.backButton}
@@ -170,14 +184,40 @@ const LoginScreen: React.FC = () => {
                 <ArrowLeft size={24} color={Colors.textPrimary} />
               </TouchableOpacity>
 
+               {/* Input Label */}
+               <Text style={styles.inputLabel}>Enter your email address</Text>
+</View>
               {/* Welcome Title */}
-              <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
+              {/* <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text> */}
 
-              {/* Input Label */}
-              <Text style={styles.inputLabel}>Enter your mobile number</Text>
+             
 
-              {/* Phone Number Input */}
-              <View style={styles.phoneInputContainer}>
+              {/* Email Input */}
+              <View style={styles.emailInputContainer}>
+                <TextInput
+                  style={styles.emailInput}
+                  placeholder="Enter your email"
+                  placeholderTextColor={Colors.textLight}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              {/* Get OTP Button with Gradient */}
+              <GradientButton
+                title="Get OTP"
+                onPress={handleGetOTP}
+                loading={false}
+                style={styles.otpButton}
+                disabled={false}
+              />
+
+              {/* Commented out Phone Number Input */}
+              {/* <Text style={styles.inputLabel}>Enter your mobile number</Text> */}
+              {/* <View style={styles.phoneInputContainer}>
                 <View style={styles.phoneInputWrapper}>
                   <PhoneInput
                     ref={phoneInputRef}
@@ -213,8 +253,6 @@ const LoginScreen: React.FC = () => {
                         input: {
                           paddingLeft: -10,
                         }
-
-             
                       }
                     }
                     modalStyles={{
@@ -241,16 +279,7 @@ const LoginScreen: React.FC = () => {
                     placeholder="Enter mobile number"
                   />
                 </View>
-              </View>
-
-              {/* Get OTP Button with Gradient */}
-              <GradientButton
-                title={getOtpMutation.isPending ? 'Sending OTP...' : 'Get OTP'}
-                onPress={handleGetOTP}
-                loading={getOtpMutation.isPending}
-                style={styles.otpButton}
-                disabled={getOtpMutation.isPending}
-              />
+              </View> */}
 
               {/* Terms and Privacy Policy */}
               {/* <Text style={styles.termsText}>
@@ -327,19 +356,34 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textSecondary,
-    marginBottom: 12,
+    // marginBottom: 12,
   },
-  phoneInputContainer: {
+  emailInputContainer: {
     marginBottom: 24,
   },
-  phoneInputWrapper: {
+  emailInput: {
     borderWidth: 1,
     borderColor: Colors.borderLight,
     borderRadius: 12,
     backgroundColor: Colors.backgroundGray,
-    overflow: 'hidden',
-    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
+    height: 55,
   },
+  // Commented out phone input styles
+  // phoneInputContainer: {
+  //   marginBottom: 24,
+  // },
+  // phoneInputWrapper: {
+  //   borderWidth: 1,
+  //   borderColor: Colors.borderLight,
+  //   borderRadius: 12,
+  //   backgroundColor: Colors.backgroundGray,
+  //   overflow: 'hidden',
+  //   width: '100%',
+  // },
   textContainer: {
     backgroundColor: Colors.backgroundWhite,
     borderTopRightRadius: 12,
@@ -388,7 +432,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    // marginBottom: 4,
   },
 });
 
