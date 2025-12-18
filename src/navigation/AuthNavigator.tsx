@@ -13,7 +13,8 @@ export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
   OTPScreen: {
-    phoneNumber: string;
+    email: string;
+    // phoneNumber: string; // COMMENTED OUT - using email instead
   };
   ProfileSetup: undefined;
   AuthTermsPolicy: undefined;

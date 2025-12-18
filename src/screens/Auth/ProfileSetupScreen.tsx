@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { Camera, CheckCircle, Calendar, Check } from 'lucide-react-native';
+import { Camera, CheckCircle, Calendar, Check, ChevronDown } from 'lucide-react-native';
+import PhoneInput from 'react-native-international-phone-number';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
@@ -57,10 +58,13 @@ const UserIcon = `
 
 const ProfileSetupScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const phoneInputRef = useRef<any>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageAsset, setProfileImageAsset] = useState<ImagePicker.Asset | null>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [bio, setBio] = useState('');
@@ -76,13 +80,46 @@ const ProfileSetupScreen: React.FC = () => {
     message: string;
     showOpenSettings: boolean;
   } | null>(null);
-  const {setUser} = useAuthStore();
+  const {setUser, user} = useAuthStore();
 
   const formattedCountry = country.slice(0, 2).toUpperCase();
 
   
   const profileSetupMutation = useProfileSetup();
   const { showWarning, showError } = useToast();
+
+  // Pre-fill form data from user store if available
+  useEffect(() => {
+    if (user) {
+      // Pre-fill email
+      if (user.email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        setEmail(user.email);
+        setEmailVerified(emailRegex.test(user.email));
+      }
+      
+      // Pre-fill full name from first_name and last_name
+      if (user.first_name || user.last_name) {
+        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+        setFullName(fullName);
+      }
+      
+      // Pre-fill date of birth if available
+      if (user.date_of_birth) {
+        const dob = new Date(user.date_of_birth);
+        if (!isNaN(dob.getTime())) {
+          setDateOfBirth(dob);
+        }
+      }
+      
+      // Pre-fill phone number if available
+      if (user.phone) {
+        // If phone starts with country code, try to extract it
+        // Otherwise, set the phone number as is
+        setPhoneNumber(user.phone);
+      }
+    }
+  }, [user]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -126,6 +163,27 @@ const ProfileSetupScreen: React.FC = () => {
       return;
     }
 
+    // Validate phone number
+    let fullPhoneNumber: string = '';
+    if (phoneInputRef.current?.getPhoneNumber) {
+      fullPhoneNumber = phoneInputRef.current.getPhoneNumber();
+    } else {
+      const cleanedPhoneNumber = phoneNumber.replace(/\D/g, '');
+      const countryCodeClean = countryCode.replace(/^\+/, '');
+      fullPhoneNumber = `+${countryCodeClean}${cleanedPhoneNumber}`;
+    }
+
+    if (!fullPhoneNumber.startsWith('+')) {
+      fullPhoneNumber = `+${fullPhoneNumber}`;
+    }
+
+    fullPhoneNumber = fullPhoneNumber.replace(/[^\d+]/g, '');
+
+    if (!fullPhoneNumber || fullPhoneNumber.length < 10) {
+      showWarning('Please enter a valid phone number');
+      return;
+    }
+
     if (!dateOfBirth) {
       showWarning('Please enter your date of birth');
       return;
@@ -163,6 +221,7 @@ const ProfileSetupScreen: React.FC = () => {
     
     formData.append('date_of_birth', formatDateForAPI(dateOfBirth));
     formData.append('email', email.trim());
+    formData.append('phone', fullPhoneNumber);
     formData.append('profile.bio', bio.trim() || '');
     
 
@@ -343,11 +402,11 @@ const ProfileSetupScreen: React.FC = () => {
             </Text>
             <View style={styles.emailInputWrapper}>
               <TextInput
-                style={[styles.input, styles.emailInput]}
+                style={[styles.input, styles.emailInput, styles.inputDisabled]}
                 placeholder="your@email.com"
                 placeholderTextColor={Colors.textLight}
                 value={email}
-                onChangeText={handleEmailChange}
+                editable={false}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -356,6 +415,71 @@ const ProfileSetupScreen: React.FC = () => {
                   <CheckCircle size={20} color={Colors.primaryCyan} />
                 </View>
               )}
+            </View>
+          </View>
+
+          {/* Phone Number Input */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              Phone Number<Text style={styles.required}>*</Text>
+            </Text>
+            <View style={styles.phoneInputWrapper}>
+              <PhoneInput
+                ref={phoneInputRef}
+                defaultValue={phoneNumber}
+                value={phoneNumber}
+                defaultCountry="US"
+                onChangePhoneNumber={(number) => {
+                  setPhoneNumber(number);
+                }}
+                onChangeSelectedCountry={(country: any) => {
+                  setCountryCode(country?.idd?.root || '');
+                }}
+                customCaret={() => <ChevronDown size={16} color="#666" />}
+                phoneInputStyles={{
+                  container: {
+                    borderWidth: 0,
+                    borderRadius: 12,
+                    backgroundColor: Colors.backgroundWhite,
+                    height: 55,
+                  },
+                  flagContainer: {
+                    borderWidth: 0,
+                    borderRadius: 12,
+                    backgroundColor: Colors.backgroundWhite,
+                  },
+                  divider: {
+                    display: 'none',
+                  },
+                  callingCode: {
+                    display: 'none',
+                  },
+                  input: {
+                    paddingLeft: -10,
+                  }
+                }}
+                modalStyles={{
+                  searchContainer: {
+                  },
+                  searchInput: {
+                    backgroundColor: 'white',
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: '#E0E0E0',
+                    padding: 14,
+                    fontSize: 16,
+                    color: '#203049',
+                    fontWeight: '500',
+                  },
+                  countryItem: {
+                    padding: 14,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
+                    borderRadius: 14,
+                  },
+                }}
+                placeholder="Enter phone number"
+              />
             </View>
           </View>
 
@@ -644,6 +768,18 @@ const styles = StyleSheet.create({
   },
   emailInput: {
     paddingRight: 50,
+  },
+  inputDisabled: {
+    backgroundColor: Colors.backgroundGray,
+    color: Colors.textSecondary,
+  },
+  phoneInputWrapper: {
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundGray,
+    overflow: 'hidden',
+    width: '100%',
   },
   verifiedIconContainer: {
     position: 'absolute',

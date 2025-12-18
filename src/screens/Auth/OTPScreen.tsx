@@ -8,18 +8,18 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { SvgXml } from 'react-native-svg';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { OtpInput } from 'react-native-otp-entry';
-import { Phone } from 'lucide-react-native';
+import { Mail } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
 import { Header } from '../../components';
-import { useVerifyOtp, useGetOtp } from '../../hooks/useAuthMutations';
+import { useVerifyOtpEmail, useResendOtpEmail } from '../../hooks/useAuthMutations';
 import { useAuthStore } from '../../services/store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useToast } from '../../components/Toast';
@@ -29,7 +29,8 @@ const { width, height } = Dimensions.get('window');
 type RootStackParamList = {
   Auth: undefined;
   OTPScreen: {
-    phoneNumber: string;
+    email: string;
+    // phoneNumber: string; // COMMENTED OUT - using email instead
   };
   ProfileSetup: undefined;
   MainApp: undefined;
@@ -74,12 +75,13 @@ const OTPScreen: React.FC = () => {
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute();
   const [otp, setOtp] = useState('');
-  const [timer, setTimer] = useState(150); 
-  const phoneNumber = (route.params as { phoneNumber?: string })?.phoneNumber || '';
+  const [timer, setTimer] = useState(60); 
+  const email = (route.params as { email?: string })?.email || '';
+  // const phoneNumber = (route.params as { phoneNumber?: string })?.phoneNumber || ''; // COMMENTED OUT - using email instead
   const { setToken, setUser } = useAuthStore();
   
-  const verifyOtpMutation = useVerifyOtp();
-  const resendOtpMutation = useGetOtp();
+  const verifyOtpMutation = useVerifyOtpEmail();
+  const resendOtpMutation = useResendOtpEmail();
   const { showWarning, showError, showSuccess } = useToast();
 
   useEffect(() => {
@@ -109,14 +111,10 @@ const OTPScreen: React.FC = () => {
     }
 
     const cleanedOtp = otp.replace(/\D/g, '');
-    
-    const cleanedPhone = phoneNumber.replace(/[^\d+]/g, '');
-    
-    const formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
 
-
+    // Email OTP verification
     verifyOtpMutation.mutate(
-      { phone: formattedPhone, otp: cleanedOtp },
+      { email: email.trim(), otp: cleanedOtp },
       {
         onSuccess: (response: any) => {
           console.log('response', response);
@@ -124,25 +122,30 @@ const OTPScreen: React.FC = () => {
             access_token: response.tokens.access,
             refresh_token: response.tokens.refresh,
           });
-          // if (response.profile) { 
-          //   setUser(response.profile);
-          // }
           if (!response.profile_setup) {
-            setUser({profile_setup: false});
+            // Store the profile data (including email) from OTP verification response
+            if (response.profile) {
+              setUser(response.profile);
+            } else {
+              setUser({profile_setup: false});
+            }
             navigation.reset({
               index: 0,
               routes: [{ name: 'ProfileSetup' }],
             });
           } else {
             setUser(response.profile);
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'MainApp' }],
-            });
+            // Navigate to root MainApp
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'MainApp' as never }],
+              })
+            );
           }
         },
         onError: (error: any) => {
-          console.log('Error verifying OTP:', error.response.data.error);
+          console.log('Error verifying OTP:', error.response?.data?.error);
           const errorMessage = error?.response?.data?.error || 
                               error?.response?.data?.message || 
                               error?.message || 
@@ -151,17 +154,51 @@ const OTPScreen: React.FC = () => {
         },
       }
     );
+
+    // COMMENTED OUT - Phone OTP verification
+    // const cleanedPhone = phoneNumber.replace(/[^\d+]/g, '');
+    // const formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
+    // verifyOtpMutation.mutate(
+    //   { phone: formattedPhone, otp: cleanedOtp },
+    //   {
+    //     onSuccess: (response: any) => {
+    //       console.log('response', response);
+    //       setToken({
+    //         access_token: response.tokens.access,
+    //         refresh_token: response.tokens.refresh,
+    //       });
+    //       if (!response.profile_setup) {
+    //         setUser({profile_setup: false});
+    //         navigation.reset({
+    //           index: 0,
+    //           routes: [{ name: 'ProfileSetup' }],
+    //         });
+    //       } else {
+    //         setUser(response.profile);
+    //         navigation.reset({
+    //           index: 0,
+    //           routes: [{ name: 'MainApp' }],
+    //         });
+    //       }
+    //     },
+    //     onError: (error: any) => {
+    //       console.log('Error verifying OTP:', error.response.data.error);
+    //       const errorMessage = error?.response?.data?.error || 
+    //                           error?.response?.data?.message || 
+    //                           error?.message || 
+    //                           'Invalid OTP. Please try again.';
+    //       showError(errorMessage);
+    //     },
+    //   }
+    // );
   };
 
   const handleResendOTP = () => {
-    // Clean phone number - remove formatting but keep + and digits
-    const cleanedPhone = phoneNumber.replace(/[^\d+]/g, '');
-    const formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
-
-    console.log('Resending OTP to:', formattedPhone);
+    // Email OTP resend
+    console.log('Resending OTP to:', email);
 
     resendOtpMutation.mutate(
-      { phone: formattedPhone },
+      { email: email.trim() },
       {
         onSuccess: () => {
           // Reset timer to 2:30
@@ -174,7 +211,7 @@ const OTPScreen: React.FC = () => {
           const errorMessage = 
             error?.response?.data?.message || 
             error?.response?.data?.error || 
-            error?.response?.data?.phone?.[0] ||
+            error?.response?.data?.email?.[0] ||
             error?.response?.data?.detail ||
             error?.message || 
             'Failed to resend OTP. Please try again.';
@@ -182,6 +219,31 @@ const OTPScreen: React.FC = () => {
         },
       }
     );
+
+    // COMMENTED OUT - Phone OTP resend
+    // const cleanedPhone = phoneNumber.replace(/[^\d+]/g, '');
+    // const formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
+    // console.log('Resending OTP to:', formattedPhone);
+    // resendOtpMutation.mutate(
+    //   { phone: formattedPhone },
+    //   {
+    //     onSuccess: () => {
+    //       setTimer(150);
+    //       showSuccess('OTP resent successfully!');
+    //     },
+    //     onError: (error: any) => {
+    //       console.log('Error resending OTP:', error);
+    //       const errorMessage = 
+    //         error?.response?.data?.message || 
+    //         error?.response?.data?.error || 
+    //         error?.response?.data?.phone?.[0] ||
+    //         error?.response?.data?.detail ||
+    //         error?.message || 
+    //         'Failed to resend OTP. Please try again.';
+    //       showError(errorMessage);
+    //     },
+    //   }
+    // );
   };
 
   return (
@@ -207,13 +269,13 @@ const OTPScreen: React.FC = () => {
         <View style={styles.content}>
           <Text style={styles.title}>Enter OTP</Text>
           <Text style={styles.subtitle}>
-            We sent a 6-digit code to your mobile number.
+            We sent a 6-digit code to your email address.
           </Text>
 
-          {/* Phone Number Display */}
+          {/* Email Display */}
           <View style={styles.phoneDisplayContainer}>
-            <Phone size={18} color={Colors.primaryCyan} fill={Colors.primaryCyan} />
-            <Text style={styles.phoneNumberText}>{phoneNumber}</Text>
+            <Mail size={18} color={Colors.primaryCyan} />
+            <Text style={styles.phoneNumberText}>{email}</Text>
           </View>
 
           {/* OTP Input Label */}

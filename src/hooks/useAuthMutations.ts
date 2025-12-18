@@ -1,15 +1,35 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getOtp, verifyOtp, profileSetup, sendFcmToken } from '../services/api/auth';
+import { getOtpEmail, verifyOtpEmail, resendOtpEmail, profileSetup, sendFcmToken, googleLogin } from '../services/api/auth';
 
-export const useGetOtp = (): UseMutationResult<any, Error, { phone: string }, unknown> => {
+// Phone OTP hooks - COMMENTED OUT, using email OTP instead
+// export const useGetOtp = (): UseMutationResult<any, Error, { phone: string }, unknown> => {
+//   return useMutation({
+//     mutationFn: (data: { phone: string }) => getOtp(data),
+//   });
+// };
+
+// export const useVerifyOtp = (): UseMutationResult<any, Error, { phone: string; otp: string }, unknown> => {
+//   return useMutation({
+//     mutationFn: (data: { phone: string; otp: string }) => verifyOtp(data),
+//   });
+// };
+
+// Email OTP hooks
+export const useGetOtpEmail = (): UseMutationResult<any, Error, { email: string }, unknown> => {
   return useMutation({
-    mutationFn: (data: { phone: string }) => getOtp(data),
+    mutationFn: (data: { email: string }) => getOtpEmail(data),
   });
 };
 
-export const useVerifyOtp = (): UseMutationResult<any, Error, { phone: string; otp: string }, unknown> => {
+export const useVerifyOtpEmail = (): UseMutationResult<any, Error, { email: string; otp: string }, unknown> => {
   return useMutation({
-    mutationFn: (data: { phone: string; otp: string }) => verifyOtp(data),
+    mutationFn: (data: { email: string; otp: string }) => verifyOtpEmail(data),
+  });
+};
+
+export const useResendOtpEmail = (): UseMutationResult<any, Error, { email: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { email: string }) => resendOtpEmail(data),
   });
 };
 
@@ -22,6 +42,12 @@ export const useProfileSetup = (): UseMutationResult<any, Error, FormData, unkno
 export const useSendFcmToken = (): UseMutationResult<any, Error, { token: string; device_type: string }, unknown> => {
   return useMutation({
     mutationFn: (data: { token: string; device_type: string }) => sendFcmToken(data),
+  });
+};
+
+export const useGoogleLogin = (): UseMutationResult<any, Error, { token: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { token: string }) => googleLogin(data),
   });
 };
 

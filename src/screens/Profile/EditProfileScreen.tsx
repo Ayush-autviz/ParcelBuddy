@@ -246,10 +246,32 @@ const EditProfileScreen: React.FC = () => {
   const handleSave = () => {
     // Validate required fields
     const isFullNameValid = validateFullName(fullName);
-    const isEmailValid = validateEmail(email);
+    // Email validation not needed since it's read-only
+    // const isEmailValid = validateEmail(email);
 
-    if (!isFullNameValid || !isEmailValid) {
+    if (!isFullNameValid) {
       showError('Please fix the errors before saving');
+      return;
+    }
+
+    // Validate phone number
+    let fullPhoneNumber: string = '';
+    if (phoneInputRef.current?.getPhoneNumber) {
+      fullPhoneNumber = phoneInputRef.current.getPhoneNumber();
+    } else {
+      const cleanedPhoneNumber = phoneNumber.replace(/\D/g, '');
+      const countryCodeClean = countryCode.replace(/^\+/, '');
+      fullPhoneNumber = `+${countryCodeClean}${cleanedPhoneNumber}`;
+    }
+
+    if (!fullPhoneNumber.startsWith('+')) {
+      fullPhoneNumber = `+${fullPhoneNumber}`;
+    }
+
+    fullPhoneNumber = fullPhoneNumber.replace(/[^\d+]/g, '');
+
+    if (!fullPhoneNumber || fullPhoneNumber.length < 10) {
+      showError('Please enter a valid phone number');
       return;
     }
 
@@ -405,7 +427,7 @@ const EditProfileScreen: React.FC = () => {
           {/* Full Name */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>
-              Full Name<Text style={styles.required}>*</Text>
+              Full Name
             </Text>
             <TextInput
               style={[styles.input, fullNameError && styles.inputError]}
@@ -425,7 +447,7 @@ const EditProfileScreen: React.FC = () => {
           {/* Date of Birth */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>
-              Date of Birth<Text style={styles.required}>*</Text>
+              Date of Birth
             </Text>
             <DatePickerInput
               value={dateOfBirth}
@@ -455,7 +477,6 @@ const EditProfileScreen: React.FC = () => {
               <PhoneInput
                 ref={phoneInputRef}
                 defaultValue={phoneNumber}
-                disabled={true}
                 value={phoneNumber}
                 defaultCountry={selectedCountry as any}
                 onChangePhoneNumber={(number) => {
@@ -514,17 +535,13 @@ const EditProfileScreen: React.FC = () => {
           {/* Email */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>
-              Email Address<Text style={styles.required}>*</Text>
+              Email Address
             </Text>
             <TextInput
-              style={[styles.input, emailError && styles.inputError]}
+              style={[styles.input, styles.inputDisabled, emailError && styles.inputError]}
               placeholder="your@email.com"
               value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (emailError) validateEmail(text);
-              }}
-              onBlur={() => validateEmail(email)}
+              editable={false}
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -536,7 +553,7 @@ const EditProfileScreen: React.FC = () => {
           {/* Location Section */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>
-              Location<Text style={styles.required}>*</Text>
+              Location
             </Text>
             <TouchableOpacity
               style={styles.locationInputWrapper}
@@ -727,6 +744,10 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: Colors.error,
+  },
+  inputDisabled: {
+    backgroundColor: Colors.backgroundGray,
+    color: Colors.textSecondary,
   },
   errorText: {
     fontSize: Fonts.sm,

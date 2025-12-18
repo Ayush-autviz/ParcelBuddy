@@ -166,7 +166,7 @@ function App() {
         <SafeAreaProvider>
           <BottomSheetModalProvider>
             <ToastProvider>
-              <StatusBar backgroundColor={Colors.backgroundWhite} barStyle="dark-content" />
+              <StatusBar translucent={true} backgroundColor={'transparent'} barStyle="dark-content" />
 
               <NavigationContainer ref={navigationRef} linking={linking}>
                 <AuthProvider>

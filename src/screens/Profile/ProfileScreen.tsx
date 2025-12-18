@@ -73,7 +73,7 @@ const ProfileScreen: React.FC = () => {
     setShowLogoutModal(false);
     queryClient.clear();
     await logout();
-    showSuccess('Logged out successfully');
+    // showSuccess('Logged out successfully');
     // Navigate to root Auth screen
     navigation.dispatch(
       CommonActions.reset({

@@ -8,7 +8,7 @@ import {
   Image,
   TextInput
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
@@ -19,10 +19,11 @@ import { ArrowLeft } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
-import { useGetOtp } from '../../hooks/useAuthMutations';
+import { useGetOtpEmail, useGoogleLogin } from '../../hooks/useAuthMutations';
 import { useToast } from '../../components/Toast';
 import AuthMethodButtons from '../../components/AuthMethodButtons';
 import { useGoogleSignIn } from '../../hooks/useGoogleSignIn';
+import { useAuthStore } from '../../services/store';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,9 +37,11 @@ const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState<'auth-methods' | 'email-login'>('auth-methods');
   
-  const getOtpMutation = useGetOtp();
+  const getOtpEmailMutation = useGetOtpEmail();
+  const googleLoginMutation = useGoogleLogin();
   const { showWarning, showError } = useToast();
   const { signIn: signInWithGoogle, isLoading: isGoogleSignInLoading } = useGoogleSignIn();
+  const { setToken, setUser } = useAuthStore();
 
   const handleGetOTP = () => {
     if (!email.trim()) {
@@ -53,9 +56,25 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
-    // TODO: Replace with email-based OTP API call
-    console.log('Email for login:', email.trim());
-    
+    // Call email OTP API
+    getOtpEmailMutation.mutate(
+      { email: email.trim() },
+      {
+        onSuccess: (response: any) => {
+          console.log('Email OTP sent:', response);
+          navigation.navigate('OTPScreen', { email: email.trim() });
+        },
+        onError: (error: any) => {
+          console.log('Error sending OTP:', error);
+          const errorMessage = error?.response?.data?.message || 
+                              error?.response?.data?.error || 
+                              error?.message || 
+                              'Failed to send OTP. Please try again.';
+          showError(errorMessage);
+        },
+      }
+    );
+
     // Commented out phone-based OTP code
     // let fullPhoneNumber: string;
     // 
@@ -113,6 +132,54 @@ const LoginScreen: React.FC = () => {
       const result = await signInWithGoogle();
       if (result && result.idToken) {
         console.log('Google Sign-In Token:', result.idToken);
+        
+        // Call Google login API using React Query
+        googleLoginMutation.mutate(
+          { token: result.idToken },
+          {
+            onSuccess: (response: any) => {
+              console.log('Google Login API Response:', response);
+              
+              // Store tokens
+              if (response.tokens) {
+                setToken({
+                  access_token: response.tokens.access,
+                  refresh_token: response.tokens.refresh,
+                });
+              }
+              
+              // Store user data
+              if (response.profile) {
+                setUser(response.profile);
+              }
+              
+              // Navigate based on profile setup status
+              if (response.profile_setup === false) {
+                // Navigate to ProfileSetupScreen if profile is not set up
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'ProfileSetup' }],
+                });
+              } else {
+                // Navigate to root MainApp
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'MainApp' as never }],
+                  })
+                );
+              }
+            },
+            onError: (error: any) => {
+              console.error('Google Login API Error:', error);
+              const errorMessage = error?.response?.data?.message || 
+                                  error?.response?.data?.error || 
+                                  error?.message || 
+                                  'Failed to login with Google';
+              showError(errorMessage);
+            },
+          }
+        );
       }
     } catch (error) {
       // Error is already handled in the hook
@@ -208,11 +275,11 @@ const LoginScreen: React.FC = () => {
 
               {/* Get OTP Button with Gradient */}
               <GradientButton
-                title="Get OTP"
+                title={getOtpEmailMutation.isPending ? 'Sending OTP...' : 'Get OTP'}
                 onPress={handleGetOTP}
-                loading={false}
+                loading={getOtpEmailMutation.isPending}
                 style={styles.otpButton}
-                disabled={false}
+                disabled={getOtpEmailMutation.isPending}
               />
 
               {/* Commented out Phone Number Input */}

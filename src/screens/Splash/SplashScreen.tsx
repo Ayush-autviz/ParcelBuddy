@@ -174,7 +174,7 @@ const SplashScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
+      <StatusBar barStyle="dark-content" backgroundColor={'transparent'} translucent={true} />
       
       {/* Top Left Ellipse */}
       <View style={styles.topEllipse}>
