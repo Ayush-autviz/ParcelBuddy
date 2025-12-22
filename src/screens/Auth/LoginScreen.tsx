@@ -165,6 +165,17 @@ const LoginScreen: React.FC = () => {
                 setUser(response.profile);
               }
               
+              // Check if user is suspended
+              if (response.profile?.is_suspended === true) {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Suspended' as never }],
+                  })
+                );
+                return;
+              }
+              
               // Navigate based on profile setup status
               if (response.profile_setup === false) {
                 // Navigate to ProfileSetupScreen if profile is not set up

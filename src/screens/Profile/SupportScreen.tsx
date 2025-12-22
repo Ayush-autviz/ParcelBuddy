@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,6 +17,7 @@ import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, Card } from '../../components';
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { useToast } from '../../components/Toast';
+import { useContactSupport } from '../../hooks/useProfile';
 
 type SupportScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Support'>;
 
@@ -41,11 +43,13 @@ const faqData: FAQItem[] = [
 
 const SupportScreen: React.FC = () => {
   const navigation = useNavigation<SupportScreenNavigationProp>();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
+  const { data: contactSupportData, isLoading, isError } = useContactSupport();
+
+  const supportEmail = contactSupportData?.email || 'ParcelBuddy@support';
 
   const handleCopyEmail = () => {
-    const email = 'ParcelBuddy@support';
-    Clipboard.setString(email);
+    Clipboard.setString(supportEmail);
     showSuccess('Email copied to clipboard');
   };
 
@@ -82,15 +86,25 @@ const SupportScreen: React.FC = () => {
             style={styles.contactCard}
             onPress={handleCopyEmail}
             activeOpacity={0.7}
+            disabled={isLoading}
           >
             <View style={styles.contactContent}>
               <View style={styles.contactTextContainer}>
                 <Text style={styles.contactLabel}>Contact Us:</Text>
-                <Text style={styles.contactEmail}>ParcelBuddy@support</Text>
+                {isLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={Colors.primaryCyan} />
+                    <Text style={styles.loadingText}>Loading...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.contactEmail}>{supportEmail}</Text>
+                )}
               </View>
-              <View style={styles.copyIconContainer}>
-                <Copy size={20} color={Colors.textPrimary} />
-              </View>
+              {!isLoading && (
+                <View style={styles.copyIconContainer}>
+                  <Copy size={20} color={Colors.textPrimary} />
+                </View>
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -175,6 +189,15 @@ const styles = StyleSheet.create({
   copyIconContainer: {
     marginLeft: 16,
     padding: 8,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
   },
 });
 

@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { getMyProfile, getProfileById } from '../services/api/profile';
+import { getContactSupport } from '../services/api/auth';
 
 export interface ProfileData {
   id?: string;
@@ -94,6 +95,24 @@ export const useProfileById = (
     },
     enabled: !!profileId, // Only fetch if profileId is provided
     staleTime: 30000, // Cache for 30 seconds
+    retry: 1,
+  });
+};
+
+// Contact support hook - get support email
+export interface ContactSupportResponse {
+  email?: string;
+  [key: string]: any;
+}
+
+export const useContactSupport = (): UseQueryResult<ContactSupportResponse, Error> => {
+  return useQuery({
+    queryKey: ['contactSupport'],
+    queryFn: async () => {
+      const response = await getContactSupport();
+      return response as ContactSupportResponse;
+    },
+    staleTime: 300000, // Cache for 5 minutes (support email doesn't change often)
     retry: 1,
   });
 };

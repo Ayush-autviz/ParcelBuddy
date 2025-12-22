@@ -115,3 +115,9 @@ export const resetPassword = async (data: { email: string; otp: string; new_pass
   const response = await publicApiClient.post('/auth/reset-password/', data);
   return response.data;
 };
+
+// contact support - get support email
+export const getContactSupport = async () => {
+  const response = await apiClient.get('/auth/contact-support/');
+  return response.data;
+};

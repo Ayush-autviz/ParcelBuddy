@@ -37,6 +37,7 @@ type RootStackParamList = {
   Splash: undefined;
   Auth: undefined;
   MainApp: undefined;
+  Suspended: undefined;
 };
 
 type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
@@ -110,6 +111,16 @@ const SplashScreen: React.FC = () => {
       } else if (profile) {
         hasNavigated.current = true;
         setUser(profile);
+        
+        // Check if user is suspended
+        if (profile?.is_suspended === true) {
+          console.log('SplashScreen: User is suspended, navigating to Suspended');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Suspended' as never }],
+          });
+          return;
+        }
         
         // If we have a payment deep link, navigate directly to PaymentHistory screen
         if (isPaymentDeepLink && deepLink) {
