@@ -12,7 +12,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
@@ -56,8 +56,11 @@ const UserIcon = `
 </svg>
 `;
 
+type ProfileSetupScreenRouteProp = RouteProp<AuthStackParamList, 'ProfileSetup'>;
+
 const ProfileSetupScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<ProfileSetupScreenRouteProp>();
   const phoneInputRef = useRef<any>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageAsset, setProfileImageAsset] = useState<ImagePicker.Asset | null>(null);
@@ -88,15 +91,22 @@ const ProfileSetupScreen: React.FC = () => {
   const profileSetupMutation = useProfileSetup();
   const { showWarning, showError } = useToast();
 
-  // Pre-fill form data from user store if available
+  // Pre-fill form data from route params or user store if available
   useEffect(() => {
+    const routeEmail = route.params?.email;
+    
+    // Pre-fill email from route params first, then from user store
+    if (routeEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      setEmail(routeEmail);
+      setEmailVerified(emailRegex.test(routeEmail));
+    } else if (user?.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      setEmail(user.email);
+      setEmailVerified(emailRegex.test(user.email));
+    }
+    
     if (user) {
-      // Pre-fill email
-      if (user.email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        setEmail(user.email);
-        setEmailVerified(emailRegex.test(user.email));
-      }
       
       // Pre-fill full name from first_name and last_name
       if (user.first_name || user.last_name) {
@@ -255,9 +265,11 @@ const ProfileSetupScreen: React.FC = () => {
       },
       onError: (error: any) => {
         console.log('Error saving profile:', error.response);
-        const errorMessage = error?.response?.data?.error || 
+        const errorMessage = 
+        error?.response?.data?.phone?.[0] ||
+        error?.response?.data?.profile?.country?.[0] ||
+        error?.response?.data?.error || 
                             error?.response?.data?.message || 
-                            error?.response?.data?.phone?.[0] ||
                             error?.message || 
                             'Failed to save profile. Please try again.';
         showError(errorMessage);

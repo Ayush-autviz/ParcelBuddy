@@ -23,10 +23,14 @@ export type AuthStackParamList = {
     email: string;
     // phoneNumber: string; // COMMENTED OUT - using email instead
   };
-  ProfileSetup: undefined;
+  ProfileSetup: {
+    email?: string;
+  } | undefined;
   AuthTermsPolicy: undefined;
   EmailLogin: undefined;
-  CreatePassword: undefined;
+  CreatePassword: {
+    email: string;
+  };
   ForgotPassword: undefined;
   VerifyResetOtp: {
     email: string;

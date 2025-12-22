@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Image,
   TextInput
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
@@ -31,11 +31,20 @@ type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const route = useRoute();
   // const phoneInputRef = useRef<any>(null);
   // const [phoneNumber, setPhoneNumber] = useState('');
   // const [countryCode, setCountryCode] = useState('');
   const [email, setEmail] = useState('');
   const [step, setStep] = useState<'auth-methods' | 'email-login'>('auth-methods');
+  
+  // Check if we should show OTP flow from route params
+  useEffect(() => {
+    const params = route.params as { showOtpFlow?: boolean } | undefined;
+    if (params?.showOtpFlow) {
+      setStep('email-login');
+    }
+  }, [route.params]);
   
   const getOtpEmailMutation = useGetOtpEmail();
   const googleLoginMutation = useGoogleLogin();
@@ -188,7 +197,7 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleEmailPress = () => {
-    setStep('email-login');
+    navigation.navigate('EmailLogin');
   };
 
   const handleApplePress = () => {
@@ -229,8 +238,8 @@ const LoginScreen: React.FC = () => {
         <View style={styles.card}>
           {step === 'auth-methods' ? (
             <>
-              {/* Welcome Title */}
-              <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
+          {/* Welcome Title */}
+          <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
               
               {/* Auth Method Buttons */}
               <AuthMethodButtons
@@ -241,26 +250,24 @@ const LoginScreen: React.FC = () => {
             </>
           ) : (
             <>
-            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 12}}>
+            <View style={styles.headerRow}>
               {/* Back Button */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.backButton}
                 onPress={handleBackPress}
                 activeOpacity={0.7}
               >
                 <ArrowLeft size={24} color={Colors.textPrimary} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
-               {/* Input Label */}
-               <Text style={styles.inputLabel}>Enter your email address</Text>
-</View>
-              {/* Welcome Title */}
-              {/* <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text> */}
-
-             
+              {/* Title */}
+              <Text style={styles.cardTitle}>Login with OTP</Text>
+              {/* <View style={styles.backButton} /> */}
+            </View>
 
               {/* Email Input */}
               <View style={styles.emailInputContainer}>
+                <Text style={styles.inputLabel}>Email Address</Text>
                 <TextInput
                   style={styles.emailInput}
                   placeholder="Enter your email"
@@ -282,83 +289,96 @@ const LoginScreen: React.FC = () => {
                 disabled={getOtpEmailMutation.isPending}
               />
 
+              {/* Alternative Login Options */}
+              <View style={styles.alternativeContainer}>
+                <Text style={styles.alternativeText}>Already have an account? </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('EmailLogin');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.alternativeLinkText}>Login</Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Commented out Phone Number Input */}
               {/* <Text style={styles.inputLabel}>Enter your mobile number</Text> */}
               {/* <View style={styles.phoneInputContainer}>
-                <View style={styles.phoneInputWrapper}>
-                  <PhoneInput
-                    ref={phoneInputRef}
-                    defaultValue={phoneNumber}
-                    value={phoneNumber}
-                    defaultCountry="US"
-                    onChangePhoneNumber={(number) => {
-                      setPhoneNumber(number);
-                    }}
-                    onChangeSelectedCountry={(country: any) => {
-                        setCountryCode(country?.idd?.root);
-                    }}
-                    customCaret={() => <ChevronDown size={16} color="#666" />}
-                    phoneInputStyles={
-                      {
-                        container: {
-                          borderWidth: 0,
-                          borderRadius: 12,
-                          backgroundColor: "#FFFFFF",
-                          height: 55,
-                        },
-                        flagContainer: {
-                          borderWidth: 0,
-                          borderRadius: 12,
-                          backgroundColor: "#FFFFFF",
-                        },
-                        divider: {
-                          display: 'none',
-                        },
-                        callingCode: {
-                          display: 'none',
-                        },
-                        input: {
-                          paddingLeft: -10,
-                        }
-                      }
+            <View style={styles.phoneInputWrapper}>
+              <PhoneInput
+                ref={phoneInputRef}
+                defaultValue={phoneNumber}
+                value={phoneNumber}
+                defaultCountry="US"
+                onChangePhoneNumber={(number) => {
+                  setPhoneNumber(number);
+                }}
+                onChangeSelectedCountry={(country: any) => {
+                    setCountryCode(country?.idd?.root);
+                }}
+                customCaret={() => <ChevronDown size={16} color="#666" />}
+                phoneInputStyles={
+                  {
+                    container: {
+                      borderWidth: 0,
+                      borderRadius: 12,
+                      backgroundColor: "#FFFFFF",
+                      height: 55,
+                    },
+                    flagContainer: {
+                      borderWidth: 0,
+                      borderRadius: 12,
+                      backgroundColor: "#FFFFFF",
+                    },
+                    divider: {
+                      display: 'none',
+                    },
+                    callingCode: {
+                      display: 'none',
+                    },
+                    input: {
+                      paddingLeft: -10,
                     }
-                    modalStyles={{
-                      searchContainer: {
-            
-                      },
-                      searchInput: {
-                        backgroundColor: 'white',
-                        borderRadius: 14,
-                        borderWidth: 1,
-                        borderColor: '#E0E0E0',
-                        padding: 14,
-                        fontSize: 16,
-                        color: '#203049',
-                        fontWeight: '500',
-                      },
-                      countryItem: {
-                        padding: 14,
-                        borderColor: '#E0E0E0',
-                        borderWidth: 1,
-                        borderRadius: 14,
-                      },
-                    }}
-                    placeholder="Enter mobile number"
-                  />
-                </View>
+                  }
+                }
+                modalStyles={{
+                  searchContainer: {
+        
+                  },
+                  searchInput: {
+                    backgroundColor: 'white',
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: '#E0E0E0',
+                    padding: 14,
+                    fontSize: 16,
+                    color: '#203049',
+                    fontWeight: '500',
+                  },
+                  countryItem: {
+                    padding: 14,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
+                    borderRadius: 14,
+                  },
+                }}
+                placeholder="Enter mobile number"
+              />
+            </View>
               </View> */}
 
-              {/* Terms and Privacy Policy */}
-              {/* <Text style={styles.termsText}>
-                By continuing, you agree to our{' '}
-                <Text style={styles.linkText} onPress={handleTermsPress}>
-                  Terms of Service
-                </Text>
-                {' and '}
-                <Text style={styles.linkText} onPress={handlePrivacyPress}>
-                  Privacy Policy
-                </Text>
-              </Text> */}
+          {/* Terms and Privacy Policy */}
+          {/* <Text style={styles.termsText}>
+            By continuing, you agree to our{' '}
+            <Text style={styles.linkText} onPress={handleTermsPress}>
+              Terms of Service
+            </Text>
+            {' and '}
+            <Text style={styles.linkText} onPress={handlePrivacyPress}>
+              Privacy Policy
+            </Text>
+          </Text> */}
             </>
           )}
         </View>
@@ -411,6 +431,18 @@ const styles = StyleSheet.create({
     elevation: 2,
     minHeight: height * 0.6,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 0,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
   cardTitle: {
     fontSize: Fonts.xl,
     marginTop:10,
@@ -423,10 +455,10 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textSecondary,
-    // marginBottom: 12,
+    marginBottom: 6,
   },
   emailInputContainer: {
-    marginBottom: 24,
+    marginBottom: 10,
   },
   emailInput: {
     borderWidth: 1,
@@ -476,7 +508,22 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   otpButton: {
+    marginBottom: 16,
+  },
+  alternativeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  alternativeText: {
+    fontSize: Fonts.sm,
+    color: Colors.textTertiary,
+  },
+  alternativeLinkText: {
+    fontSize: Fonts.sm,
+    color: Colors.primaryCyan,
+    fontWeight: Fonts.weightMedium,
   },
   termsText: {
     fontSize: Fonts.sm,
@@ -493,13 +540,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 130,
     height: 140,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    // marginBottom: 4,
   },
 });
 

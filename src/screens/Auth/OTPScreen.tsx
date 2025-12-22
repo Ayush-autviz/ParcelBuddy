@@ -34,6 +34,7 @@ type RootStackParamList = {
   };
   ProfileSetup: undefined;
   MainApp: undefined;
+  CreatePassword: undefined;
 };
 
 type OTPScreenNavigationProp = StackNavigationProp<RootStackParamList, 'OTPScreen'>;
@@ -118,31 +119,35 @@ const OTPScreen: React.FC = () => {
       {
         onSuccess: (response: any) => {
           console.log('response', response);
-          setToken({
-            access_token: response.tokens.access,
-            refresh_token: response.tokens.refresh,
+          // setToken({
+          //   access_token: response.tokens.access,
+          //   refresh_token: response.tokens.refresh,
+          // });
+          // if (!response.profile_setup) {
+          //   // Store the profile data (including email) from OTP verification response
+          //   if (response.profile) {
+          //     setUser(response.profile);
+          //   } else {
+          //     setUser({profile_setup: false});
+          //   }
+          //   navigation.reset({
+          //     index: 0,
+          //     routes: [{ name: 'ProfileSetup' }],
+          //   });
+          // } else {
+          //   setUser(response.profile);
+          //   // Navigate to root MainApp
+          //   navigation.dispatch(
+          //     CommonActions.reset({
+          //       index: 0,
+          //       routes: [{ name: 'MainApp' as never }],
+          //     })
+          //   );
+          // }
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'CreatePassword', params: { email: email.trim() } }],
           });
-          if (!response.profile_setup) {
-            // Store the profile data (including email) from OTP verification response
-            if (response.profile) {
-              setUser(response.profile);
-            } else {
-              setUser({profile_setup: false});
-            }
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'ProfileSetup' }],
-            });
-          } else {
-            setUser(response.profile);
-            // Navigate to root MainApp
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'MainApp' as never }],
-              })
-            );
-          }
         },
         onError: (error: any) => {
           console.log('Error verifying OTP:', error.response?.data?.error);

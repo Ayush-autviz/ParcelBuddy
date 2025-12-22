@@ -8,77 +8,84 @@ import {
   Image,
   TextInput,
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
-import { useLoginEmail } from '../../hooks/useAuthMutations';
+import { useResetPassword } from '../../hooks/useAuthMutations';
 import { useToast } from '../../components/Toast';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { useAuthStore } from '../../services/store';
 
 const { width, height } = Dimensions.get('window');
 
-type EmailLoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'EmailLogin'>;
+type ResetPasswordScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'ResetPassword'>;
 
-const EmailLoginScreen: React.FC = () => {
-  const navigation = useNavigation<EmailLoginScreenNavigationProp>();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const ResetPasswordScreen: React.FC = () => {
+  const navigation = useNavigation<ResetPasswordScreenNavigationProp>();
+  const route = useRoute();
+  const email = (route.params as { email?: string })?.email || '';
+  const otp = (route.params as { otp?: string })?.otp || '';
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const loginMutation = useLoginEmail();
+  const resetPasswordMutation = useResetPassword();
   const { showError, showSuccess } = useToast();
   const { setToken, setUser } = useAuthStore();
 
-  const handleLogin = () => {
-    if (!email.trim()) {
-      showError('Please enter your email address');
+  const handleResetPassword = () => {
+    if (!newPassword.trim()) {
+      showError('Please enter a new password');
       return;
     }
 
-    if (!password.trim()) {
-      showError('Please enter your password');
+    if (newPassword.length < 6) {
+      showError('Password must be at least 6 characters long');
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      showError('Please enter a valid email address');
+    if (newPassword !== confirmPassword) {
+      showError('Passwords do not match');
       return;
     }
 
-    loginMutation.mutate(
-      { email: email.trim(), password: password.trim() },
+    resetPasswordMutation.mutate(
+      { 
+        email: email.trim(), 
+        otp: otp.trim(),
+        new_password: newPassword.trim(), 
+        confirm_password: confirmPassword.trim() 
+      },
       {
         onSuccess: (response: any) => {
-          console.log('Email Login Response:', response);
+          console.log('Reset Password Response:', response);
+          showSuccess('Password reset successfully!');
           
-          // Store tokens
-          if (response.tokens) {
-            setToken({
-              access_token: response.tokens.access,
-              refresh_token: response.tokens.refresh,
-            });
-          }
+          // Store tokens if provided
+          // if (response.tokens) {
+          //   setToken({
+          //     access_token: response.tokens.access,
+          //     refresh_token: response.tokens.refresh,
+          //   });
+          // }
           
-          // Store user data
-          if (response.profile) {
-            setUser(response.profile);
-          }
+          // Store user data if provided
+          // if (response.profile) {
+          //   setUser(response.profile);
+          // }
           
           // Navigate based on profile setup status
-          if (response.profile_setup === false) {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'ProfileSetup' }],
-            });
-          } else {
+          // if (response.profile_setup === false) {
+          //   navigation.reset({
+          //     index: 0,
+          //     routes: [{ name: 'ProfileSetup' }],
+          //   });
+          // } else {
             // Navigate to root MainApp
             navigation.dispatch(
               CommonActions.reset({
@@ -86,28 +93,24 @@ const EmailLoginScreen: React.FC = () => {
                 routes: [{ name: 'MainApp' as never }],
               })
             );
-          }
+          // }
         },
         onError: (error: any) => {
-          console.log('Email Login Error:', error.response);
+          console.log('Reset Password Error:', error);
           const errorMessage = 
-            error?.response?.data?.error || 
             error?.response?.data?.message || 
+            error?.response?.data?.error || 
             error?.response?.data?.detail ||
             error?.message || 
-            'Failed to login. Please try again.';
+            'Failed to reset password. Please try again.';
           showError(errorMessage);
         },
       }
     );
   };
 
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
-  };
-
   const handleBackPress = () => {
-    navigation.navigate('Login');
+    navigation.goBack();
   };
 
   return (
@@ -148,35 +151,25 @@ const EmailLoginScreen: React.FC = () => {
           </TouchableOpacity>
 
           {/* Title */}
-          <Text style={styles.cardTitle}>Login with Email</Text>
+          <Text style={styles.cardTitle}>Reset Password</Text>
           <View style={styles.backButton} />
         </View>
 
-        {/* Email Input */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Email Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor={Colors.textLight}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+        {/* Description */}
+        <Text style={styles.description}>
+          Enter your new password below
+        </Text>
 
-        {/* Password Input */}
+        {/* New Password Input */}
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Password</Text>
+          <Text style={styles.inputLabel}>New Password</Text>
           <View style={styles.passwordContainer}>
             <TextInput
               style={styles.passwordInput}
-              placeholder="Enter your password"
+              placeholder="Enter new password"
               placeholderTextColor={Colors.textLight}
-              value={password}
-              onChangeText={setPassword}
+              value={newPassword}
+              onChangeText={setNewPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoCorrect={false}
@@ -195,35 +188,41 @@ const EmailLoginScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Forgot Password Link */}
-        <TouchableOpacity
-          style={styles.forgotPasswordContainer}
-          onPress={handleForgotPassword}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
-        {/* Alternative Login Options */}
-        <View style={styles.alternativeContainer}>
-          <Text style={styles.alternativeText}>Don't have an account? </Text>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('Login', { showOtpFlow: true });
-            }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.alternativeLinkText}>Signup</Text>
-          </TouchableOpacity>
+        {/* Confirm Password Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Confirm Password</Text>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm new password"
+              placeholderTextColor={Colors.textLight}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              activeOpacity={0.7}
+            >
+              {showConfirmPassword ? (
+                <EyeOff size={20} color={Colors.textLight} />
+              ) : (
+                <Eye size={20} color={Colors.textLight} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Login Button */}
+        {/* Reset Password Button */}
         <GradientButton
-          title={loginMutation.isPending ? 'Logging in...' : 'Login'}
-          onPress={handleLogin}
-          loading={loginMutation.isPending}
-          style={styles.loginButton}
-          disabled={loginMutation.isPending}
+          title={resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
+          onPress={handleResetPassword}
+          loading={resetPasswordMutation.isPending}
+          style={styles.resetButton}
+          disabled={resetPasswordMutation.isPending}
         />
       </View>
     </KeyboardAwareScrollView>
@@ -278,7 +277,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    // marginBottom: 20,
   },
   backButton: {
     width: 40,
@@ -293,6 +292,12 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
+  description: {
+    fontSize: Fonts.sm,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
   inputContainer: {
     marginBottom: 10,
   },
@@ -301,17 +306,6 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textSecondary,
     marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: 12,
-    backgroundColor: Colors.backgroundGray,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: Fonts.base,
-    color: Colors.textPrimary,
-    height: 55,
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -332,32 +326,9 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 16,
   },
-  forgotPasswordContainer: {
-    alignItems: 'flex-end',
+  resetButton: {
+    marginTop: 10,
     marginBottom: 24,
-  },
-  forgotPasswordText: {
-    fontSize: Fonts.sm,
-    color: Colors.primaryCyan,
-    fontWeight: Fonts.weightMedium,
-  },
-  loginButton: {
-    marginBottom: 24,
-  },
-  alternativeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  alternativeText: {
-    fontSize: Fonts.sm,
-    color: Colors.textTertiary,
-  },
-  alternativeLinkText: {
-    fontSize: Fonts.sm,
-    color: Colors.primaryCyan,
-    fontWeight: Fonts.weightMedium,
   },
   logo: {
     width: 130,
@@ -365,5 +336,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmailLoginScreen;
+export default ResetPasswordScreen;
+
+
 
