@@ -19,11 +19,12 @@ import { ArrowLeft } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
-import { useGetOtpEmail, useGoogleLogin } from '../../hooks/useAuthMutations';
+import { useGetOtpEmail, useGoogleLogin, useVerifyOtpEmail, useResendOtpEmail } from '../../hooks/useAuthMutations';
 import { useToast } from '../../components/Toast';
 import AuthMethodButtons from '../../components/AuthMethodButtons';
 import { useGoogleSignIn } from '../../hooks/useGoogleSignIn';
 import { useAuthStore } from '../../services/store';
+import OtpVerificationForm from '../../components/auth/OtpVerificationForm';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,7 +37,7 @@ const LoginScreen: React.FC = () => {
   // const [phoneNumber, setPhoneNumber] = useState('');
   // const [countryCode, setCountryCode] = useState('');
   const [email, setEmail] = useState('');
-  const [step, setStep] = useState<'auth-methods' | 'email-login'>('auth-methods');
+  const [step, setStep] = useState<'auth-methods' | 'email-login' | 'otp-verification'>('auth-methods');
   
   // Check if we should show OTP flow from route params
   useEffect(() => {
@@ -47,6 +48,8 @@ const LoginScreen: React.FC = () => {
   }, [route.params]);
   
   const getOtpEmailMutation = useGetOtpEmail();
+  const verifyOtpMutation = useVerifyOtpEmail();
+  const resendOtpMutation = useResendOtpEmail();
   const googleLoginMutation = useGoogleLogin();
   const { showWarning, showError } = useToast();
   const { signIn: signInWithGoogle, isLoading: isGoogleSignInLoading } = useGoogleSignIn();
@@ -71,7 +74,7 @@ const LoginScreen: React.FC = () => {
       {
         onSuccess: (response: any) => {
           console.log('Email OTP sent:', response);
-          navigation.navigate('OTPScreen', { email: email.trim() });
+          setStep('otp-verification');
         },
         onError: (error: any) => {
           console.log('Error sending OTP:', error);
@@ -206,7 +209,19 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleBackPress = () => {
-    setStep('auth-methods');
+    if (step === 'otp-verification') {
+      setStep('email-login');
+    } else {
+      setStep('auth-methods');
+    }
+  };
+
+  const handleVerifySuccess = (otp: string, response?: any) => {
+    console.log('OTP verified:', response);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'CreatePassword', params: { email: email.trim() } }],
+    });
   };
 
   return (
@@ -248,7 +263,7 @@ const LoginScreen: React.FC = () => {
                 onApplePress={handleApplePress}
               />
             </>
-          ) : (
+          ) : step === 'email-login' ? (
             <>
             <View style={styles.headerRow}>
               {/* Back Button */}
@@ -301,7 +316,36 @@ const LoginScreen: React.FC = () => {
                   <Text style={styles.alternativeLinkText}>Login</Text>
                 </TouchableOpacity>
               </View>
+            </>
+          ) : (
+            <>
+            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+              {/* Back Button */}
+              <TouchableOpacity
+                style={{justifyContent: 'space-between', alignItems: 'center'}}
+                onPress={handleBackPress}
+                activeOpacity={0.7}
+              >
+                <ArrowLeft size={24} color={Colors.textPrimary} />
+              </TouchableOpacity>
 
+              {/* Title */}
+              <Text style={{fontSize: Fonts.xl, fontWeight: Fonts.weightBold, color: Colors.textPrimary, textAlign: 'center'}}>Verify OTP</Text>
+              <View style={{width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-start'}} />
+            </View>
+
+              {/* OTP Verification Form */}
+              <OtpVerificationForm
+                email={email}
+                onVerifySuccess={handleVerifySuccess}
+                verifyMutation={verifyOtpMutation}
+                resendMutation={resendOtpMutation}
+                initialTimer={60}
+                verifyButtonText="Verify OTP"
+                resendButtonText="Resend OTP"
+              />
+            </>
+          )}
               {/* Commented out Phone Number Input */}
               {/* <Text style={styles.inputLabel}>Enter your mobile number</Text> */}
               {/* <View style={styles.phoneInputContainer}>
@@ -379,8 +423,6 @@ const LoginScreen: React.FC = () => {
               Privacy Policy
             </Text>
           </Text> */}
-            </>
-          )}
         </View>
     </KeyboardAwareScrollView>
   );
