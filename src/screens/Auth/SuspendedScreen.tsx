@@ -18,6 +18,7 @@ import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { useContactSupport } from '../../hooks/useProfile';
 import { useToast } from '../../components/Toast';
 import { Clipboard } from 'react-native';
+import { useAuthStore } from '../../services/store';
 
 const { width, height } = Dimensions.get('window');
 
@@ -27,6 +28,7 @@ const SuspendedScreen: React.FC = () => {
   const navigation = useNavigation<SuspendedScreenNavigationProp>();
   const { data: contactSupportData, isLoading } = useContactSupport();
   const { showSuccess } = useToast();
+  const { setToken } = useAuthStore();
 
   const supportEmail = contactSupportData?.email || 'support@parcelbuddy.com';
 
@@ -37,9 +39,15 @@ const SuspendedScreen: React.FC = () => {
 
   const handleLogout = () => {
     // Navigate back to login
+    setToken(
+      {
+        access_token: '',
+        refresh_token: '',
+      }
+    );
     navigation.reset({
       index: 0,
-      routes: [{ name: 'Login' }],
+      routes: [{ name: 'Auth' }],
     });
   };
 

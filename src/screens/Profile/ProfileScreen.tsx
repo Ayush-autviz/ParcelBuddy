@@ -92,20 +92,74 @@ const ProfileScreen: React.FC = () => {
     setShowDeleteAccountModal(false);
     setIsDeletingAccount(true);
     try {
-      await deleteAccount();
-      queryClient.clear();
-      await logout();
+      // Step 1: Delete account
+      const result = await deleteAccount();
+      console.log('Delete account result:', result);
+      
+      // Step 2: Clear query cache
+      try {
+        queryClient.clear();
+      } catch (clearError) {
+        console.error('Error clearing query cache:', clearError);
+        // Continue even if clearing cache fails
+      }
+      
+      // Step 3: Logout user
+      try {
+        await logout();
+      } catch (logoutError) {
+        console.error('Error during logout:', logoutError);
+        // Continue even if logout fails - account is already deleted
+      }
+      
+      // Step 4: Show success and navigate
       showSuccess('Account deleted successfully');
-      // Navigate to root Auth screen
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Auth' as never }],
-        })
-      );
+      
+      // Step 5: Navigate to root Auth screen
+      try {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Auth' as never }],
+          })
+        );
+      } catch (navError) {
+        console.error('Error during navigation:', navError);
+        // Navigation error shouldn't prevent success message
+      }
     } catch (error: any) {
       console.error('Error deleting account:', error);
-      showError(error?.response?.data?.error || 'Failed to delete account. Please try again.');
+      console.error('Error response:', error?.response);
+      console.error('Error response data:', error?.response?.data);
+      console.error('Error response status:', error?.response?.status);
+      
+      // Check if the error is actually from a successful deletion
+      // Sometimes the response might be successful but throw an error during processing
+      if (error?.response?.status === 200 && error?.response?.data?.message) {
+        // This is actually a success - account was deleted
+        console.log('Account deletion was successful despite error object');
+        queryClient.clear();
+        try {
+          await logout();
+        } catch (logoutError) {
+          console.error('Error during logout:', logoutError);
+        }
+        showSuccess('Account deleted successfully');
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Auth' as never }],
+          })
+        );
+      } else {
+        // Actual error occurred
+        const errorMessage = error?.response?.data?.error || 
+                            error?.response?.data?.detail || 
+                            error?.response?.data?.message ||
+                            error?.message ||
+                            'Failed to delete account. Please try again.';
+        showError(errorMessage);
+      }
     } finally {
       setIsDeletingAccount(false);
     }

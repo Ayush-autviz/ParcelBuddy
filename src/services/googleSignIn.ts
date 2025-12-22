@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 // For iOS: Get it from GoogleService-Info.plist -> CLIENT_ID
 // For Android: Get it from google-services.json -> client -> oauth_client -> client_id
 GoogleSignin.configure({
+  iosClientId: '239698794881-oamlmashqj46ephvn7elbvb7lfja9vr2.apps.googleusercontent.com',
   webClientId: '239698794881-mc60nuu984mpqqtne2eedf3v756he0oa.apps.googleusercontent.com', // Replace with your actual web client ID
   offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
   forceCodeForRefreshToken: true, // [Android] related to `serverAuthCode`, read the docs link below *.

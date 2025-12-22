@@ -13,10 +13,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   var reactNativeFactory: RCTReactNativeFactory?
 
   func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-    // Handle Google Sign-In URL
-    if GIDSignIn.sharedInstance.handle(url) {
-      return true
-    }
+    // // Handle Google Sign-In URL
+    // if GIDSignIn.sharedInstance.handle(url) {
+    //   return true
+    // }
     // Handle other URLs (e.g., deep linking)
     return RCTLinkingManager.application(app, open: url, options: options)
   }
@@ -40,7 +40,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // IMPORTANT: This must be the iOS OAuth Client ID, NOT the Web Client ID
     // Get this from Google Cloud Console → APIs & Services → Credentials → iOS Client ID
     let finalClientId = iosClientId ?? "239698794881-mc60nuu984mpqqtne2eedf3v756he0oa.apps.googleusercontent.com"
-    GoogleSignIn.sharedInstance.configuration = GIDConfiguration(clientID: finalClientId)
+    // GoogleSignIn.sharedInstance.configuration = GIDConfiguration(clientID: finalClientId)
     
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
