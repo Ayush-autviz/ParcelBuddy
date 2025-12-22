@@ -257,6 +257,7 @@ const ProfileSetupScreen: React.FC = () => {
         console.log('Error saving profile:', error.response);
         const errorMessage = error?.response?.data?.error || 
                             error?.response?.data?.message || 
+                            error?.response?.data?.phone?.[0] ||
                             error?.message || 
                             'Failed to save profile. Please try again.';
         showError(errorMessage);
