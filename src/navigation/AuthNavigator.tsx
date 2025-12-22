@@ -12,6 +12,7 @@ import CreatePasswordScreen from '../screens/Auth/CreatePasswordScreen';
 import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
 import VerifyResetOtpScreen from '../screens/Auth/VerifyResetOtpScreen';
 import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
+import SuspendedScreen from '../screens/Auth/SuspendedScreen';
 
 // Define the auth stack navigator param list
 export type AuthStackParamList = {
@@ -39,6 +40,7 @@ export type AuthStackParamList = {
     email: string;
     otp: string;
   };
+  Suspended: undefined;
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
@@ -62,6 +64,13 @@ const AuthNavigator: React.FC = () => {
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="VerifyResetOtp" component={VerifyResetOtpScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+      <Stack.Screen 
+        name="Suspended" 
+        component={SuspendedScreen}
+        options={{
+          gestureEnabled: false, // Prevent going back when suspended
+        }}
+      />
     </Stack.Navigator>
   );
 };
