@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -228,22 +229,32 @@ const ProfileScreen: React.FC = () => {
           })}
         </View>
 
+        {/* Delete Account Button */}
+        <TouchableOpacity
+          style={[
+            styles.deleteAccountButton,
+            isDeletingAccount && styles.deleteAccountButtonDisabled,
+          ]}
+          onPress={handleDeleteAccount}
+          disabled={isDeletingAccount}
+          activeOpacity={0.7}
+        >
+          {isDeletingAccount ? (
+            <ActivityIndicator size="small" color={Colors.error} />
+          ) : (
+            <>
+              <Trash2 size={20} color={Colors.error} style={styles.deleteAccountIcon} />
+              <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         {/* Logout Button */}
         <GradientButton
           title="Logout"
           onPress={handleLogout}
           style={styles.logoutButton}
           icon={<LogOut size={20} color={Colors.textWhite} style={styles.logoutIcon} />}
-        />
-
-        {/* Delete Account Button */}
-        <GradientButton
-          title="Delete Account"
-          onPress={handleDeleteAccount}
-          style={styles.deleteAccountButton}
-          icon={<Trash2 size={20} color={Colors.textWhite} style={styles.deleteAccountIcon} />}
-          loading={isDeletingAccount}
-          disabled={isDeletingAccount}
         />
       </ScrollView>
 
@@ -384,16 +395,34 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sm,
     color: Colors.textTertiary,
   },
-  logoutButton: {
-    marginTop: 8,
-  },
-  logoutIcon: {
-    marginRight: 0,
-  },
   deleteAccountButton: {
-    marginTop: 12,
+    marginTop: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: Colors.error,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteAccountButtonDisabled: {
+    opacity: 0.6,
+  },
+  deleteAccountButtonText: {
+    color: Colors.error,
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    marginLeft: 8,
   },
   deleteAccountIcon: {
+    marginRight: 0,
+  },
+  logoutButton: {
+    marginTop: 12,
+  },
+  logoutIcon: {
     marginRight: 0,
   },
 });

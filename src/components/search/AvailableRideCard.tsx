@@ -58,7 +58,7 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
 
   return (
  
-    <View style={[styles.container, style]}>
+    <TouchableOpacity onPress={onSendRequest || onPress || (() => {})} style={[styles.container, style]}>
       <Card style={styles.card} padding={16}>
         <View style={styles.content}>
           {/* Left Side - Driver Info */}
@@ -111,12 +111,12 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
         {/* Send Request Button */}
         <GradientButton
           title="Send Request"
-          onPress={onSendRequest || onPress || (() => {})}
+          onPress={ (() => {})}
           style={styles.requestButton}
           textStyle={styles.requestButtonText}
         />
       </Card>
-    </View>
+    </TouchableOpacity>
   );
 };
 

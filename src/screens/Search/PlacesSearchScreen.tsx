@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -41,6 +41,7 @@ const PlacesSearchScreen: React.FC = () => {
 
   const [query, setQuery] = useState(initialValue);
   const [searchQuery, setSearchQuery] = useState(''); // Query to actually search with
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     data: places = [],
@@ -48,9 +49,41 @@ const PlacesSearchScreen: React.FC = () => {
     isFetching,
   } = usePlaces(searchQuery, isDomestic, searchQuery.length >= 2);
 
+  // Debounce search query updates
+  useEffect(() => {
+    // Clear existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced search
+    if (query.trim().length >= 2) {
+      debounceTimeoutRef.current = setTimeout(() => {
+        setSearchQuery(query.trim());
+      }, 500); // 500ms debounce delay
+    } else {
+      // Clear search query if input is too short
+      setSearchQuery('');
+    }
+
+    // Cleanup function
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [query]);
+
   const handleSearch = () => {
+    // Clear any pending debounce
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    // Immediately update search query when Enter is pressed
     if (query.trim().length >= 2) {
       setSearchQuery(query.trim());
+    } else {
+      setSearchQuery('');
     }
   };
 
@@ -161,7 +194,7 @@ const PlacesSearchScreen: React.FC = () => {
           <MapPin size={64} color={Colors.primaryCyan} />
           <Text style={styles.emptyTitle}>Search for places</Text>
           <Text style={styles.emptyDescription}>
-            Type at least 2 characters and press Enter to search
+            Type at least 2 characters to search
           </Text>
         </View>
       );

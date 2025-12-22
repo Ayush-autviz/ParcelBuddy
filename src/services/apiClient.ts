@@ -9,7 +9,8 @@
   });
 
   // const BaseURL = 'http://13.233.74.72:8000';
-  const BaseURL = 'https://api.parcelbuddys.com'
+  // const BaseURL = 'https://api.parcelbuddys.com'
+  const BaseURL = 'https://54c72ca97865.ngrok-free.app'
 
   // Request Interceptor
   instance.interceptors.request.use((config) => {
@@ -33,6 +34,8 @@
     },
     async (error) => {
       const originalRequest = error.config;
+
+      console.log('ERROR IN INTERCEPTOR', error.response);
 
       // Prevent infinite loops
       if (error.response?.status === 401 && !originalRequest._retry) {

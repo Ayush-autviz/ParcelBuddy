@@ -7,10 +7,17 @@ import SignupScreen from '../screens/Auth/SignupScreen';
 import OTPScreen from '../screens/Auth/OTPScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import AuthTermsPolicy from '../screens/Auth/AuthTermsPolicy';
+import EmailLoginScreen from '../screens/Auth/EmailLoginScreen';
+import CreatePasswordScreen from '../screens/Auth/CreatePasswordScreen';
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
+import VerifyResetOtpScreen from '../screens/Auth/VerifyResetOtpScreen';
+import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 
 // Define the auth stack navigator param list
 export type AuthStackParamList = {
-  Login: undefined;
+  Login: {
+    showOtpFlow?: boolean;
+  } | undefined;
   Signup: undefined;
   OTPScreen: {
     email: string;
@@ -18,6 +25,16 @@ export type AuthStackParamList = {
   };
   ProfileSetup: undefined;
   AuthTermsPolicy: undefined;
+  EmailLogin: undefined;
+  CreatePassword: undefined;
+  ForgotPassword: undefined;
+  VerifyResetOtp: {
+    email: string;
+  };
+  ResetPassword: {
+    email: string;
+    otp: string;
+  };
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
@@ -36,6 +53,11 @@ const AuthNavigator: React.FC = () => {
       <Stack.Screen name="OTPScreen" component={OTPScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <Stack.Screen name="AuthTermsPolicy" component={AuthTermsPolicy} />
+      <Stack.Screen name="EmailLogin" component={EmailLoginScreen} />
+      <Stack.Screen name="CreatePassword" component={CreatePasswordScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="VerifyResetOtp" component={VerifyResetOtpScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );
 };

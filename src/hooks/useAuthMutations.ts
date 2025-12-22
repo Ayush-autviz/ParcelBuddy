@@ -1,5 +1,17 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
-import { getOtpEmail, verifyOtpEmail, resendOtpEmail, profileSetup, sendFcmToken, googleLogin } from '../services/api/auth';
+import { 
+  getOtpEmail, 
+  verifyOtpEmail, 
+  resendOtpEmail, 
+  profileSetup, 
+  sendFcmToken, 
+  googleLogin,
+  createPassword,
+  loginEmail,
+  forgotPassword,
+  verifyResetOtp,
+  resetPassword
+} from '../services/api/auth';
 
 // Phone OTP hooks - COMMENTED OUT, using email OTP instead
 // export const useGetOtp = (): UseMutationResult<any, Error, { phone: string }, unknown> => {
@@ -48,6 +60,37 @@ export const useSendFcmToken = (): UseMutationResult<any, Error, { token: string
 export const useGoogleLogin = (): UseMutationResult<any, Error, { token: string }, unknown> => {
   return useMutation({
     mutationFn: (data: { token: string }) => googleLogin(data),
+  });
+};
+
+// Password management hooks
+export const useCreatePassword = (): UseMutationResult<any, Error, { email: string; password: string; confirm_password: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { email: string; password: string; confirm_password: string }) => createPassword(data),
+  });
+};
+
+export const useLoginEmail = (): UseMutationResult<any, Error, { email: string; password: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { email: string; password: string }) => loginEmail(data),
+  });
+};
+
+export const useForgotPassword = (): UseMutationResult<any, Error, { email: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { email: string }) => forgotPassword(data),
+  });
+};
+
+export const useVerifyResetOtp = (): UseMutationResult<any, Error, { email: string; otp: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { email: string; otp: string }) => verifyResetOtp(data),
+  });
+};
+
+export const useResetPassword = (): UseMutationResult<any, Error, { email: string; otp: string; new_password: string; confirm_password: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { email: string; otp: string; new_password: string; confirm_password: string }) => resetPassword(data),
   });
 };
 

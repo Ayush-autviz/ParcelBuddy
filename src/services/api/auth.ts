@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import publicApiClient from "../publicApiClient";
 
 // get otp (phone) - COMMENTED OUT, using email OTP instead
 // export const getOtp = async (data: any) => {
@@ -17,21 +18,21 @@ import apiClient from "../apiClient";
 // get otp for email
 export const getOtpEmail = async (data: { email: string }) => {
   console.log('data', data);
-  const response = await apiClient.post('/auth/request-otp-email/', data);
+  const response = await publicApiClient.post('/auth/request-otp-email/', data);
   return response.data;
 };
 
 // verify otp for email
 export const verifyOtpEmail = async (data: { email: string; otp: string }) => {
   console.log('data', data);
-  const response = await apiClient.post('/auth/verify-otp-email/', data);
+  const response = await publicApiClient.post('/auth/verify-otp-email/', data);
   return response.data;
 };
 
 // resend otp for email
 export const resendOtpEmail = async (data: { email: string }) => {
   console.log('data', data);
-  const response = await apiClient.post('/auth/resend-otp-email/', data);
+  const response = await publicApiClient.post('/auth/resend-otp-email/', data);
   return response.data;
 };
 
@@ -80,6 +81,37 @@ export const sendFcmToken = async (data: any) => {
 
 // google login
 export const googleLogin = async (data: { token: string }) => {
-  const response = await apiClient.post('/auth/google-login/', data);
+  const response = await publicApiClient.post('/auth/google-login/', data);
+  return response.data;
+};
+
+// password management
+export const createPassword = async (data: { email: string; password: string; confirm_password: string }) => {
+  console.log('data', data);
+  const response = await publicApiClient.post('/auth/create-password/', data);
+  return response.data;
+};
+
+export const loginEmail = async (data: { email: string; password: string }) => {
+  console.log('data', data);
+  const response = await publicApiClient.post('/auth/login-email/', data);
+  return response.data;
+};
+
+export const forgotPassword = async (data: { email: string }) => {
+  console.log('data', data);
+  const response = await publicApiClient.post('/auth/forgot-password/', data);
+  return response.data;
+};
+
+export const verifyResetOtp = async (data: { email: string; otp: string }) => {
+  console.log('data', data);
+  const response = await publicApiClient.post('/auth/verify-reset-otp/', data);
+  return response.data;
+};
+
+export const resetPassword = async (data: { email: string; otp: string; new_password: string; confirm_password: string }) => {
+  console.log('data', data);
+  const response = await publicApiClient.post('/auth/reset-password/', data);
   return response.data;
 };

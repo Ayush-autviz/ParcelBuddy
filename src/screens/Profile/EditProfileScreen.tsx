@@ -490,7 +490,7 @@ const EditProfileScreen: React.FC = () => {
                   container: {
                     borderWidth: 0,
                     borderRadius: 12,
-                    backgroundColor: Colors.backgroundGray,
+                    backgroundColor: Colors.backgroundWhite,
                     height: 50,
                   },
                   flagContainer: {
