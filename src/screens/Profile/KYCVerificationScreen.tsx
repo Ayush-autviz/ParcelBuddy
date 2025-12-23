@@ -5,7 +5,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
@@ -49,7 +49,7 @@ const KYCVerificationScreen: React.FC = () => {
 
   
   // Use profile data from API if available, otherwise fallback to user from store
-  const currentProfile = profileData || user;
+  const currentProfile = user || profileData;
   
   const kycStatus = currentProfile?.kyc_status;
   const isKYCApproved = kycStatus === 'Approved';
@@ -87,7 +87,9 @@ const KYCVerificationScreen: React.FC = () => {
     // Refresh profile to get updated KYC status
     await fetchAndUpdateProfile();
     
-    // The screen will automatically update based on the new status
+    // Navigate to KYCVerificationScreen to show updated status
+    // Use navigate instead of reset to maintain bottom tabs visibility
+    navigation.navigate('KYCVerification');
   };
 
   return (

@@ -46,6 +46,12 @@ const KYCWebViewScreen: React.FC = () => {
       statusCheckedRef.current = true;
       showInfo('Your KYC verification is under review. We will notify you once it\'s processed.');
       setTimeout(() => {
+        fetchAndUpdateProfile().then(() => {
+          navigation.goBack();
+        }).catch((error) => {
+          console.error('Error fetching profile after KYC review status:', error);
+          navigation.goBack();
+        });
         navigation.goBack();
       }, 2000);
       return;
@@ -86,9 +92,21 @@ const KYCWebViewScreen: React.FC = () => {
       console.log('❌ [KYC WebView] Status detected: Declined');
       statusCheckedRef.current = true;
       showError('Your KYC verification has been declined. Please try again.');
-      setTimeout(() => {
-        navigation.goBack();
-      }, 1000);
+      
+      // Fetch updated profile to get latest KYC status
+      fetchAndUpdateProfile().then(() => {
+        // Wait a bit for the profile to update, then go back
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1000);
+      }).catch((error) => {
+        console.error('Error fetching profile after KYC decline:', error);
+        // On error, just go back
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1000);
+      });
+      return;
     }
   };
 
