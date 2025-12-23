@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   confirmButton: {
-    paddingVertical: 14,
+    paddingVertical: 6,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderLight,
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },

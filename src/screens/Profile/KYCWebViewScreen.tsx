@@ -23,7 +23,7 @@ const KYCWebViewScreen: React.FC = () => {
   const route = useRoute<KYCWebViewScreenRouteProp>();
   const navigation = useNavigation<KYCWebViewScreenNavigationProp>();
   const { url } = route.params;
-  const { showSuccess, showInfo } = useToast();
+  const { showSuccess, showInfo, showError } = useToast();
   const { user, setUser } = useAuthStore();
 
   const [loading, setLoading] = React.useState(true);
@@ -79,6 +79,16 @@ const KYCWebViewScreen: React.FC = () => {
         }, 2000);
       });
       return;
+    }
+
+    // Check for status=Rejected
+    if (urlToCheck.includes('status=Declined')) {
+      console.log('❌ [KYC WebView] Status detected: Declined');
+      statusCheckedRef.current = true;
+      showError('Your KYC verification has been declined. Please try again.');
+      setTimeout(() => {
+        navigation.goBack();
+      }, 1000);
     }
   };
 

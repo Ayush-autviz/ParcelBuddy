@@ -287,7 +287,7 @@ const LoginScreen: React.FC = () => {
               </TouchableOpacity> */}
 
               {/* Title */}
-              <Text style={styles.cardTitle}>Login with OTP</Text>
+              <Text style={styles.cardTitle}>Signup</Text>
               {/* <View style={styles.backButton} /> */}
             </View>
 

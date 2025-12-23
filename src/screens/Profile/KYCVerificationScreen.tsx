@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,9 @@ import { useToast } from '../../components/Toast';
 import { DocumentIcon, SmileyIcon } from '../../assets/icons/svg/main';
 import { useAuthStore } from '../../services/store';
 import { fetchAndUpdateProfile } from '../../utils/profileUtils';
+import KycPhoneOtpForm from '../../components/kyc/KycPhoneOtpForm';
+import { useRequestKycPhoneOtp, useVerifyKycPhoneOtp } from '../../hooks/useAuthMutations';
+import { useMyProfile } from '../../hooks/useProfile';
 
 type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'KYCVerification'>;
 
@@ -30,14 +33,31 @@ const KYCVerificationScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuthStore();
   
+  // Fetch profile data from API to get phone number
+  const { data: profileData } = useMyProfile();
+  
+  // KYC Phone OTP mutations
+  const requestKycPhoneOtpMutation = useRequestKycPhoneOtp();
+  const verifyKycPhoneOtpMutation = useVerifyKycPhoneOtp();
+  
   // Fetch and update profile when screen comes into focus to get latest KYC status
   useFocusEffect(
     useCallback(() => {
       fetchAndUpdateProfile();
     }, [])
   );
+
   
-  const isKYCApproved = user?.kyc_status === 'Approved';
+  // Use profile data from API if available, otherwise fallback to user from store
+  const currentProfile = profileData || user;
+  
+  const kycStatus = currentProfile?.kyc_status;
+  const isKYCApproved = kycStatus === 'Approved';
+  const isKYCNotStarted = kycStatus === 'not_started' || kycStatus === 'Not Started' || !kycStatus;
+  const isKYCInProgress = !isKYCApproved && !isKYCNotStarted; // Any other status (In Review, Rejected, Pending, etc.)
+  
+  // Get phone number from profile data
+  const phoneNumber = currentProfile?.phone;
 
   const handleContinue = async () => {
     try {
@@ -58,6 +78,16 @@ const KYCVerificationScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleKycOtpVerifySuccess = async (response?: any) => {
+    console.log('KYC OTP verification successful:', response);
+    showSuccess('Phone number verified successfully!');
+    
+    // Refresh profile to get updated KYC status
+    await fetchAndUpdateProfile();
+    
+    // The screen will automatically update based on the new status
   };
 
   return (
@@ -100,7 +130,17 @@ const KYCVerificationScreen: React.FC = () => {
               </View>
             </View>
           </View>
+        ) : isKYCInProgress ? (
+          /* Phone OTP Verification for In Progress Status */
+          <KycPhoneOtpForm
+            phone={phoneNumber}
+            onVerifySuccess={handleKycOtpVerifySuccess}
+            requestMutation={requestKycPhoneOtpMutation}
+            verifyMutation={verifyKycPhoneOtpMutation}
+            initialTimer={60}
+          />
         ) : (
+          /* Normal Screen for Not Started Status */
           <>
             {/* Verification Steps */}
             <View style={styles.stepsContainer}>
@@ -134,8 +174,8 @@ const KYCVerificationScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Continue Button */}
-      {!isKYCApproved && (
+      {/* Continue Button - Only show for not_started status */}
+      {isKYCNotStarted && (
         <View style={styles.buttonContainer}>
           <GradientButton
             title={isLoading ? 'Loading...' : 'Continue'}

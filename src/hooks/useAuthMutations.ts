@@ -10,7 +10,9 @@ import {
   loginEmail,
   forgotPassword,
   verifyResetOtp,
-  resetPassword
+  resetPassword,
+  requestKycPhoneOtp,
+  verifyKycPhoneOtp
 } from '../services/api/auth';
 
 // Phone OTP hooks - COMMENTED OUT, using email OTP instead
@@ -91,6 +93,19 @@ export const useVerifyResetOtp = (): UseMutationResult<any, Error, { email: stri
 export const useResetPassword = (): UseMutationResult<any, Error, { email: string; otp: string; new_password: string; confirm_password: string }, unknown> => {
   return useMutation({
     mutationFn: (data: { email: string; otp: string; new_password: string; confirm_password: string }) => resetPassword(data),
+  });
+};
+
+// KYC phone OTP hooks
+export const useRequestKycPhoneOtp = (): UseMutationResult<any, Error, { phone: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { phone: string }) => requestKycPhoneOtp(data),
+  });
+};
+
+export const useVerifyKycPhoneOtp = (): UseMutationResult<any, Error, { otp: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { otp: string }) => verifyKycPhoneOtp(data),
   });
 };
 

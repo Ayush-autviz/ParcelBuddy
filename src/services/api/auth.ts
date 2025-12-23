@@ -121,3 +121,17 @@ export const getContactSupport = async () => {
   const response = await publicApiClient.get('/auth/contact-support/');
   return response.data;
 };
+
+// KYC phone OTP - request OTP
+export const requestKycPhoneOtp = async (data: { phone: string }) => {
+  console.log('data', data);
+  const response = await apiClient.post('/auth/kyc-phone-otp/request/', data);
+  return response.data;
+};
+
+// KYC phone OTP - verify OTP
+export const verifyKycPhoneOtp = async (data: { otp: string }) => {
+  console.log('data', data);
+  const response = await apiClient.post('/auth/kyc-phone-otp/verify/', data);
+  return response.data;
+};

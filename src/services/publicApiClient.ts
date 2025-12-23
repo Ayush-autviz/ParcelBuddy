@@ -10,7 +10,7 @@ const instance = axios.create({
 
 // const BaseURL = 'http://13.233.74.72:8000';
 // const BaseURL = 'https://api.parcelbuddys.com'
-const BaseURL = 'https://54c72ca97865.ngrok-free.app'
+const BaseURL = 'https://c20fa334cb66.ngrok-free.app'
 
 // Request Interceptor
 instance.interceptors.request.use((config) => {
