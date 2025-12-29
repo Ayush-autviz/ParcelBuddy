@@ -195,6 +195,18 @@ const LoginScreen: React.FC = () => {
             },
             onError: (error: any) => {
               console.error('Google Login API Error:', error);
+              
+              // Check if account is suspended from error response
+              if (error?.response?.data?.is_suspended === true) {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Suspended' as never }],
+                  })
+                );
+                return;
+              }
+              
               const errorMessage = error?.response?.data?.message || 
                                   error?.response?.data?.error || 
                                   error?.message || 

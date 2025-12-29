@@ -349,7 +349,7 @@ const SubscriptionScreen: React.FC = () => {
 
         {/* Footer Disclaimer */}
         <Text style={styles.disclaimer}>
-          All prices are exclusive of taxes and other fees. Payments are processed securely via Razorpay.
+          All prices are exclusive of taxes and other fees. Payments are processed securely{user?.profile?.country === 'IN' ? ' via Razorpay' : user?.profile?.country === 'CA' ? ' via Stripe' : '.'}.
         </Text>
       </ScrollView>
 

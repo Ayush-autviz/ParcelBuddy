@@ -111,7 +111,7 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
         {/* Send Request Button */}
         <GradientButton
           title="Send Request"
-          onPress={ (() => {})}
+          onPress={ onSendRequest || onPress || (() => {})}
           style={styles.requestButton}
           textStyle={styles.requestButtonText}
         />

@@ -10,7 +10,7 @@
 
   // const BaseURL = 'http://13.233.74.72:8000';
   const BaseURL = 'https://api.parcelbuddys.com'
-  // const BaseURL = 'https://c20fa334cb66.ngrok-free.app'
+  // const BaseURL = 'https://316e9560dc31.ngrok-free.app'
 
   // Request Interceptor
   instance.interceptors.request.use((config) => {
@@ -37,11 +37,22 @@
 
       console.log('ERROR IN INTERCEPTOR', error.response);
 
+      if (error.response?.status === 403 && error.response?.data?.is_suspended === true) {
+          console.log('403 Forbidden - Trying to refresh token');
+          useAuthStore.getState().logout();
+          navigationRef.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Suspended' as never }],
+            })
+          );
+          return Promise.reject(error);
+      }
+
       // Prevent infinite loops
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
-        console.log('403 Forbidden - Trying to refresh token');
 
         try {
           const authState = useAuthStore.getState();

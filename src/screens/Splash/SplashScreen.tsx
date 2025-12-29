@@ -111,6 +111,8 @@ const SplashScreen: React.FC = () => {
       } else if (profile) {
         hasNavigated.current = true;
         setUser(profile);
+
+        const profile_check = profile?.first_name && profile?.email && profile?.phone && profile?.date_of_birth && profile?.profile?.country;
         
         // Check if user is suspended
         if (profile?.is_suspended === true) {
@@ -156,7 +158,7 @@ const SplashScreen: React.FC = () => {
               },
             ],
           });
-        } else if (profile?.first_name) {
+        } else if (profile_check) {
           console.log('SplashScreen: Navigating to MainApp');
           // Normal navigation to MainApp
           navigation.reset({

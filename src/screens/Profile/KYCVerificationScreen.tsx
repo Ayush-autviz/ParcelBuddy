@@ -102,12 +102,14 @@ const KYCVerificationScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Title Section */}
+        {!isKYCApproved && 
         <View style={styles.titleSection}>
           <Text style={styles.title}>Verify Your Identity</Text>
           <Text style={styles.description}>
             For the community's safety, we need to quickly confirm you are who you say you are.
           </Text>
         </View>
+}
 
         {/* Approved Success Card */}
         {isKYCApproved ? (

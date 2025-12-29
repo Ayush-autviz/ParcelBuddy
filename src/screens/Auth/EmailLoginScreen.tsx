@@ -101,6 +101,18 @@ const EmailLoginScreen: React.FC = () => {
         },
         onError: (error: any) => {
           console.log('Email Login Error:', error.response);
+          
+          // Check if account is suspended from error response
+          if (error?.response?.data?.is_suspended === true) {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Suspended' as never }],
+              })
+            );
+            return;
+          }
+          
           const errorMessage = 
             error?.response?.data?.error || 
             error?.response?.data?.message || 
