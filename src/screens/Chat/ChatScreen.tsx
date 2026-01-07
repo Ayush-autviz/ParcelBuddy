@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, User, MessageCircle } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -43,7 +43,7 @@ const ChatScreen: React.FC = () => {
   const navigation = useNavigation<ChatScreenNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearchQuery, setActiveSearchQuery] = useState<string | undefined>(undefined);
-  
+
   // Pagination state
   const [allChatRooms, setAllChatRooms] = useState<ChatRoom[]>([]);
   const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
@@ -51,7 +51,7 @@ const ChatScreen: React.FC = () => {
   const initializedRef = useRef(false);
   const initialPageSizeRef = useRef<number>(0);
   const lastDataRef = useRef<string | null>(null);
-  
+
   // Handle search on Enter press
   const handleSearch = () => {
     const trimmedQuery = searchQuery.trim();
@@ -64,32 +64,40 @@ const ChatScreen: React.FC = () => {
     initialPageSizeRef.current = 0;
     lastDataRef.current = null;
   };
-  
+
   // Fetch chat list from API with search query (only if not empty)
   const { data: chatListResponse, isLoading, isError, error, refetch, isRefetching } = useChatList(undefined, activeSearchQuery);
   const queryClient = useQueryClient();
 
   console.log('chatListResponse', chatListResponse);
-  
+
+  // Refetch chat list when screen comes into focus (e.g., returning from ChatDetail)
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('[ChatScreen] Screen focused - refetching chat list');
+      refetch();
+    }, [refetch])
+  );
+
   // Custom handleRefresh that invalidates cache and forces fresh data
   const handleRefresh = React.useCallback(async () => {
     // Invalidate cache to force fresh fetch
     queryClient.invalidateQueries({ queryKey: ['chatList'] });
-    
+
     // Reset pagination state
     setNextPageUrl(null);
     setIsLoadingMore(false);
-    
+
     // Reset data hash to force update
     lastDataRef.current = null;
-    
+
     // Reset initial page size to force full refresh
     initialPageSizeRef.current = 0;
     initializedRef.current = false;
-    
+
     // Refetch data
     const result = await refetch();
-    
+
     // Update local state with fresh data
     if (result.data?.results) {
       setAllChatRooms(result.data.results);
@@ -106,6 +114,9 @@ const ChatScreen: React.FC = () => {
     if (chatListResponse?.results && !initializedRef.current) {
       setAllChatRooms(chatListResponse.results);
       setNextPageUrl(chatListResponse.pagination?.next_page || null);
+      // Initialize hash for future comparisons
+      const dataHash = chatListResponse.results.map(r => `${r.id}|${r.unread_count}|${r.last_message}|${r.last_message_at}`).join(',');
+      lastDataRef.current = dataHash;
       initializedRef.current = true;
       initialPageSizeRef.current = chatListResponse.results.length;
     }
@@ -117,18 +128,34 @@ const ChatScreen: React.FC = () => {
       if (initialPageSizeRef.current === 0) {
         initialPageSizeRef.current = chatListResponse.results.length;
       }
-      const dataHash = chatListResponse.results.map(r => r.id).join(',');
+      const dataHash = chatListResponse.results.map(r => `${r.id}|${r.unread_count}|${r.last_message}|${r.last_message_at}`).join(',');
+
+      // We will update if the hash differs OR if we just want to be safe (for debugging)
+      // For now, let's keep the hash check but ensure it works.
       if (lastDataRef.current !== dataHash) {
+        console.log('⚡️ [ChatScreen] HASH MISMATCH - UPDATING STATE');
         lastDataRef.current = dataHash;
         const initialPageSize = initialPageSizeRef.current;
-        setAllChatRooms(prev => {
-          if (prev.length > initialPageSize) {
-            const additionalPages = prev.slice(initialPageSize);
-            return [...chatListResponse.results, ...additionalPages];
-          }
-          return chatListResponse.results;
-        });
+
+        // Directly set state if we are not paging, just to be safe
+        if (initialPageSize === 0 || allChatRooms.length === 0) {
+          setAllChatRooms(chatListResponse.results);
+        } else {
+          setAllChatRooms(prev => {
+            console.log('   Updating list state. Prev size:', prev.length);
+            // Merging logic
+            if (prev.length > initialPageSize) {
+              const additionalPages = prev.slice(initialPageSize);
+              return [...chatListResponse.results, ...additionalPages];
+            }
+            return chatListResponse.results;
+          });
+        }
         setNextPageUrl(chatListResponse.pagination?.next_page || null);
+      } else {
+        console.log('😴 [ChatScreen] Data matches, NO update needed');
+        // FORCE UPDATE for debugging if you suspect the hash is identical but data is somehow different
+        // setAllChatRooms(chatListResponse.results); 
       }
     }
   }, [chatListResponse]);
@@ -151,7 +178,7 @@ const ChatScreen: React.FC = () => {
       setIsLoadingMore(false);
     }
   };
-  
+
   // Transform API response to MessageItem format
   const messages: any = useMemo(() => {
     if (!allChatRooms || allChatRooms.length === 0) {
@@ -163,7 +190,7 @@ const ChatScreen: React.FC = () => {
       const firstName = otherUser?.first_name || '';
       const lastName = otherUser?.last_name || '';
       const fullName = `${firstName} ${lastName}`.trim() || 'Unknown User';
-      
+
       // Format timestamp
       const formatTimestamp = (dateString: string | undefined): string => {
         if (!dateString) return '';
@@ -213,7 +240,7 @@ const ChatScreen: React.FC = () => {
     const firstName = otherUser?.first_name || '';
     const lastName = otherUser?.last_name || '';
     const fullName = `${firstName} ${lastName}`.trim() || 'Unknown User';
-    
+
     navigation.navigate('ChatDetail', {
       roomId: message.id,
       userName: fullName,
@@ -260,7 +287,7 @@ const ChatScreen: React.FC = () => {
                 {item.lastMessage}
               </Text>
             ) : (
-              <Text style={{fontSize: Fonts.sm, color: Colors.textLight, fontStyle: 'italic' }} numberOfLines={1}>
+              <Text style={{ fontSize: Fonts.sm, color: Colors.textLight, fontStyle: 'italic' }} numberOfLines={1}>
                 start the conversation
               </Text>
             )}
@@ -277,7 +304,7 @@ const ChatScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  // Show loading state
+  // Show loading state - only if we have no messages yet
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput, BackHandler, Keyboard, StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
+import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send, LoadEarlier } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ArrowLeft, ChevronRight, Image as ImageIcon, Mic, SendIcon } from 'lucide-react-native';
@@ -12,12 +12,13 @@ import { Fonts } from '../../constants/fonts';
 import { useAuthStore } from '../../services/store';
 import { useToast } from '../../components/Toast';
 import { useChatWebSocket, ChatMessage } from '../../hooks/useChatWebSocket';
-import { getConversationMessages, markMessageAsRead } from '../../services/api/chat';
+import { getConversationMessages, markMessageAsRead, getConversationMessagesByUrl } from '../../services/api/chat';
 import { useRespondToLuggageRequest, useUpdateLuggageRequestWeight, useLuggageRequestDetail } from '../../hooks/useLuggage';
 import GradientButton from '../../components/GradientButton';
 import { SvgXml } from 'react-native-svg';
 import { FilledUserIcon } from '../../assets/icons/svg/main';
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
+import { useQueryClient } from '@tanstack/react-query';
 
 type ChatDetailScreenRouteProp = {
   key: string;
@@ -33,10 +34,10 @@ const ChatDetailScreen: React.FC = () => {
   const { showError, showSuccess } = useToast();
   const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
-  
+
   // Dynamic keyboard height tracking
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  
+
   // Listen to keyboard show/hide events
   useEffect(() => {
     const showSubscription = Keyboard.addListener(
@@ -45,65 +46,67 @@ const ChatDetailScreen: React.FC = () => {
         setKeyboardHeight(e.endCoordinates.height);
       }
     );
-    
+
     const hideSubscription = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
         setKeyboardHeight(0);
       }
     );
-    
+
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
     };
   }, []);
-  
+
   const respondToLuggageRequestMutation = useRespondToLuggageRequest();
   const updateLuggageRequestWeightMutation = useUpdateLuggageRequestWeight();
-  
+
   const { roomId, userName, userAvatar, origin, destination, luggage_request_id, luggage_request_status, luggage_request_weight, is_ride_created_by_me } = route.params;
-  
+
   // Store luggage request status in state to update UI immediately
   const [luggageRequestStatus, setLuggageRequestStatus] = useState<string>(luggage_request_status || 'pending');
-  
+
   // Update status when route params change (e.g., from navigation)
   useEffect(() => {
     if (luggage_request_status) {
       setLuggageRequestStatus(luggage_request_status);
     }
   }, [luggage_request_status]);
-  
+
   // Calculate dynamic bottom offset based on keyboard and action buttons
   const ACTION_BAR_HEIGHT = (is_ride_created_by_me && luggageRequestStatus === 'pending') ? Platform.OS === 'ios' ? -45 : -70 : Platform.OS === 'ios' ? 25 : 5;
-  
+
   // iOS: GiftedChat handles keyboard automatically via KeyboardAvoidingView internally
   // We only need to account for safe area + action buttons when keyboard is hidden
   // When keyboard is visible, GiftedChat adjusts automatically, so minimal offset needed
   const bottomOffset = Platform.OS === 'ios'
     ? (keyboardHeight > 0
-        ? 0  // iOS: GiftedChat handles keyboard automatically, no offset needed
-        : insets.bottom + ACTION_BAR_HEIGHT - 80)  // iOS: safe area + action buttons when keyboard hidden
+      ? 0  // iOS: GiftedChat handles keyboard automatically, no offset needed
+      : insets.bottom + ACTION_BAR_HEIGHT - 80)  // iOS: safe area + action buttons when keyboard hidden
     : (keyboardHeight > 0
-        ? insets.bottom  // Android: safe area when keyboard visible
-        : insets.bottom + ACTION_BAR_HEIGHT - 20);  // Android: safe area + action buttons when keyboard hidden
-  
+      ? insets.bottom  // Android: safe area when keyboard visible
+      : insets.bottom + ACTION_BAR_HEIGHT - 20);  // Android: safe area + action buttons when keyboard hidden
+
   // Fetch luggage request detail to get ride information
   const { data: luggageRequestDetail } = useLuggageRequestDetail(luggage_request_id);
 
-  
+
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [weight, setWeight] = useState('');
+  const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
   const typingTimeoutRef = useRef<any>(null);
   const readMessageIdsRef = useRef<Set<string>>(new Set());
   const bottomSheetRef = useRef<BottomSheet>(null);
-  
+  const queryClient = useQueryClient();
   // Track bottom sheet state
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  
+
   // Define snap points for bottom sheet
   const snapPoints = useMemo(() => ['75%'], []);
 
@@ -149,7 +152,7 @@ const ChatDetailScreen: React.FC = () => {
   const convertApiMessageToIMessage = useCallback((apiMessage: any): IMessage => {
     // Use currentUserId for messages that are mine, so GiftedChat can properly identify them
     const messageUserId = apiMessage.is_mine ? currentUserId : apiMessage.sender;
-    
+
     return {
       _id: apiMessage.id,
       text: apiMessage.content,
@@ -183,26 +186,26 @@ const ChatDetailScreen: React.FC = () => {
         const messageExistsById = previousMessages.some(
           (msg) => msg._id === chatMessage.id
         );
-        
+
         if (messageExistsById) {
           console.log('⚠️ [ChatDetailScreen] Duplicate message detected by ID, skipping:', chatMessage.id);
           return previousMessages;
         }
-        
+
         // Also check if it's a message from current user with same content and recent timestamp
         // This handles optimistic messages that might have different IDs
         if (chatMessage.sender_id === currentUserId) {
           const messageTime = new Date(chatMessage.created_on).getTime();
           const now = Date.now();
           const timeDiff = Math.abs(now - messageTime);
-          
+
           // Check if there's a recent message with same content from current user
           const duplicateByContent = previousMessages.some((msg) => {
             if (msg.user?._id === currentUserId && msg.text === chatMessage.content) {
-              const msgTime = msg.createdAt instanceof Date 
-                ? msg.createdAt.getTime() 
-                : typeof msg.createdAt === 'number' 
-                  ? msg.createdAt 
+              const msgTime = msg.createdAt instanceof Date
+                ? msg.createdAt.getTime()
+                : typeof msg.createdAt === 'number'
+                  ? msg.createdAt
                   : 0;
               const msgTimeDiff = Math.abs(now - msgTime);
               // If messages are within 2 seconds and have same content, consider it duplicate
@@ -210,17 +213,17 @@ const ChatDetailScreen: React.FC = () => {
             }
             return false;
           });
-          
+
           if (duplicateByContent) {
             console.log('⚠️ [ChatDetailScreen] Duplicate message detected by content, replacing optimistic message:', chatMessage.id);
             // Replace the optimistic message with the real one from server
             const iMessage = convertToIMessage(chatMessage);
             return previousMessages.map((msg) => {
               if (msg.user?._id === currentUserId && msg.text === chatMessage.content) {
-                const msgTime = msg.createdAt instanceof Date 
-                  ? msg.createdAt.getTime() 
-                  : typeof msg.createdAt === 'number' 
-                    ? msg.createdAt 
+                const msgTime = msg.createdAt instanceof Date
+                  ? msg.createdAt.getTime()
+                  : typeof msg.createdAt === 'number'
+                    ? msg.createdAt
                     : 0;
                 const msgTimeDiff = Math.abs(Date.now() - msgTime);
                 if (msgTimeDiff < 2000) {
@@ -231,11 +234,11 @@ const ChatDetailScreen: React.FC = () => {
             });
           }
         }
-        
+
         const iMessage = convertToIMessage(chatMessage);
         return GiftedChat.append(previousMessages, [iMessage]);
       });
-      
+
       // Mark message as read if it's from the other user
       if (chatMessage.sender_id !== currentUserId && !chatMessage.is_read) {
         readMessageIdsRef.current.add(chatMessage.id);
@@ -245,6 +248,10 @@ const ChatDetailScreen: React.FC = () => {
             const messageIds = Array.from(readMessageIdsRef.current);
             sendReadReceipt(messageIds);
             readMessageIdsRef.current.clear();
+
+            // Refetch queries to update unread counts globally and in list
+            queryClient.refetchQueries({ queryKey: ['unreadCount'], type: 'all' });
+            queryClient.refetchQueries({ queryKey: ['chatList'], type: 'all' });
           }
         }, 500);
       }
@@ -288,12 +295,12 @@ const ChatDetailScreen: React.FC = () => {
   const handleTyping = useCallback((text: string) => {
     if (text.length > 0) {
       sendWebSocketTyping(true);
-      
+
       // Clear existing timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      
+
       // Set timeout to stop typing after 1 second of inactivity
       typingTimeoutRef.current = setTimeout(() => {
         sendWebSocketTyping(false);
@@ -333,47 +340,70 @@ const ChatDetailScreen: React.FC = () => {
     } catch (error: any) {
       console.error('Error sending message:', error);
       showError('Failed to send message. Please try again.');
-      
+
       // Remove optimistic message on error
       setMessages((previousMessages) => previousMessages.slice(1));
     }
   }, [isConnected, sendWebSocketMessage, sendWebSocketTyping, showError]);
 
   // Mark chat as read and fetch conversation messages on mount
+  const markChatAsRead = useCallback(async () => {
+    try {
+      await markMessageAsRead(roomId);
+      console.log('✅ Chat marked as read');
+      queryClient.refetchQueries({ queryKey: ['unreadCount'], type: 'all' });
+      queryClient.refetchQueries({ queryKey: ['chatList'], type: 'all' });
+    } catch (error: any) {
+      console.error('Error marking chat as read:', error);
+    }
+  }, [roomId, queryClient]);
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await getConversationMessages(roomId);
+
+      if (response && response.results) {
+        const convertedMessages = response.results.map(convertApiMessageToIMessage);
+        setMessages(convertedMessages);
+        setNextPageUrl(response.pagination?.next_page || null);
+      }
+    } catch (error: any) {
+      console.error('Error fetching messages:', error);
+      showError('Failed to load messages. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [roomId, convertApiMessageToIMessage, showError]);
+
+  const loadEarlierMessages = useCallback(async () => {
+    if (!nextPageUrl || isLoadingEarlier) return;
+
+    try {
+      setIsLoadingEarlier(true);
+      console.log('🔄 Loading earlier messages from:', nextPageUrl);
+
+      const response = await getConversationMessagesByUrl(nextPageUrl);
+
+      if (response && response.results) {
+        const convertedMessages = response.results.map(convertApiMessageToIMessage);
+        setMessages((prevMessages) => GiftedChat.prepend(prevMessages, convertedMessages));
+        setNextPageUrl(response.pagination?.next_page || null);
+      }
+    } catch (error: any) {
+      console.error('Error loading earlier messages:', error);
+    } finally {
+      setIsLoadingEarlier(false);
+    }
+  }, [nextPageUrl, isLoadingEarlier, convertApiMessageToIMessage]);
+
+  // Initial load effect
   useEffect(() => {
-    const markChatAsRead = async () => {
-      try {
-        await markMessageAsRead(roomId);
-        console.log('✅ Chat marked as read');
-      } catch (error: any) {
-        console.error('Error marking chat as read:', error);
-        // Don't show error to user, just log it
-      }
-    };
-
-    const fetchMessages = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getConversationMessages(roomId);
-        
-        if (response && response.results) {
-          const convertedMessages = response.results.map(convertApiMessageToIMessage);
-          
-          setMessages(convertedMessages);
-        }
-      } catch (error: any) {
-        console.error('Error fetching messages:', error);
-        showError('Failed to load messages. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     // Mark chat as read when screen is opened
     markChatAsRead();
     // Fetch messages
     fetchMessages();
-  }, [roomId, convertApiMessageToIMessage, showError]);
+  }, [markChatAsRead, fetchMessages]);
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
@@ -387,7 +417,7 @@ const ChatDetailScreen: React.FC = () => {
   // Custom render functions for GiftedChat
   const renderBubble = (props: any) => {
     const isCurrentUser = props.currentMessage?.user?._id === currentUserId;
-    
+
     return (
       <Bubble
         {...props}
@@ -427,7 +457,7 @@ const ChatDetailScreen: React.FC = () => {
             elevation: 5,
 
           },
-          
+
         }}
         textStyle={{
           right: {
@@ -466,7 +496,7 @@ const ChatDetailScreen: React.FC = () => {
 
   const renderInputToolbar = (props: any) => {
     return (
-      <View style={[styles.inputToolbarContainer, {paddingBottom: luggageRequestStatus === 'approved' ? Platform.OS === 'ios' ? 10 : 0 : 0}]}>
+      <View style={[styles.inputToolbarContainer, { paddingBottom: luggageRequestStatus === 'approved' ? Platform.OS === 'ios' ? 10 : 0 : 0 }]}>
         <InputToolbar
           {...props}
           containerStyle={styles.inputToolbar}
@@ -482,7 +512,7 @@ const ChatDetailScreen: React.FC = () => {
       <Send {...props} containerStyle={styles.sendContainer}>
         <View style={styles.sendButton}>
           {/* <Text style={styles.sendButtonText}>Send</Text> */}
-          <SendIcon size={22} color={Colors.textWhite} style={{marginTop: 1}} />
+          <SendIcon size={22} color={Colors.textWhite} style={{ marginTop: 1 }} />
         </View>
       </Send>
     );
@@ -493,6 +523,26 @@ const ChatDetailScreen: React.FC = () => {
       <View style={styles.avatarContainer}>
         <SvgXml xml={ProfileUserIcon} height={24} width={24} />
       </View>
+    );
+  };
+
+  const renderLoadEarlier = (props: any) => {
+    return (
+      <LoadEarlier
+        {...props}
+        label="Load earlier messages"
+        wrapperStyle={{
+          backgroundColor: 'transparent',
+        }}
+        activityIndicatorStyle={{
+          backgroundColor: 'transparent',
+        }}
+        activityIndicatorColor={Colors.primaryCyan}
+        textStyle={{
+          color: Colors.primaryCyan,
+          fontFamily: Fonts.medium,
+        }}
+      />
     );
   };
 
@@ -519,7 +569,7 @@ const ChatDetailScreen: React.FC = () => {
 
       const ride = luggageRequestDetail.ride;
       const rideId = ride.id;
-      
+
       if (!rideId) {
         showError('Ride ID not available');
         return;
@@ -528,7 +578,7 @@ const ChatDetailScreen: React.FC = () => {
       // Format date from "2025-11-28" to the format expected by RideDetail
       const travelDate = ride.travel_date || '';
       const formattedDate = travelDate; // RideDetail expects YYYY-MM-DD format
-      
+
       // Format time from "18:00:00" to "06:00 PM"
       const formatTime = (timeString: string | null): string => {
         if (!timeString) return '';
@@ -605,292 +655,295 @@ const ChatDetailScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
-      <SafeAreaView style={[styles.safeArea, !is_ride_created_by_me ? {marginBottom: 20} : {}]} edges={['top']}>
-      {/* Custom Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        
-        <View style={styles.headerUserInfo}>
-          {userAvatar ? (
-            <Image source={{ uri: userAvatar }} style={styles.headerAvatar} />
-          ) : (
-            <View style={styles.headerAvatarPlaceholder}>
-              <SvgXml xml={ProfileUserIcon} height={24} width={24} />
-            </View>
-          )}
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerName}>{userName}</Text>
-            {/* <Text style={styles.headerStatus}>
+      <SafeAreaView style={[styles.safeArea, !is_ride_created_by_me ? { marginBottom: 20 } : {}]} edges={['top']}>
+        {/* Custom Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <ArrowLeft size={24} color={Colors.textPrimary} />
+          </TouchableOpacity>
+
+          <View style={styles.headerUserInfo}>
+            {userAvatar ? (
+              <Image source={{ uri: userAvatar }} style={styles.headerAvatar} />
+            ) : (
+              <View style={styles.headerAvatarPlaceholder}>
+                <SvgXml xml={ProfileUserIcon} height={24} width={24} />
+              </View>
+            )}
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerName}>{userName}</Text>
+              {/* <Text style={styles.headerStatus}>
               {isOnline ? 'Online' : 'Offline'}
             </Text> */}
+            </View>
           </View>
+
+          <View style={styles.headerRight} />
         </View>
-        
-        <View style={styles.headerRight} />
-      </View>
 
-      {/* Context Bar */}
-      {(origin || destination) && (
-        <TouchableOpacity 
-          style={styles.contextBar} 
-          activeOpacity={0.7}
-          onPress={handleRoutePress}
-        >
-          <Text style={styles.contextText}>
-            From: {origin || 'Unknown'} to {destination || 'Unknown'}
-          </Text>
-          <ChevronRight size={20} color={Colors.textTertiary} />
-        </TouchableOpacity>
-      )}
+        {/* Context Bar */}
+        {(origin || destination) && (
+          <TouchableOpacity
+            style={styles.contextBar}
+            activeOpacity={0.7}
+            onPress={handleRoutePress}
+          >
+            <Text style={styles.contextText}>
+              From: {origin || 'Unknown'} to {destination || 'Unknown'}
+            </Text>
+            <ChevronRight size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        )}
 
-      {/* Connection Status Indicator */}
-      {connectionStatus !== 'connected' && (
-        <View style={styles.statusBar}>
-          <Text style={styles.statusText}>
-            {connectionStatus === 'connecting' && 'Connecting...'}
-            {connectionStatus === 'disconnected' && 'Disconnected. Reconnecting...'}
-            {connectionStatus === 'error' && 'Connection error. Please check your internet.'}
-          </Text>
-        </View>
-      )}
+        {/* Connection Status Indicator */}
+        {connectionStatus !== 'connected' && (
+          <View style={styles.statusBar}>
+            <Text style={styles.statusText}>
+              {connectionStatus === 'connecting' && 'Connecting...'}
+              {connectionStatus === 'disconnected' && 'Disconnected. Reconnecting...'}
+              {connectionStatus === 'error' && 'Connection error. Please check your internet.'}
+            </Text>
+          </View>
+        )}
 
-      {/* Typing Indicator */}
-      {isTyping && (
-        <View style={styles.infoBar}>
-          <Text style={styles.typingText}>User is typing...</Text>
-        </View>
-      )}
+        {/* Typing Indicator */}
+        {isTyping && (
+          <View style={styles.infoBar}>
+            <Text style={styles.typingText}>User is typing...</Text>
+          </View>
+        )}
 
-      {/* <KeyboardAvoidingView
+        {/* <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       > */}
-      <View style={{flex: 1}}>
-        <GiftedChat
-          messages={messages}
-          onSend={onSend}
-          user={currentUser}
-          bottomOffset={bottomOffset}
-          placeholder="Type a message..."
-          isLoadingEarlier={isLoading}
-          showUserAvatar={false}
-          renderAvatarOnTop={false}
-          renderBubble={renderBubble}
-          renderInputToolbar={renderInputToolbar}
-          renderSend={renderSend}
-          scrollToBottomComponent={() => null}
-          infiniteScroll
-          minInputToolbarHeight={60}
-          onInputTextChanged={handleTyping}
-          messagesContainerStyle={styles.messagesContainer}
-          // renderAvatar={renderAvatar}
-          renderAvatar={null}
-        />
-      </View>
-      {/* </KeyboardAvoidingView> */}
-
-      {/* Action Buttons - Only show if ride is created by me */}
-      {is_ride_created_by_me && luggageRequestStatus === 'pending' && (
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={styles.declineButton} 
-            activeOpacity={0.7}
-            onPress={() => {
-              if (!luggage_request_id) {
-                showError('Luggage request ID is missing');
-                return;
-              }
-              
-              respondToLuggageRequestMutation.mutate(
-                {
-                  requestId: luggage_request_id,
-                  status: 'rejected',
-                },
-                {
-                  onSuccess: () => {
-                    setLuggageRequestStatus('rejected');
-                    showSuccess('Luggage request declined successfully');
-                  },
-                  onError: (error: any) => {
-                    console.error('Decline luggage request error:', error);
-                    showError(error?.response?.data?.message || error?.message || 'Failed to decline request. Please try again.');
-                  },
-                }
-              );
-            }}
-            disabled={respondToLuggageRequestMutation.isPending}
-          >
-            <Text style={styles.declineButtonText}>
-              {respondToLuggageRequestMutation.isPending ? 'Declining...' : 'Decline'}
-            </Text>
-          </TouchableOpacity>
-          <GradientButton
-            title="Approve"
-            onPress={() => {
-              console.log('Approve button pressed');
-              console.log('BottomSheet ref:', bottomSheetRef.current);
-              try {
-                if (bottomSheetRef.current) {
-                  bottomSheetRef.current.expand();
-                  console.log('Called expand()');
-                } else {
-                  console.log('BottomSheet ref is null');
-                }
-              } catch (error) {
-                console.error('Error expanding bottom sheet:', error);
-              }
-            }}
-            style={styles.approveButton}
+        <View style={{ flex: 1 }}>
+          <GiftedChat
+            messages={messages}
+            onSend={onSend}
+            user={currentUser}
+            bottomOffset={bottomOffset}
+            placeholder="Type a message..."
+            loadEarlier={!!nextPageUrl}
+            onLoadEarlier={loadEarlierMessages}
+            isLoadingEarlier={isLoadingEarlier}
+            showUserAvatar={false}
+            renderAvatarOnTop={false}
+            renderBubble={renderBubble}
+            renderInputToolbar={renderInputToolbar}
+            renderSend={renderSend}
+            renderLoadEarlier={renderLoadEarlier}
+            scrollToBottomComponent={() => null}
+            infiniteScroll
+            minInputToolbarHeight={60}
+            onInputTextChanged={handleTyping}
+            messagesContainerStyle={styles.messagesContainer}
+            // renderAvatar={renderAvatar}
+            renderAvatar={null}
           />
         </View>
-      )}
+        {/* </KeyboardAvoidingView> */}
 
-      {/* Bottom Sheet */}
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={-1}
-        snapPoints={snapPoints}
-        enablePanDownToClose={true}
-        backdropComponent={renderBackdrop}
-        backgroundStyle={styles.bottomSheetBackground}
-        handleIndicatorStyle={styles.bottomSheetIndicator}
-        onChange={(index) => {
-          // Track bottom sheet state when it changes
-          if (index === -1) {
-            setIsBottomSheetOpen(false);
-          } else {
-            setIsBottomSheetOpen(true);
-          }
-        }}
-        onClose={() => {
-          // Update state when bottom sheet is closed
-          setIsBottomSheetOpen(false);
-        }}
-      >
-        <BottomSheetView style={styles.bottomSheetContent}>
-          <Text style={styles.bottomSheetTitle}>Select Weight to Approve</Text>
-          
-          <View style={styles.bottomSheetInputContainer}>
+        {/* Action Buttons - Only show if ride is created by me */}
+        {is_ride_created_by_me && luggageRequestStatus === 'pending' && (
+          <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={styles.matchRequestButton}
+              style={styles.declineButton}
               activeOpacity={0.7}
               onPress={() => {
-                if (luggage_request_weight !== undefined && luggage_request_weight !== null) {
-                  setWeight(String(luggage_request_weight));
+                if (!luggage_request_id) {
+                  showError('Luggage request ID is missing');
+                  return;
                 }
-              }}
-            >
-              <Text style={styles.matchRequestText}>Match Request</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.weightInputContainer}>
-              <TextInput
-                style={styles.weightInput}
-                placeholder="Enter Weight"
-                placeholderTextColor={Colors.textSecondary}
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-          
-          <GradientButton
-            title="Approve"
-            onPress={() => {
-              // Validate weight
-              if (!weight || weight.trim() === '') {
-                showError('Please enter weight or click "Match Request" to use the request weight');
-                return;
-              }
 
-              // Validate weight is a number
-              if (isNaN(Number(weight))) {
-                showError('Please enter a valid weight');
-                return;
-              }
-              
-              // Validate weight is greater than 0
-              if (Number(weight) <= 0) {
-                showError('Please enter a weight greater than 0');
-                return;
-              }
-              
-              if (!luggage_request_id) {
-                showError('Luggage request ID is missing');
-                return;
-              }
-
-              const inputWeight = Number(weight);
-              const requestWeight = luggage_request_weight ? Number(luggage_request_weight) : null;
-
-              // Check if weight matches the luggage request weight
-              if (requestWeight !== null && inputWeight === requestWeight) {
-                // Weight matches, directly call respondToLuggageRequest
                 respondToLuggageRequestMutation.mutate(
                   {
                     requestId: luggage_request_id,
-                    status: 'approved',
+                    status: 'rejected',
                   },
                   {
                     onSuccess: () => {
-                      setLuggageRequestStatus('approved');
-                      showSuccess('Luggage request approved successfully');
-                      bottomSheetRef.current?.close();
-                      setWeight(''); // Reset weight
+                      setLuggageRequestStatus('rejected');
+                      showSuccess('Luggage request declined successfully');
                     },
                     onError: (error: any) => {
-                      console.error('Approve luggage request error:', error);
-                      showError(error?.response?.data?.message || error?.message || 'Failed to approve request. Please try again.');
+                      console.error('Decline luggage request error:', error);
+                      showError(error?.response?.data?.message || error?.message || 'Failed to decline request. Please try again.');
                     },
                   }
                 );
-              } else {
-                // Weight is different, first update weight, then approve
-                updateLuggageRequestWeightMutation.mutate(
-                  {
-                    requestId: luggage_request_id,
-                    weight_kg: inputWeight,
-                  },
-                  {
-                    onSuccess: () => {
-                      // After updating weight, approve the request
-                      respondToLuggageRequestMutation.mutate(
-                        {
-                          requestId: luggage_request_id,
-                          status: 'approved',
-                        },
-                        {
-                          onSuccess: () => {
-                            setLuggageRequestStatus('approved');
-                            showSuccess('Luggage request approved successfully');
-                            bottomSheetRef.current?.close();
-                            setWeight(''); // Reset weight
-                          },
-                          onError: (error: any) => {
-                            console.error('Approve luggage request error:', error);
-                            showError(error?.response?.data?.message || error?.message || 'Failed to approve request. Please try again.');
-                          },
-                        }
-                      );
-                    },
-                    onError: (error: any) => {
-                      console.error('Update luggage request weight error:', error);
-                      showError(error?.response?.data?.message || error?.message || 'Failed to update weight. Please try again.');
-                    },
+              }}
+              disabled={respondToLuggageRequestMutation.isPending}
+            >
+              <Text style={styles.declineButtonText}>
+                {respondToLuggageRequestMutation.isPending ? 'Declining...' : 'Decline'}
+              </Text>
+            </TouchableOpacity>
+            <GradientButton
+              title="Approve"
+              onPress={() => {
+                console.log('Approve button pressed');
+                console.log('BottomSheet ref:', bottomSheetRef.current);
+                try {
+                  if (bottomSheetRef.current) {
+                    bottomSheetRef.current.expand();
+                    console.log('Called expand()');
+                  } else {
+                    console.log('BottomSheet ref is null');
                   }
-                );
-              }
-            }}
-            style={styles.bottomSheetApproveButton}
-            loading={respondToLuggageRequestMutation.isPending || updateLuggageRequestWeightMutation.isPending}
-            disabled={respondToLuggageRequestMutation.isPending || updateLuggageRequestWeightMutation.isPending}
-          />
-        </BottomSheetView>
-      </BottomSheet>
+                } catch (error) {
+                  console.error('Error expanding bottom sheet:', error);
+                }
+              }}
+              style={styles.approveButton}
+            />
+          </View>
+        )}
+
+        {/* Bottom Sheet */}
+        <BottomSheet
+          ref={bottomSheetRef}
+          index={-1}
+          snapPoints={snapPoints}
+          enablePanDownToClose={true}
+          backdropComponent={renderBackdrop}
+          backgroundStyle={styles.bottomSheetBackground}
+          handleIndicatorStyle={styles.bottomSheetIndicator}
+          onChange={(index) => {
+            // Track bottom sheet state when it changes
+            if (index === -1) {
+              setIsBottomSheetOpen(false);
+            } else {
+              setIsBottomSheetOpen(true);
+            }
+          }}
+          onClose={() => {
+            // Update state when bottom sheet is closed
+            setIsBottomSheetOpen(false);
+          }}
+        >
+          <BottomSheetView style={styles.bottomSheetContent}>
+            <Text style={styles.bottomSheetTitle}>Select Weight to Approve</Text>
+
+            <View style={styles.bottomSheetInputContainer}>
+              <TouchableOpacity
+                style={styles.matchRequestButton}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (luggage_request_weight !== undefined && luggage_request_weight !== null) {
+                    setWeight(String(luggage_request_weight));
+                  }
+                }}
+              >
+                <Text style={styles.matchRequestText}>Match Request</Text>
+              </TouchableOpacity>
+
+              <View style={styles.weightInputContainer}>
+                <TextInput
+                  style={styles.weightInput}
+                  placeholder="Enter Weight"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={weight}
+                  onChangeText={setWeight}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+
+            <GradientButton
+              title="Approve"
+              onPress={() => {
+                // Validate weight
+                if (!weight || weight.trim() === '') {
+                  showError('Please enter weight or click "Match Request" to use the request weight');
+                  return;
+                }
+
+                // Validate weight is a number
+                if (isNaN(Number(weight))) {
+                  showError('Please enter a valid weight');
+                  return;
+                }
+
+                // Validate weight is greater than 0
+                if (Number(weight) <= 0) {
+                  showError('Please enter a weight greater than 0');
+                  return;
+                }
+
+                if (!luggage_request_id) {
+                  showError('Luggage request ID is missing');
+                  return;
+                }
+
+                const inputWeight = Number(weight);
+                const requestWeight = luggage_request_weight ? Number(luggage_request_weight) : null;
+
+                // Check if weight matches the luggage request weight
+                if (requestWeight !== null && inputWeight === requestWeight) {
+                  // Weight matches, directly call respondToLuggageRequest
+                  respondToLuggageRequestMutation.mutate(
+                    {
+                      requestId: luggage_request_id,
+                      status: 'approved',
+                    },
+                    {
+                      onSuccess: () => {
+                        setLuggageRequestStatus('approved');
+                        showSuccess('Luggage request approved successfully');
+                        bottomSheetRef.current?.close();
+                        setWeight(''); // Reset weight
+                      },
+                      onError: (error: any) => {
+                        console.error('Approve luggage request error:', error);
+                        showError(error?.response?.data?.message || error?.message || 'Failed to approve request. Please try again.');
+                      },
+                    }
+                  );
+                } else {
+                  // Weight is different, first update weight, then approve
+                  updateLuggageRequestWeightMutation.mutate(
+                    {
+                      requestId: luggage_request_id,
+                      weight_kg: inputWeight,
+                    },
+                    {
+                      onSuccess: () => {
+                        // After updating weight, approve the request
+                        respondToLuggageRequestMutation.mutate(
+                          {
+                            requestId: luggage_request_id,
+                            status: 'approved',
+                          },
+                          {
+                            onSuccess: () => {
+                              setLuggageRequestStatus('approved');
+                              showSuccess('Luggage request approved successfully');
+                              bottomSheetRef.current?.close();
+                              setWeight(''); // Reset weight
+                            },
+                            onError: (error: any) => {
+                              console.error('Approve luggage request error:', error);
+                              showError(error?.response?.data?.message || error?.message || 'Failed to approve request. Please try again.');
+                            },
+                          }
+                        );
+                      },
+                      onError: (error: any) => {
+                        console.error('Update luggage request weight error:', error);
+                        showError(error?.response?.data?.message || error?.message || 'Failed to update weight. Please try again.');
+                      },
+                    }
+                  );
+                }
+              }}
+              style={styles.bottomSheetApproveButton}
+              loading={respondToLuggageRequestMutation.isPending || updateLuggageRequestWeightMutation.isPending}
+              disabled={respondToLuggageRequestMutation.isPending || updateLuggageRequestWeightMutation.isPending}
+            />
+          </BottomSheetView>
+        </BottomSheet>
       </SafeAreaView>
     </View>
   );

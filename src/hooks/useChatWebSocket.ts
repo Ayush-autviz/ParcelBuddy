@@ -1,43 +1,45 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuthStore } from '../services/store';
+import { useQueryClient } from '@tanstack/react-query';
 
 const BaseURL = 'https://api.parcelbuddys.com';
 const WS_BASE_URL = BaseURL.replace('http://', 'ws://').replace('https://', 'wss://');
 
-    export interface ChatMessage {
-    id: string;
-    sender_id: string;
-    sender_name: string;
-    content: string;
-    message_type: 'text' | 'image' | 'system';
-    created_on: string;
-    is_read: boolean;
-    }
+export interface ChatMessage {
+  id: string;
+  sender_id: string;
+  sender_name: string;
+  content: string;
+  message_type: 'text' | 'image' | 'system';
+  created_on: string;
+  is_read: boolean;
+}
 
-    export interface WebSocketMessage {
-    type: 'chat_message' | 'typing_indicator' | 'read_receipt' | 'user_status';
-    message?: ChatMessage;
-    user_id?: string;
-    is_typing?: boolean;
-    message_ids?: string[];
-    read_by?: string;
-    status?: 'online' | 'offline';
-    }
+export interface WebSocketMessage {
+  type: 'chat_message' | 'typing_indicator' | 'read_receipt' | 'user_status';
+  message?: ChatMessage;
+  user_id?: string;
+  is_typing?: boolean;
+  message_ids?: string[];
+  read_by?: string;
+  status?: 'online' | 'offline';
+}
 
-    interface UseChatWebSocketOptions {
-    roomId: string;
-    onMessage?: (message: ChatMessage) => void;
-    onTyping?: (userId: string, isTyping: boolean) => void;
-    onReadReceipt?: (messageIds: string[], readBy: string) => void;
-    onUserStatus?: (userId: string, status: 'online' | 'offline') => void;
-    onConnected?: () => void;
-    onDisconnected?: () => void;
-    onError?: (error: Event) => void;
-    }
+interface UseChatWebSocketOptions {
+  roomId: string;
+  onMessage?: (message: ChatMessage) => void;
+  onTyping?: (userId: string, isTyping: boolean) => void;
+  onReadReceipt?: (messageIds: string[], readBy: string) => void;
+  onUserStatus?: (userId: string, status: 'online' | 'offline') => void;
+  onConnected?: () => void;
+  onDisconnected?: () => void;
+  onError?: (error: Event) => void;
+}
 
 export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
   const { roomId, onMessage, onTyping, onReadReceipt, onUserStatus, onConnected, onDisconnected, onError } = options;
   const { token } = useAuthStore();
+  const queryClient = useQueryClient();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -45,7 +47,7 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
   const reconnectDelayRef = useRef(1000); // Start with 1 second
-  
+
   // Store callbacks in refs to prevent re-renders
   const callbacksRef = useRef({
     onMessage,
@@ -56,7 +58,7 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
     onDisconnected,
     onError,
   });
-  
+
   // Update callbacks ref when they change
   useEffect(() => {
     callbacksRef.current = {
@@ -73,7 +75,7 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
   const connect = useCallback(() => {
     console.log('🔌 [WebSocket] Attempting to connect...');
     console.log('🔌 [WebSocket] Room ID:', roomId);
-    
+
     if (!token?.access_token) {
       console.error('❌ [WebSocket] No access token available');
       setConnectionStatus('error');
@@ -100,13 +102,13 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
       console.log('🔌 [WebSocket] Room ID:', roomId);
       console.log('🔌 [WebSocket] Token present:', !!token.access_token);
       console.log('🔌 [WebSocket] Token length:', token.access_token?.length);
-      
+
       setConnectionStatus('connecting');
-      
+
       // Create native WebSocket connection
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
-      
+
       console.log('🔌 [WebSocket] WebSocket instance created');
 
       // Connection events
@@ -134,7 +136,7 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
         if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current += 1;
           console.log(`🔄 [WebSocket] Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${reconnectDelayRef.current}ms...`);
-          
+
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectDelayRef.current = Math.min(reconnectDelayRef.current * 2, 30000); // Exponential backoff, max 30s
             connect();
@@ -165,6 +167,12 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
           switch (data.type) {
             case 'chat_message':
               if (data.message) {
+                queryClient.invalidateQueries({ queryKey: ['chat', roomId] });
+                // Force refetch chat list to ensure UI updates immediately (matches ['chatList', ...])
+                queryClient.refetchQueries({ queryKey: ['chatList'], type: 'all' });
+                // Force refetch unread count to ensure tab badge updates immediately
+                queryClient.refetchQueries({ queryKey: ['unreadCount'], type: 'all' });
+
                 console.log('📨 [WebSocket] Processing chat_message:', {
                   id: data.message.id,
                   sender: data.message.sender_name,
@@ -218,17 +226,17 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
       setConnectionStatus('error');
       callbacksRef.current.onError?.(error as Event);
     }
-    }, [roomId, token?.access_token]); // Only depend on roomId and token, not callbacks
+  }, [roomId, token?.access_token]); // Only depend on roomId and token, not callbacks
 
   const disconnect = useCallback(() => {
     console.log('🔌 [WebSocket] Disconnecting...');
-    
+
     // Clear reconnection timeout
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
+
     if (wsRef.current) {
       console.log('🔌 [WebSocket] WebSocket exists, closing connection...');
       console.log('🔌 [WebSocket] Ready state before close:', wsRef.current.readyState);
@@ -238,7 +246,7 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
     } else {
       console.log('🔌 [WebSocket] No WebSocket to disconnect');
     }
-    
+
     setIsConnected(false);
     setConnectionStatus('disconnected');
   }, []);
@@ -250,7 +258,7 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
     console.log('📤 [WebSocket] WebSocket ready state:', wsRef.current?.readyState);
     console.log('📤 [WebSocket] WebSocket exists?', !!wsRef.current);
     console.log('📤 [WebSocket] Is OPEN?', wsRef.current?.readyState === WebSocket.OPEN);
-    
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const payload = {
         type: 'chat_message',
@@ -303,28 +311,28 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions) => {
     }
   }, []);
 
-    useEffect(() => {
-        console.log('🔄 [WebSocket] useEffect triggered - connecting...');
-        console.log('🔄 [WebSocket] Room ID:', roomId);
-        console.log('🔄 [WebSocket] Token available:', !!token?.access_token);
-        
-        connect();
+  useEffect(() => {
+    console.log('🔄 [WebSocket] useEffect triggered - connecting...');
+    console.log('🔄 [WebSocket] Room ID:', roomId);
+    console.log('🔄 [WebSocket] Token available:', !!token?.access_token);
 
-        return () => {
-        console.log('🔄 [WebSocket] useEffect cleanup - disconnecting...');
-        disconnect();
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [roomId, token?.access_token]); // Only reconnect when roomId or token changes
+    connect();
 
-    return {
-        isConnected,
-        connectionStatus,
-        sendMessage,
-        sendTyping,
-        sendReadReceipt,
-        connect,
-        disconnect,
+    return () => {
+      console.log('🔄 [WebSocket] useEffect cleanup - disconnecting...');
+      disconnect();
     };
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, token?.access_token]); // Only reconnect when roomId or token changes
+
+  return {
+    isConnected,
+    connectionStatus,
+    sendMessage,
+    sendTyping,
+    sendReadReceipt,
+    connect,
+    disconnect,
+  };
+};
 

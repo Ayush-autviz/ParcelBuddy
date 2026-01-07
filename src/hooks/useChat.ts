@@ -84,7 +84,7 @@ export const useChatList = (pageUrl?: string, searchQuery?: string): UseQueryRes
       const response = await getChatMessagesList(pageUrl, searchQuery);
       return response;
     },
-    staleTime: 30000, // Cache for 30 seconds
+    staleTime: 0, // Always stale to force fetch on mount/focus
     retry: 1,
   });
 };
@@ -106,8 +106,8 @@ export const useUnreadChatCount = (): UseQueryResult<{ total_unread: number }, E
       const response = await unreadChatMessagesCount();
       return response;
     },
-    staleTime: 30000, // Cache for 30 seconds
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 5000, // Cache for 5 seconds
+    refetchInterval: 15000, // Refetch every 5 seconds
     retry: 1,
   });
 };

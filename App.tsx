@@ -52,7 +52,7 @@ function App() {
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-  
+
       if (enabled) {
         console.log('iOS notification permission granted');
       } else {
@@ -60,59 +60,61 @@ function App() {
       }
     }
   }
-  
+
   useEffect(() => {
     requestPermission();
   }, []);
-  
-    // Handle foreground messages
-    useEffect(() => {
-      console.log('useEffect');
-      const unsubscribe = messaging().onMessage(async remoteMessage => {
-        console.log('Foreground message:', remoteMessage);
-  
-        console.log('Notification type:', remoteMessage.data?.type);
-  
-        // Invalidate unread count query to update notification count in drawer
-        queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
-  
-        // Request permissions if needed
-        await notifee.requestPermission({
-          sound: true,
-          badge: true,
-          alert: true,
-        });
-  
-        // await notifee.deleteChannel('default');
-  
-        // Create single channel (Android)
-        await notifee.createChannel({
-          id: 'default',
-          name: 'Default Channel',
-          importance: AndroidImportance.HIGH,
-          vibration: true,
-          sound: 'default',
-        });
-  
-        // Display a notification
-        await notifee.displayNotification({
-          title: remoteMessage.notification?.title,
-          body: remoteMessage.notification?.body,
-          ios: {
-            sound: 'default',
-          },
-          android: {
-            channelId: 'default',
-            pressAction: {
-              id: 'default',
-            },
-            sound: 'default',
-          },
-        });
+
+  // Handle foreground messages
+  useEffect(() => {
+    console.log('useEffect');
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      console.log('Foreground message:', remoteMessage);
+
+      console.log('Notification type:', remoteMessage.data?.type);
+
+      // Invalidate unread count query to update notification count in drawer
+      console.log('🔄 [App] Foreground notification received - Invalidating chat queries');
+      queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
+      queryClient.invalidateQueries({ queryKey: ['chatList'] });
+
+      // Request permissions if needed
+      await notifee.requestPermission({
+        sound: true,
+        badge: true,
+        alert: true,
       });
-  
-      return unsubscribe;
-    }, [queryClient]);  
+
+      // await notifee.deleteChannel('default');
+
+      // Create single channel (Android)
+      await notifee.createChannel({
+        id: 'default',
+        name: 'Default Channel',
+        importance: AndroidImportance.HIGH,
+        vibration: true,
+        sound: 'default',
+      });
+
+      // Display a notification
+      await notifee.displayNotification({
+        title: remoteMessage.notification?.title,
+        body: remoteMessage.notification?.body,
+        ios: {
+          sound: 'default',
+        },
+        android: {
+          channelId: 'default',
+          pressAction: {
+            id: 'default',
+          },
+          sound: 'default',
+        },
+      });
+    });
+
+    return unsubscribe;
+  }, [queryClient]);
 
 
   useEffect(() => {
