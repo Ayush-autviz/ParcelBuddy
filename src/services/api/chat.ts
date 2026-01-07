@@ -13,13 +13,13 @@ export const getChatMessagesList = async (pageUrl?: string, searchQuery?: string
             return response.data;
         }
     }
-    
+
     // Build query parameters - only add search if it's not empty
     const params = new URLSearchParams();
     if (searchQuery && searchQuery.trim()) {
         params.append('search', searchQuery.trim());
     }
-    
+
     const queryString = params.toString();
     const url = queryString ? `/api/chat-rooms/?${queryString}` : '/api/chat-rooms/';
     const response = await apiClient.get(url);
@@ -35,6 +35,21 @@ export const createChatRoom = async (data: any) => {
 //  get conversation messages
 export const getConversationMessages = async (conversation_id: string) => {
     const response = await apiClient.get(`/api/chat-rooms/${conversation_id}/messages/`);
+    return response.data;
+};
+
+// get conversation messages by url (pagination)
+export const getConversationMessagesByUrl = async (url: string) => {
+    // Extract the path and query from the full URL if needed, or pass directly if apiClient handles absolute URLs (usually not)
+    // Matches /api/... until end
+    const urlMatch = url.match(/\/api\/.*$/);
+    if (urlMatch) {
+        const path = urlMatch[0];
+        const response = await apiClient.get(path);
+        return response.data;
+    }
+    // Fallback if no match (assuming relative path was passed)
+    const response = await apiClient.get(url);
     return response.data;
 };
 
