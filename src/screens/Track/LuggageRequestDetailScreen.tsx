@@ -25,6 +25,8 @@ import { useToast } from '../../components/Toast';
 import { useLuggageRequestDetail, useRespondToLuggageRequest } from '../../hooks/useLuggage';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreateChatRoom } from '../../hooks/useChat';
+import VerificationRequiredModal from '../../components/Modal/VerificationRequiredModal';
+import { useAuthStore } from '../../services/store';
 
 type LuggageRequestDetailParams = {
   LuggageRequestDetail: {
@@ -37,12 +39,14 @@ type LuggageRequestDetailScreenNavigationProp = StackNavigationProp<ExtendedTrac
 
 const LuggageRequestDetailScreen: React.FC = () => {
   const route = useRoute<LuggageRequestDetailScreenRouteProp>();
-  const navigation = useNavigation<LuggageRequestDetailScreenNavigationProp>();
+  const navigation = useNavigation<any>();
   const { requestId } = route.params;
   const { showSuccess, showError } = useToast();
   const queryClient = useQueryClient();
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const { user } = useAuthStore();
 
   // Respond to luggage request mutation
   const respondToRequestMutation = useRespondToLuggageRequest();
@@ -113,6 +117,16 @@ const LuggageRequestDetailScreen: React.FC = () => {
   };
 
   const handleChat = () => {
+
+    const needsKYC = user && !(user as any)?.is_kyc_verified;
+    const needsSubscription = user && !(user as any)?.is_subscribed;
+
+    // Show combined modal if either is needed
+    if (needsKYC || needsSubscription) {
+      setShowVerificationModal(true);
+      return;
+    }
+
     if (!requestId) {
       showError('Unable to start chat. Request information is missing.');
       return;
@@ -484,6 +498,27 @@ const LuggageRequestDetailScreen: React.FC = () => {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+     {/* Verification Required Modal */}
+     <VerificationRequiredModal
+        visible={showVerificationModal}
+        needsKYC={!!(user && !(user as any)?.is_kyc_verified)}
+        needsSubscription={!!(user && !(user as any)?.is_subscribed)}
+        onContinue={() => {
+          setShowVerificationModal(false);
+          // Always navigate to KYC first if needed, otherwise to subscription
+          if (user && !(user as any)?.is_kyc_verified) {
+            navigation.navigate('Profile', {
+              screen: 'KYCVerification',
+            });
+          } else if (user && !(user as any)?.is_subscribed) {
+            navigation.navigate('Profile', {
+              screen: 'Subscription',
+            });
+          }
+        }}
+        onClose={() => setShowVerificationModal(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -808,6 +843,13 @@ const styles = StyleSheet.create({
   rejectionReasonCard: {
     backgroundColor: Colors.error + '10',
     borderColor: Colors.error + '30',
+  },
+  verificationModalContainer: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
   },
 });
 

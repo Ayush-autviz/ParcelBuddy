@@ -208,8 +208,8 @@ const EditProfileScreen: React.FC = () => {
         setIsFetchingCountry(true);
         try {
           const countryResponse = await getCountryByCoordinates(
-            locationData.latitude.toString(),
-            locationData.longitude.toString()
+            locationData.latitude.toFixed(6).toString(),
+            locationData.longitude.toFixed(6).toString()
           );
           if (countryResponse?.country) {
             setCountry(countryResponse.country);
@@ -373,7 +373,7 @@ const EditProfileScreen: React.FC = () => {
       },
       onError: (error: any) => {
         console.error('❌ [EDIT PROFILE] Error updating profile:', error);
-        showError(error?.response?.data?.message || error?.message || 'Failed to update profile. Please try again.');
+        showError(error?.response?.data?.message || error?.response?.data?.phone?.[0] || error?.message || 'Failed to update profile. Please try again.');
       },
     });
   };

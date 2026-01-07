@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput, BackHandler, Keyboard } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput, BackHandler, Keyboard, StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -604,6 +604,7 @@ const ChatDetailScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
       <SafeAreaView style={[styles.safeArea, !is_ride_created_by_me ? {marginBottom: 20} : {}]} edges={['top']}>
       {/* Custom Header */}
       <View style={styles.header}>

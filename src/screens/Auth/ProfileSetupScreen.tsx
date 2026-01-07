@@ -317,8 +317,8 @@ const ProfileSetupScreen: React.FC = () => {
         setIsFetchingCountry(true);
         try {
           const countryResponse = await getCountryByCoordinates(
-            locationData.latitude.toString(),
-            locationData.longitude.toString()
+            locationData.latitude.toFixed(6).toString(),
+            locationData.longitude.toFixed(6).toString()
           );
           if (countryResponse?.country) {
             setCountry(countryResponse.country);

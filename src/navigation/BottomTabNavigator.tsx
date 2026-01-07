@@ -68,7 +68,7 @@ const TabBarIcon: React.FC<{ focused: boolean; iconName: string; unreadCount?: n
       {iconName === 'Chat' && unreadCount !== undefined && unreadCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 9 ? '9+' : unreadCount}
           </Text>
         </View>
       )}

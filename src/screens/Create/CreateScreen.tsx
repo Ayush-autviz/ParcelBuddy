@@ -122,10 +122,10 @@ const CreateScreen: React.FC = () => {
     const needsSubscription = user && !(user as any)?.is_subscribed;
 
     // Show combined modal if either is needed
-    if (needsKYC || needsSubscription) {
-      setShowVerificationModal(true);
-      return;
-    }
+    // if (needsKYC || needsSubscription) {
+    //   setShowVerificationModal(true);
+    //   return;
+    // }
 
     // Validation
     if (!origin || !destination) {
