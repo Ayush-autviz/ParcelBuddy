@@ -35,6 +35,8 @@ const SendRequestScreen: React.FC = () => {
   const route = useRoute<SendRequestScreenRouteProp>();
   const navigation = useNavigation<SendRequestScreenNavigationProp>();
   const { ride } = route.params;
+  console.log('SendRequestScreen ride:', ride);
+  console.log('SendRequestScreen ride.notes:', ride?.notes);
   const { showWarning, showError, showSuccess } = useToast();
   const createLuggageRequestMutation = useCreateLuggageRequest();
   const { user } = useAuthStore();
@@ -112,7 +114,7 @@ const SendRequestScreen: React.FC = () => {
       return;
     }
 
-  
+
 
     // if (!specialInstructions || !specialInstructions.trim()) {
     //   showWarning('Please enter special instructions');
@@ -134,7 +136,7 @@ const SendRequestScreen: React.FC = () => {
     //   return;
     // }
 
-  
+
 
     const weightNum = parseFloat(weight);
     const lengthNum = parseFloat(length);
@@ -166,20 +168,20 @@ const SendRequestScreen: React.FC = () => {
     formData.append('ride', ride.id);
     formData.append('weight_kg', weightNum.toString());
     if (lengthNum) {
-    formData.append('length_cm', lengthNum.toString());
+      formData.append('length_cm', lengthNum.toString());
     }
     if (widthNum) {
       formData.append('width_cm', widthNum.toString());
     }
     if (heightNum) {
-    formData.append('height_cm', heightNum.toString());
+      formData.append('height_cm', heightNum.toString());
     }
     formData.append('item_description', itemDescription.trim());
-    
+
     if (specialInstructions.trim()) {
       formData.append('special_instructions', specialInstructions.trim());
     }
-    
+
     formData.append('offered_price', '0');
 
     // Append luggage photos as array
@@ -188,7 +190,7 @@ const SendRequestScreen: React.FC = () => {
         const fileExtension = imageAsset.uri.split('.').pop() || 'jpg';
         const fileName = imageAsset.fileName || `luggage_photo_${Date.now()}.${fileExtension}`;
         const fileType = imageAsset.type || `image/${fileExtension}`;
-        
+
         formData.append('luggage_photos', {
           uri: imageAsset.uri,
           type: fileType,
@@ -217,6 +219,10 @@ const SendRequestScreen: React.FC = () => {
   const formattedDate = formatDate(ride.travel_date);
   const rating = ride.rating || 4.8;
   const reviewCount = ride.review_count || 124;
+
+  const availableWeight = parseFloat(ride.available_weight_kg || '0');
+  const enteredWeight = parseFloat(weight || '0');
+  const isOverWeight = weight !== '' && !isNaN(enteredWeight) && enteredWeight > availableWeight;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -268,18 +274,39 @@ const SendRequestScreen: React.FC = () => {
           </View>
         </Card>
 
+        {/* Note Card */}
+        {ride.notes && (
+          <Card style={styles.driverCard} padding={16}>
+            <Text style={styles.disclaimerTitle}>Note:</Text>
+            <View style={styles.driverRow}>
+              <View style={styles.driverLeft}>
+                <View style={[styles.driverAvatar, { alignItems: 'flex-start', justifyContent: 'flex-start' }]}>
+                  {/* use file text */}
+                  <View style={styles.avatarPlaceholder}>
+                    <Package size={20} color={Colors.primaryCyan} />
+                  </View>
+                </View>
+                <View style={styles.driverInfo}>
+                  <Text style={styles.driverName}>{ride.notes}</Text>
+                </View>
+              </View>
+
+            </View>
+          </Card>
+        )}
+
         {/* Driver Information Card */}
         <Card style={styles.driverCard} padding={16}>
-          <TouchableOpacity 
-            style={styles.driverRow} 
+          <TouchableOpacity
+            style={styles.driverRow}
             activeOpacity={0.7}
             onPress={() => {
               // Use profileId from ride if available, otherwise fallback to traveler.profile.id
               const profileIdFromRide = ride.profileId;
               const profileIdFromTraveler = (ride.traveler as any)?.profile?.id;
               const profileId = profileIdFromRide || profileIdFromTraveler;
-            
-              
+
+
               navigation.navigate('UserProfile', {
                 traveler: ride.traveler,
                 profileId: profileId,
@@ -313,24 +340,32 @@ const SendRequestScreen: React.FC = () => {
         {/* Luggage Details Section */}
         <SectionCard title="Luggage">
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Weight (kg)</Text>
+            <Text style={styles.label}>Weight (kg) - Available: {availableWeight}kg</Text>
             <SearchInput
               icon={WeightIcon}
               placeholder="Enter weight"
               value={weight}
               onChangeText={setWeight}
               keyboardType="decimal-pad"
-              containerStyle={styles.input}
+              containerStyle={[
+                styles.input,
+                isOverWeight && styles.inputError
+              ]}
             />
+            {isOverWeight && (
+              <Text style={styles.errorText}>
+                Weight cannot exceed available capacity of {availableWeight}kg
+              </Text>
+            )}
           </View>
-          <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8}}>Dimensions (cm)</Text>
+          <Text style={{ fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8 }}>Dimensions (cm)</Text>
           <View style={styles.dimensionsRow}>
             <View style={styles.dimensionItem}>
               <Text style={styles.label}>Height</Text>
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={height}
                 onChangeText={setHeight}
                 keyboardType="numeric"
@@ -342,7 +377,7 @@ const SendRequestScreen: React.FC = () => {
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={width}
                 onChangeText={setWidth}
                 keyboardType="numeric"
@@ -354,7 +389,7 @@ const SendRequestScreen: React.FC = () => {
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={length}
                 onChangeText={setLength}
                 keyboardType="numeric"
@@ -390,9 +425,9 @@ const SendRequestScreen: React.FC = () => {
               <View style={styles.imagesGrid}>
                 {images.map((imageAsset, index) => (
                   <View key={index} style={styles.imageWrapper}>
-                    <Image 
-                      source={{ uri: imageAsset.uri }} 
-                      style={styles.uploadedImage} 
+                    <Image
+                      source={{ uri: imageAsset.uri }}
+                      style={styles.uploadedImage}
                     />
                     <TouchableOpacity
                       style={styles.removeImageButton}
@@ -747,8 +782,18 @@ const styles = StyleSheet.create({
   disclaimerText: {
     flex: 1,
     fontSize: Fonts.sm,
-    color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  inputError: {
+    borderColor: Colors.error,
+    borderWidth: 1,
+    backgroundColor: Colors.error + '05',
+  },
+  errorText: {
+    fontSize: Fonts.xs,
+    color: Colors.error,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 

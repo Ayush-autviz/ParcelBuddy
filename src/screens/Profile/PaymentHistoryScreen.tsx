@@ -54,14 +54,14 @@ const PaymentHistoryScreen: React.FC = () => {
   const navigation = useNavigation<PaymentHistoryScreenNavigationProp>();
   const { data: transactionData, isLoading, isError, isFetching, refetch } = useTransactionHistory();
   const { setUser } = useAuthStore();
-  
+
 
   console.log('transactionData', transactionData);
   // State for pagination
   const [allTransactions, setAllTransactions] = useState<TransactionResponse[]>([]);
   const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
+
   const initializedRef = useRef(false);
   const initialPageSizeRef = useRef(0);
   const lastDataRef = useRef<string | null>(null);
@@ -168,7 +168,7 @@ const PaymentHistoryScreen: React.FC = () => {
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primaryCyan} />
+            {/*  <ActivityIndicator size="large" color={Colors.primaryCyan} /> */}
             <Text style={styles.loadingText}>Loading transactions...</Text>
           </View>
         ) : isError ? (
@@ -212,7 +212,7 @@ const PaymentHistoryScreen: React.FC = () => {
                   {isLoadingMore ? (
                     <ActivityIndicator size="small" color={Colors.textPrimary} />
                   ) : (
-                    <Text style={{color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold}}>View More</Text>
+                    <Text style={{ color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold }}>View More</Text>
                   )}
                 </TouchableOpacity>
               </View>

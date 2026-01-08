@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, StyleSheet, ViewStyle, TextInputProps, TextStyle } from 'react-native';
+import { View, TextInput, StyleSheet, ViewStyle, TextInputProps, TextStyle, StyleProp } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { SvgXml } from 'react-native-svg';
@@ -9,8 +9,8 @@ import { TimeIcon } from '../../assets/icons/svg/main';
 interface SearchInputProps extends Omit<TextInputProps, 'style'> {
   icon?: any;
   lucideIcon?: any;
-  containerStyle?: ViewStyle;
-  inputStyle?: TextStyle;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
 }
 
 const SearchInput: React.FC<SearchInputProps> = ({

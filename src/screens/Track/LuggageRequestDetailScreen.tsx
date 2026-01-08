@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { User, ChevronRight, MessageCircle, Package } from 'lucide-react-native';
+import { User, ChevronRight, MessageCircle, Package, X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -46,18 +46,19 @@ const LuggageRequestDetailScreen: React.FC = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { user } = useAuthStore();
 
   // Respond to luggage request mutation
   const respondToRequestMutation = useRespondToLuggageRequest();
-  
+
   // Create chat room mutation
   const createChatRoomMutation = useCreateChatRoom();
 
   // Fetch luggage request detail by ID
-  const { 
-    data: luggageRequestDetail, 
-    isLoading, 
+  const {
+    data: luggageRequestDetail,
+    isLoading,
     isError,
     error,
     refetch: refetchRequestDetail
@@ -89,7 +90,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
       showError('Please provide a reason for rejection');
       return;
     }
-    
+
     setShowRejectModal(false);
     respondToRequestMutation.mutate(
       { requestId, status: 'rejected', rejection_reason: rejectionReason.trim() },
@@ -133,7 +134,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
     }
 
     createChatRoomMutation.mutate(
-      { 
+      {
         luggage_request_id: requestId
       },
       {
@@ -173,18 +174,18 @@ const LuggageRequestDetailScreen: React.FC = () => {
   // Extract data from luggage request
   const weight = luggageRequestDetail?.weight_kg ? String(luggageRequestDetail.weight_kg) : '';
   // Handle dimensions - can be 0, null, or undefined (show "0" if value is 0, empty string if null/undefined)
-  const height = luggageRequestDetail?.height_cm !== undefined && luggageRequestDetail?.height_cm !== null 
-    ? String(luggageRequestDetail.height_cm) 
+  const height = luggageRequestDetail?.height_cm !== undefined && luggageRequestDetail?.height_cm !== null
+    ? String(luggageRequestDetail.height_cm)
     : '';
-  const width = luggageRequestDetail?.width_cm !== undefined && luggageRequestDetail?.width_cm !== null 
-    ? String(luggageRequestDetail.width_cm) 
+  const width = luggageRequestDetail?.width_cm !== undefined && luggageRequestDetail?.width_cm !== null
+    ? String(luggageRequestDetail.width_cm)
     : '';
-  const length = luggageRequestDetail?.length_cm !== undefined && luggageRequestDetail?.length_cm !== null 
-    ? String(luggageRequestDetail.length_cm) 
+  const length = luggageRequestDetail?.length_cm !== undefined && luggageRequestDetail?.length_cm !== null
+    ? String(luggageRequestDetail.length_cm)
     : '';
   const itemDescription = luggageRequestDetail?.item_description || '';
   const specialInstructions = luggageRequestDetail?.special_instructions || '';
-  
+
   // Handle luggage_photo - array of objects with id and luggage_image
   const luggagePhotos = luggageRequestDetail?.luggage_photo || [];
 
@@ -217,7 +218,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
     );
   }
 
-//   // Show error state
+  //   // Show error state
   if (isError) {
     return (
       <SafeAreaView style={styles.container}>
@@ -318,14 +319,14 @@ const LuggageRequestDetailScreen: React.FC = () => {
               containerStyle={styles.input}
             />
           </View>
-          <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8}}>Dimensions (cm)</Text>
+          <Text style={{ fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8 }}>Dimensions (cm)</Text>
           <View style={styles.dimensionsRow}>
             <View style={styles.dimensionItem}>
               <Text style={styles.label}>Height</Text>
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={height || ''}
                 editable={false}
                 containerStyle={styles.input}
@@ -336,7 +337,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={width || ''}
                 editable={false}
                 containerStyle={styles.input}
@@ -347,7 +348,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={length || ''}
                 editable={false}
                 containerStyle={styles.input}
@@ -362,18 +363,30 @@ const LuggageRequestDetailScreen: React.FC = () => {
           <View style={styles.imagesGrid}>
             {luggagePhotos.length > 0 ? (
               luggagePhotos.slice(0, 3).map((photo: any, index: number) => (
-                <View key={photo.id || index} style={styles.imageCard}>
+                <TouchableOpacity
+                  key={photo.id || index}
+                  style={styles.imageCard}
+                  onPress={() => {
+                    const imageUrl = photo?.luggage_image;
+                    if (imageUrl) {
+                      console.log('Opening image:', imageUrl);
+                      setSelectedImage(imageUrl);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
                   {photo.luggage_image ? (
                     <Image
                       source={{ uri: photo.luggage_image }}
                       style={styles.image}
+                      resizeMode="cover"
                     />
                   ) : (
                     <View style={styles.imagePlaceholder}>
                       <Package size={24} color={Colors.textTertiary} />
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
               ))
             ) : (
               <View style={styles.imageCard}>
@@ -422,30 +435,30 @@ const LuggageRequestDetailScreen: React.FC = () => {
 
         {/* Action Buttons */}
         {luggageRequestDetail?.status === 'pending' && (
-        <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity
-            style={[
-              styles.declineButton,
-              respondToRequestMutation.isPending && styles.buttonDisabled,
-            ]}
-            onPress={handleReject}
-            activeOpacity={0.7}
-            disabled={respondToRequestMutation.isPending}
-          >
-            {respondToRequestMutation.isPending ? (
-              <ActivityIndicator size="small" color={Colors.primaryCyan} />
-            ) : (
-              <Text style={styles.declineButtonText}>Reject</Text>
-            )}
-          </TouchableOpacity>
-          <GradientButton
-            title="Chat"
-            onPress={handleChat}
-            style={styles.chatButton}
-            icon={<MessageCircle size={20} color={Colors.textWhite} style={styles.chatIcon} />}
-            disabled={respondToRequestMutation.isPending || createChatRoomMutation.isPending}
-          />
-        </View>
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.declineButton,
+                respondToRequestMutation.isPending && styles.buttonDisabled,
+              ]}
+              onPress={handleReject}
+              activeOpacity={0.7}
+              disabled={respondToRequestMutation.isPending}
+            >
+              {respondToRequestMutation.isPending ? (
+                <ActivityIndicator size="small" color={Colors.primaryCyan} />
+              ) : (
+                <Text style={styles.declineButtonText}>Reject</Text>
+              )}
+            </TouchableOpacity>
+            <GradientButton
+              title="Chat"
+              onPress={handleChat}
+              style={styles.chatButton}
+              icon={<MessageCircle size={20} color={Colors.textWhite} style={styles.chatIcon} />}
+              disabled={respondToRequestMutation.isPending || createChatRoomMutation.isPending}
+            />
+          </View>
         )}
       </ScrollView>
 
@@ -464,7 +477,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
                 <Text style={styles.rejectModalMessage}>
                   Please provide a reason for rejecting this luggage request.
                 </Text>
-                
+
                 <TextInput
                   style={styles.rejectionReasonInput}
                   placeholder="e.g. Sorry, not enough space available for this size."
@@ -475,7 +488,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
                   numberOfLines={4}
                   textAlignVertical="top"
                 />
-                
+
                 <View style={styles.rejectModalButtons}>
                   <GradientButton
                     title="Reject"
@@ -499,8 +512,37 @@ const LuggageRequestDetailScreen: React.FC = () => {
         </TouchableWithoutFeedback>
       </Modal>
 
-     {/* Verification Required Modal */}
-     <VerificationRequiredModal
+      {/* Full Screen Image Modal */}
+      <Modal
+        visible={!!selectedImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <View style={styles.imageViewerContainer}>
+          <TouchableWithoutFeedback onPress={() => setSelectedImage(null)}>
+            <View style={styles.imageViewerContent}>
+              {selectedImage && (
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.fullScreenImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </TouchableWithoutFeedback>
+          <TouchableOpacity
+            style={styles.imageViewerCloseButton}
+            onPress={() => setSelectedImage(null)}
+            activeOpacity={0.7}
+          >
+            <X size={24} color={Colors.textWhite} />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Verification Required Modal */}
+      <VerificationRequiredModal
         visible={showVerificationModal}
         needsKYC={!!(user && !(user as any)?.is_kyc_verified)}
         needsSubscription={!!(user && !(user as any)?.is_subscribed)}
@@ -850,6 +892,31 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 400,
+  },
+  imageViewerContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewerContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '80%',
+  },
+  imageViewerCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 1,
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
   },
 });
 

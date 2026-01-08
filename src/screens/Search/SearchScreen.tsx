@@ -38,12 +38,12 @@ const SearchScreen: React.FC = () => {
   const [date, setDate] = useState<Date | null>(null);
   const shouldClearOnFocus = useRef(false);
 
-  const { 
-    from, 
-    to, 
-    selectedFrom, 
-    selectedTo, 
-    setFrom, 
+  const {
+    from,
+    to,
+    selectedFrom,
+    selectedTo,
+    setFrom,
     setTo,
     fromLatitude,
     fromLongitude,
@@ -150,7 +150,7 @@ const SearchScreen: React.FC = () => {
     searchRidesMutation.mutate(searchParams, {
       onSuccess: (response) => {
         console.log('🔍 [SEARCH SCREEN] Search rides response:', JSON.stringify(response, null, 2));
-        
+
         // Transform API response to AvailableRideData format
         const transformedRides = (response || []).map((ride: any) => {
           const profileId = ride.traveler?.profile?.id;
@@ -158,7 +158,7 @@ const SearchScreen: React.FC = () => {
           console.log('🔍 [SEARCH SCREEN] Traveler:', ride.traveler?.first_name, ride.traveler?.last_name);
           console.log('🔍 [SEARCH SCREEN] Profile object:', JSON.stringify(ride.traveler?.profile, null, 2));
           console.log('🔍 [SEARCH SCREEN] Extracted profileId:', profileId);
-          
+
           return {
             id: ride.id,
             traveler: {
@@ -179,18 +179,19 @@ const SearchScreen: React.FC = () => {
             // Rating and review_count would come from traveler profile if available
             rating: ride.traveler?.profile?.average_rating || 0,
             review_count: ride.traveler?.total_rating || 128,
+            notes: ride.notes,
           };
         });
-        
+
         console.log('🔍 [SEARCH SCREEN] Transformed rides:', JSON.stringify(transformedRides.map((r: any) => ({ id: r.id, profileId: r.profileId })), null, 2));
-        
+
         // Set flag to clear form when screen comes back into focus
         // This ensures clearing happens when screen is active, not before navigation
         shouldClearOnFocus.current = true;
-        
+
         // Refetch search history to include the new search
         refetchHistory();
-        
+
         // Navigate to Available Rides screen with results
         navigation.navigate('AvailableRides', {
           rides: transformedRides,
@@ -228,15 +229,15 @@ const SearchScreen: React.FC = () => {
         max_price: 10,
         ordering: '-travel_date',
       };
-      
+
       searchRidesMutation.mutate(searchParams, {
         onSuccess: (response) => {
           console.log('🔍 [SEARCH SCREEN - HISTORY] Search rides response:', JSON.stringify(response, null, 2));
-          
+
           // Transform API response to AvailableRideData format
           const transformedRides = (response || []).map((ride: any) => {
             const profileId = ride.traveler?.profile?.id;
-            
+
             return {
               id: ride.id,
               traveler: {
@@ -256,17 +257,18 @@ const SearchScreen: React.FC = () => {
               price_per_kg: ride.price_per_kg,
               rating: ride.traveler?.profile?.average_rating || 0,
               review_count: ride.traveler?.total_rating || 0,
+              notes: ride.notes,
             };
           });
-          
+
           console.log('🔍 [SEARCH SCREEN - HISTORY] Transformed rides:', JSON.stringify(transformedRides.map((r: any) => ({ id: r.id, profileId: r.profileId })), null, 2));
-          
+
           // Set flag to clear form when screen comes back into focus
           shouldClearOnFocus.current = true;
-          
+
           // Refetch search history to include the new search
           refetchHistory();
-          
+
           // Navigate to Available Rides screen with results
           navigation.navigate('AvailableRides', {
             rides: transformedRides,
@@ -283,7 +285,7 @@ const SearchScreen: React.FC = () => {
     }
   };
 
-  
+
   // fcm token
 
   const requestNotificationPermission = async () => {
@@ -315,7 +317,7 @@ const SearchScreen: React.FC = () => {
       await messaging().registerDeviceForRemoteMessages();
       const token = await messaging().getToken();
       console.log('FCM TOKEN in SearchScreen:', token);
-      
+
       // Send token to backend
       if (token) {
         sendFcmTokenMutation.mutate(
@@ -335,15 +337,15 @@ const SearchScreen: React.FC = () => {
     }
   };
 
-useEffect(() => {
-  getFcmTokenAndSendToBackend();
-}, []);
+  useEffect(() => {
+    getFcmTokenAndSendToBackend();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <Header title="Search Rides" variant="centered" />
-      
+
       <KeyboardAwareScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -354,10 +356,10 @@ useEffect(() => {
       >
         {/* Illustration Banner */}
         <View style={styles.bannerContainer}>
-        <Image
-        source={require('../../assets/images/Aeroplane.png')}
-        style={styles.bannerPlaceholder}
-        />
+          <Image
+            source={require('../../assets/images/Aeroplane.png')}
+            style={styles.bannerPlaceholder}
+          />
         </View>
 
         {/* Search Form Card */}
@@ -378,7 +380,7 @@ useEffect(() => {
             />
           </View>
 
-          <Text style={{fontSize: Fonts.xs, color: Colors.textTertiary, textAlign: 'center', marginBottom: 16, fontStyle: 'italic'}}>Currently we operate for India and Canada only</Text>
+          <Text style={{ fontSize: Fonts.xs, color: Colors.textTertiary, textAlign: 'center', marginBottom: 16, fontStyle: 'italic' }}>Currently we operate for India and Canada only</Text>
 
           {/* Input Fields */}
           <View style={styles.inputsContainer}>

@@ -5,8 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   ActivityIndicator,
+  Modal,
+  TouchableWithoutFeedback,
+  Image,
 } from 'react-native';
 import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -23,6 +25,7 @@ import {
   LogOut,
   ChevronRight,
   Trash2,
+  X,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
@@ -56,6 +59,7 @@ const ProfileScreen: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   console.log('user', user);
   const queryClient = useQueryClient();
 
@@ -95,7 +99,7 @@ const ProfileScreen: React.FC = () => {
       // Step 1: Delete account
       const result = await deleteAccount();
       console.log('Delete account result:', result);
-      
+
       // Step 2: Clear query cache
       try {
         queryClient.clear();
@@ -103,7 +107,7 @@ const ProfileScreen: React.FC = () => {
         console.error('Error clearing query cache:', clearError);
         // Continue even if clearing cache fails
       }
-      
+
       // Step 3: Logout user
       try {
         await logout();
@@ -111,10 +115,10 @@ const ProfileScreen: React.FC = () => {
         console.error('Error during logout:', logoutError);
         // Continue even if logout fails - account is already deleted
       }
-      
+
       // Step 4: Show success and navigate
       showSuccess('Account deleted successfully');
-      
+
       // Step 5: Navigate to root Auth screen
       try {
         navigation.dispatch(
@@ -132,7 +136,7 @@ const ProfileScreen: React.FC = () => {
       console.error('Error response:', error?.response);
       console.error('Error response data:', error?.response?.data);
       console.error('Error response status:', error?.response?.status);
-      
+
       // Check if the error is actually from a successful deletion
       // Sometimes the response might be successful but throw an error during processing
       if (error?.response?.status === 200 && error?.response?.data?.message) {
@@ -153,11 +157,11 @@ const ProfileScreen: React.FC = () => {
         );
       } else {
         // Actual error occurred
-        const errorMessage = error?.response?.data?.error || 
-                            error?.response?.data?.detail || 
-                            error?.response?.data?.message ||
-                            error?.message ||
-                            'Failed to delete account. Please try again.';
+        const errorMessage = error?.response?.data?.error ||
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          error?.message ||
+          'Failed to delete account. Please try again.';
         showError(errorMessage);
       }
     } finally {
@@ -237,7 +241,12 @@ const ProfileScreen: React.FC = () => {
       >
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
-          <View style={styles.avatarContainer}>
+          <TouchableOpacity
+            style={styles.avatarContainer}
+            onPress={() => user?.profile?.profile_photo && setSelectedImage(user.profile.profile_photo)}
+            activeOpacity={0.9}
+            disabled={!user?.profile?.profile_photo}
+          >
             {user?.profile?.profile_photo ? (
               <Image source={{ uri: user?.profile?.profile_photo }} style={styles.avatarImage} />
             ) : (
@@ -250,9 +259,9 @@ const ProfileScreen: React.FC = () => {
                 <User size={60} color={Colors.textWhite} />
               </LinearGradient>
             )}
-          </View>
+          </TouchableOpacity>
           <Text style={styles.userName}>{user?.first_name} {user?.last_name}</Text>
-          <Text style={styles.userAge}>{user?.date_of_birth ? new Date().getFullYear() - new Date(user?.date_of_birth).getFullYear(): ''} years old</Text>
+          <Text style={styles.userAge}>{user?.date_of_birth ? new Date().getFullYear() - new Date(user?.date_of_birth).getFullYear() : ''} years old</Text>
         </View>
 
         {/* Menu Items */}
@@ -267,8 +276,8 @@ const ProfileScreen: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuItemLeft}>
-                  <View style={styles.iconContainer}>   
-                     <SvgXml xml={Icon} width={20} height={20} />
+                  <View style={styles.iconContainer}>
+                    <SvgXml xml={Icon} width={20} height={20} />
                   </View>
                   <View style={styles.menuItemText}>
                     <Text style={styles.menuItemTitle}>{item.title}</Text>
@@ -334,6 +343,35 @@ const ProfileScreen: React.FC = () => {
         onCancel={() => setShowDeleteAccountModal(false)}
         type="destructive"
       />
+
+      {/* Full Screen Image Modal */}
+      <Modal
+        visible={!!selectedImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <View style={styles.imageViewerContainer}>
+          <TouchableWithoutFeedback onPress={() => setSelectedImage(null)}>
+            <View style={styles.imageViewerContent}>
+              {selectedImage && (
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.fullScreenImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </TouchableWithoutFeedback>
+          <TouchableOpacity
+            style={styles.imageViewerCloseButton}
+            onPress={() => setSelectedImage(null)}
+            activeOpacity={0.7}
+          >
+            <X size={24} color={Colors.textWhite} />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -478,6 +516,31 @@ const styles = StyleSheet.create({
   },
   logoutIcon: {
     marginRight: 0,
+  },
+  imageViewerContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewerContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '80%',
+  },
+  imageViewerCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 1,
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
   },
 });
 

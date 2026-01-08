@@ -25,6 +25,7 @@ export interface AvailableRideData {
   price_per_kg?: string;
   rating?: number;
   review_count?: number;
+  notes?: string;
 }
 
 interface AvailableRideCardProps {
@@ -57,8 +58,8 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
   const reviewCount = ride.review_count || 128; // Default review count if not provided
 
   return (
- 
-    <TouchableOpacity onPress={onSendRequest || onPress || (() => {})} style={[styles.container, style]}>
+
+    <TouchableOpacity onPress={onSendRequest || onPress || (() => { })} style={[styles.container, style]}>
       <Card style={styles.card} padding={16}>
         <View style={styles.content}>
           {/* Left Side - Driver Info */}
@@ -92,9 +93,9 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
             <View style={styles.capacityContainer}>
               {availableWeight !== '0' ? (
                 <>
-               <Text style={styles.capacityValue}>{availableWeight}kg</Text>
-              <Text style={styles.capacityLabel}>Available Capacity</Text>
-              </>
+                  <Text style={styles.capacityValue}>{availableWeight}kg</Text>
+                  <Text style={styles.capacityLabel}>Available Capacity</Text>
+                </>
               ) : (
                 <Text style={styles.capacityValue}>Full</Text>
               )}
@@ -111,7 +112,7 @@ const AvailableRideCard: React.FC<AvailableRideCardProps> = ({
         {/* Send Request Button */}
         <GradientButton
           title="Send Request"
-          onPress={ onSendRequest || onPress || (() => {})}
+          onPress={onSendRequest || onPress || (() => { })}
           style={styles.requestButton}
           textStyle={styles.requestButtonText}
         />
