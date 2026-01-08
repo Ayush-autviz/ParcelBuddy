@@ -32,7 +32,7 @@ export const useLuggageRequestsForRide = (
         throw new Error('Ride ID is required');
       }
       const response = await getLuggageRequestsForRide(rideId);
-      
+
       if (!Array.isArray(response)) {
         return [];
       }
@@ -226,13 +226,13 @@ export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, E
     queryKey: ['bookedRides'],
     queryFn: async () => {
       const response = await getLuggageRequests();
-      
+
       // Check if response has pagination structure
       const hasPagination = response?.pagination && response?.results;
-      const requestsArray = hasPagination 
-        ? response.results 
+      const requestsArray = hasPagination
+        ? response.results
         : (Array.isArray(response) ? response : (response?.data || response?.results || []));
-      
+
       if (!Array.isArray(requestsArray)) {
         console.warn('getLuggageRequests: Expected array but got:', typeof response, response);
         return {
@@ -277,16 +277,22 @@ export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, E
         const requestCount = request.total_request_count || 0;
         // Extract traveler name from ride_info
         // Check both traveler_name and traveler.name as fallback
-        const travelerName = request.ride_info?.traveler_name?.trim() 
-          || (request.ride_info?.traveler?.first_name && request.ride_info?.traveler?.last_name 
-              ? `${request.ride_info.traveler.first_name} ${request.ride_info.traveler.last_name}`.trim()
-              : '')
+        const travelerName = request.ride_info?.traveler_name?.trim()
+          || (request.ride_info?.traveler?.first_name && request.ride_info?.traveler?.last_name
+            ? `${request.ride_info.traveler.first_name} ${request.ride_info.traveler.last_name}`.trim()
+            : '')
           || '';
-        
+
+        // Extract traveler profile photo
+        const travelerProfilePhoto = request.ride_info?.traveler_profile_pic
+          || request.ride_info?.traveler?.profile?.profile_photo
+          || request.ride_info?.photo // Based on user provided log "photo: null" in ride_info
+          || null;
+
 
 
         return {
-          id:  request.id,
+          id: request.id,
           status: request.status,
           date: formatDate(request.ride_info?.travel_date || ''),
           origin: request.ride_info?.origin || request.ride_info?.origin_name || 'Unknown Origin',
@@ -299,6 +305,7 @@ export const useBookedRides = (): UseQueryResult<PaginatedBookedRidesResponse, E
           requestCount: requestCount,
           travelerName: travelerName,
           bookingRequest: request, // Store original booking request for detail screen
+          travelerProfilePhoto: travelerProfilePhoto,
         } as BookedRideCardData;
       });
 

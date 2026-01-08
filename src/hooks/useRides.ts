@@ -25,6 +25,10 @@ export interface PublishedRideResponse {
   total_request_count?: number;
   pending_request_count?: number;
   all_sender_rated?: boolean;
+  approved_senders?: Array<{
+    profile_photo?: string;
+    sender_profile_pic?: string;
+  }>;
 }
 
 // Interface for paginated published rides response
@@ -43,13 +47,13 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
     queryKey: ['publishedRides'],
     queryFn: async () => {
       const response = await getPublishedRides();
-      
+
       // Check if response has pagination structure
       const hasPagination = response?.pagination && response?.results;
-      const ridesArray = hasPagination 
-        ? response.results 
+      const ridesArray = hasPagination
+        ? response.results
         : (Array.isArray(response) ? response : (response?.data || response?.results || []));
-      
+
       if (!Array.isArray(ridesArray)) {
         console.warn('getPublishedRides: Expected array but got:', typeof response, response);
         return {
@@ -93,8 +97,8 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
         // 1. Status is 'completed' AND
         // 2. all_sender_rated is false AND
         // 3. total_request_count > 0
-        const showRate = ride.status === 'completed' 
-          && !ride.all_sender_rated 
+        const showRate = ride.status === 'completed'
+          && !ride.all_sender_rated
           && (ride.total_request_count || 0) > 0;
 
         return {
@@ -109,6 +113,9 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
           showRateButton: showRate,
           requestCount: ride.total_request_count || 0,
           pendingRequestCount: ride.pending_request_count || 0,
+          approvedSenders: (ride.approved_senders || []).map((sender: any) => ({
+            profilePhoto: sender.profile_photo || sender.sender_profile_pic || null
+          })),
         } as RideCardData;
       });
 

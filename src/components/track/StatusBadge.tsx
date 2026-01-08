@@ -40,7 +40,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
           showDot: false,
           dotColor: Colors.primaryTeal,
         };
-        case 'cancelled':
+      case 'cancelled':
         return {
           label: 'Cancelled',
           showIcon: false,
@@ -54,14 +54,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
           showDot: false,
           dotColor: Colors.primaryTeal,
         };
-        case 'active':
+      case 'active':
         return {
           label: 'Active',
           showIcon: false,
           showDot: false,
           dotColor: Colors.primaryTeal,
         };
-        case 'in_progress':
+      case 'in_progress':
         return {
           label: 'In Progress',
           showIcon: false,
@@ -85,26 +85,26 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
 
   return (
     <View style={[styles.container, style]}>
-      {config.showDot && (
+      {/* {config.showDot && (
         <View style={[styles.dot, { backgroundColor: config.dotColor }]} />
-      )}
+      )} */}
       {/* <LinearGradient
         colors={[Colors.gradientStart, Colors.gradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.badge}
       > */}
-        {config.showIcon && (
-          <Bell size={14} color={Colors.textWhite} style={styles.icon} />
-        )}
-        <GradientButton
-          title={config.label}
-          onPress={() => {}}
-          style={styles.button}
-          textStyle={styles.text}
-          
-        />
-        {/* <Text style={[styles.text, { color: Colors.textWhite }]}>
+      {config.showIcon && (
+        <Bell size={14} color={Colors.textWhite} style={styles.icon} />
+      )}
+      <GradientButton
+        title={config.label}
+        onPress={() => { }}
+        style={styles.button}
+        textStyle={styles.text}
+
+      />
+      {/* <Text style={[styles.text, { color: Colors.textWhite }]}>
           {config.label}
         </Text> */}
       {/* </LinearGradient> */}

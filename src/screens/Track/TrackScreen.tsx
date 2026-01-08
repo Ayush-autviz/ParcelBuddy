@@ -77,48 +77,48 @@ const TrackScreen: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  
+
   // Pagination state for booked rides
   const [allBookedRides, setAllBookedRides] = useState<BookedRideCardData[]>([]);
   const [nextPageUrlBooked, setNextPageUrlBooked] = useState<string | null>(null);
   const [isLoadingMoreBooked, setIsLoadingMoreBooked] = useState(false);
-  
+
   // Pagination state for published rides
   const [allPublishedRides, setAllPublishedRides] = useState<RideCardData[]>([]);
   const [nextPageUrlPublished, setNextPageUrlPublished] = useState<string | null>(null);
   const [isLoadingMorePublished, setIsLoadingMorePublished] = useState(false);
-  
+
   // Track which tabs have been initialized to preserve data when switching
   const initializedTabsRef = useRef<Set<TabType>>(new Set());
-  
+
   // Rating mutation
   const createRatingMutation = useCreateRating();
-  
+
   // Define snap points for bottom sheet - larger for rating screen
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
   // Fetch published rides from API
-  const { 
-    data: publishedRidesData, 
-    isLoading: isLoadingPublished, 
-    isFetching: isFetchingPublished, 
-    isError: isErrorPublished, 
-    refetch: refetchPublished, 
-    failureReason: failureReasonPublished 
+  const {
+    data: publishedRidesData,
+    isLoading: isLoadingPublished,
+    isFetching: isFetchingPublished,
+    isError: isErrorPublished,
+    refetch: refetchPublished,
+    failureReason: failureReasonPublished
   } = usePublishedRides();
 
   // Fetch booked rides (luggage requests) from API
-  const { 
-    data: bookedRidesData , 
-    isLoading: isLoadingBooked, 
-    isFetching: isFetchingBooked, 
-    isError: isErrorBooked, 
-    refetch: refetchBooked, 
-    failureReason: failureReasonBooked 
+  const {
+    data: bookedRidesData,
+    isLoading: isLoadingBooked,
+    isFetching: isFetchingBooked,
+    isError: isErrorBooked,
+    refetch: refetchBooked,
+    failureReason: failureReasonBooked
   } = useBookedRides();
 
   console.log();
-  
+
 
   // Initialize data only when switching to a tab that hasn't been initialized yet
   // This preserves loaded data when switching between tabs
@@ -136,11 +136,11 @@ const TrackScreen: React.FC = () => {
       initializedTabsRef.current.add('Published');
     }
   }, [activeTab, bookedRidesData, publishedRidesData]);
-  
+
   // Track initial page sizes for refresh handling
   const initialPageSizeRef = useRef<{ booked: number; published: number }>({ booked: 0, published: 0 });
   const lastDataRef = useRef<{ booked: string | null; published: string | null }>({ booked: null, published: null });
-  
+
   // Handle pull-to-refresh: update first page when data is refetched (only if data actually changed)
   useEffect(() => {
     if (activeTab === 'Booked' && bookedRidesData?.rides && initializedTabsRef.current.has('Booked')) {
@@ -148,13 +148,13 @@ const TrackScreen: React.FC = () => {
       if (initialPageSizeRef.current.booked === 0) {
         initialPageSizeRef.current.booked = bookedRidesData.rides.length;
       }
-      
+
       // Create a simple hash to detect if data actually changed
       const dataHash = bookedRidesData.rides.map(r => r.id).join(',');
       if (lastDataRef.current.booked !== dataHash) {
         lastDataRef.current.booked = dataHash;
         const initialPageSize = initialPageSizeRef.current.booked;
-        
+
         // Use functional update to avoid stale closure
         setAllBookedRides(prev => {
           // If we have more data than the initial page, preserve additional pages
@@ -173,13 +173,13 @@ const TrackScreen: React.FC = () => {
       if (initialPageSizeRef.current.published === 0) {
         initialPageSizeRef.current.published = publishedRidesData.rides.length;
       }
-      
+
       // Create a simple hash to detect if data actually changed
       const dataHash = publishedRidesData.rides.map(r => r.id).join(',');
       if (lastDataRef.current.published !== dataHash) {
         lastDataRef.current.published = dataHash;
         const initialPageSize = initialPageSizeRef.current.published;
-        
+
         // Use functional update to avoid stale closure
         setAllPublishedRides(prev => {
           // If we have more data than the initial page, preserve additional pages
@@ -202,12 +202,12 @@ const TrackScreen: React.FC = () => {
     setIsLoadingMoreBooked(true);
     try {
       const response = await getLuggageRequests(nextPageUrlBooked);
-      
+
       const hasPagination = response?.pagination && response?.results;
-      const requestsArray = hasPagination 
-        ? response.results 
+      const requestsArray = hasPagination
+        ? response.results
         : (Array.isArray(response) ? response : (response?.data || response?.results || []));
-      
+
       if (Array.isArray(requestsArray)) {
         // Format the new rides using the same logic as useBookedRides
         const formatDate = (dateString: string): string => {
@@ -236,8 +236,18 @@ const TrackScreen: React.FC = () => {
           .filter((request: any) => request.status !== 'cancelled')
           .map((request: any) => {
             // Extract traveler name from ride_info
-            const travelerName = request.ride_info?.traveler_name?.trim() || '';
-            
+            const travelerName = request.ride_info?.traveler_name?.trim()
+              || (request.ride_info?.traveler?.first_name && request.ride_info?.traveler?.last_name
+                ? `${request.ride_info.traveler.first_name} ${request.ride_info.traveler.last_name}`.trim()
+                : '')
+              || '';
+
+            // Extract traveler profile photo
+            const travelerProfilePhoto = request.ride_info?.traveler_profile_pic
+              || request.ride_info?.traveler?.profile?.profile_photo
+              || request.ride_info?.photo
+              || null;
+
             return {
               id: request.id,
               status: request.status,
@@ -252,6 +262,7 @@ const TrackScreen: React.FC = () => {
               requestCount: request.total_request_count || 0,
               travelerName: travelerName,
               bookingRequest: request,
+              travelerProfilePhoto: travelerProfilePhoto,
             } as BookedRideCardData;
           });
 
@@ -274,12 +285,12 @@ const TrackScreen: React.FC = () => {
     setIsLoadingMorePublished(true);
     try {
       const response = await getPublishedRides(nextPageUrlPublished);
-      
+
       const hasPagination = response?.pagination && response?.results;
-      const ridesArray = hasPagination 
-        ? response.results 
+      const ridesArray = hasPagination
+        ? response.results
         : (Array.isArray(response) ? response : (response?.data || response?.results || []));
-      
+
       if (Array.isArray(ridesArray)) {
         // Format the new rides using the same logic as usePublishedRides
         const formatDate = (dateString: string): string => {
@@ -309,8 +320,8 @@ const TrackScreen: React.FC = () => {
           // 1. Status is 'completed' AND
           // 2. all_sender_rated is false AND
           // 3. total_request_count > 0
-          const showRate = ride.status === 'completed' 
-            && !ride.all_sender_rated 
+          const showRate = ride.status === 'completed'
+            && !ride.all_sender_rated
             && (ride.total_request_count || 0) > 0;
 
           return {
@@ -325,6 +336,9 @@ const TrackScreen: React.FC = () => {
             showRateButton: showRate,
             requestCount: ride.total_request_count || 0,
             pendingRequestCount: ride.pending_request_count || 0,
+            approvedSenders: (ride.approved_senders || []).map((sender: any) => ({
+              profilePhoto: sender.profile_photo || sender.sender_profile_pic || null // Adapt based on actual API response structure
+            })),
           } as RideCardData;
         });
 
@@ -353,20 +367,20 @@ const TrackScreen: React.FC = () => {
     if (activeTab === 'Booked') {
       // Invalidate cache to force fresh fetch
       queryClient.invalidateQueries({ queryKey: ['bookedRides'] });
-      
+
       // Reset pagination state
       setNextPageUrlBooked(null);
       setIsLoadingMoreBooked(false);
-      
+
       // Reset data hash to force update
       lastDataRef.current.booked = null;
-      
+
       // Reset initial page size to force full refresh
       initialPageSizeRef.current.booked = 0;
-      
+
       // Refetch data
       const result = await refetchBooked();
-      
+
       // Update local state with fresh data
       if (result.data?.rides) {
         setAllBookedRides(result.data.rides);
@@ -378,26 +392,42 @@ const TrackScreen: React.FC = () => {
     } else {
       // Invalidate cache to force fresh fetch
       queryClient.invalidateQueries({ queryKey: ['publishedRides'] });
-      
+
       // Reset pagination state
       setNextPageUrlPublished(null);
       setIsLoadingMorePublished(false);
-      
+
       // Reset data hash to force update
       lastDataRef.current.published = null;
-      
+
       // Reset initial page size to force full refresh
       initialPageSizeRef.current.published = 0;
-      
+
       // Refetch data
       const result = await refetchPublished();
-      
+
       // Update local state with fresh data
       if (result.data?.rides) {
         setAllPublishedRides(result.data.rides);
         setNextPageUrlPublished(result.data.pagination?.next_page || null);
         // Update data hash
         lastDataRef.current.published = result.data.rides.map(r => r.id).join(',');
+
+        // Also ensure we map approvedSenders if not already mapped by the hook
+        // The hook usePublishedRides might need update too, but we can't see it.
+        // Assuming result.data.rides already has the shape we want, or we trust the API response mapping if the hook does it.
+        // If the hook returns raw API data, we might need transformation here actually.
+        // Wait, usePublishedRides returns { rides: RideCardData[], ... } so the mapping happens in the hook?
+        // Let's check where the mapping happens for the initial data.
+        // Ah, line 108 calls usePublishedRides. We need to check usePublishedRides in useRides.ts
+
+        // Since I can't edit the hook right now without viewing it, and I see setAllPublishedRides uses result.data.rides...
+        // If the hook doesn't map it, we are in trouble for initial load.
+        // BUT, handleLoadMorePublished maps it MANUALLY in lines 307-328.
+
+        // Let's assume for now that I need to edit the HOOK as well, OR I need to re-map the data here if the hook returns mapped data but missing the field.
+        // If usePublishedRides returns RideCardData[], I should edit useRides.ts.
+
         initialPageSizeRef.current.published = result.data.rides.length;
       }
     }
@@ -415,7 +445,7 @@ const TrackScreen: React.FC = () => {
       }
       return;
     }
-    
+
     // For published rides, navigate to ride detail screen
     const formattedDate = ride.date;
     navigation.navigate('RideDetail', {
@@ -436,13 +466,13 @@ const TrackScreen: React.FC = () => {
     setRating(0);
     setFeedback('');
     setIsLoadingLuggageRequests(true);
-    
+
     try {
       if (activeTab === 'Booked') {
         // For booked rides, rate the traveler
         const bookedRide = ride as BookedRideCardData;
         const bookingRequest = bookedRide.bookingRequest;
-        
+
         if (!bookingRequest || !bookingRequest.ride_info) {
           showError('Ride information not found');
           setIsLoadingLuggageRequests(false);
@@ -451,7 +481,7 @@ const TrackScreen: React.FC = () => {
 
         // Try to get traveler from multiple sources
         let traveler = bookingRequest.ride_info?.traveler || bookingRequest.traveler;
-        
+
         // If traveler not found in booking request, fetch ride details
         if (!traveler && bookingRequest.ride_info.id) {
           try {
@@ -510,21 +540,21 @@ const TrackScreen: React.FC = () => {
         setSelectedRideId(ride.id);
         const response = await getApprovedLuggageRequestsForRide(ride.id);
         console.log('Approved luggage requests response:', response);
-        
+
         let allRequests: any[] = [];
         if (Array.isArray(response)) {
           allRequests = response;
         } else if (response && Array.isArray(response.data)) {
           allRequests = response.data;
         }
-        
+
         // Map the response to LuggageRequest format
         const approvedRequests = allRequests.map((request: any) => {
           // The API returns sender_name and sender_profile_pic directly
           const senderName = request.sender_name || 'Unknown';
           const senderProfilePhoto = request.sender_profile_pic || null;
           const hasRated = request.has_rated === true;
-          
+
           return {
             id: request.id,
             senderName,
@@ -544,7 +574,7 @@ const TrackScreen: React.FC = () => {
             fullData: request, // Store full request data for API calls
           };
         });
-        
+
         setLuggageRequests(approvedRequests);
         bottomSheetModalRef.current?.present();
       }
@@ -610,7 +640,7 @@ const TrackScreen: React.FC = () => {
 
     // Determine rating type based on active tab
     const ratingType = activeTab === 'Published' ? 'sender' : 'traveler';
-    
+
     // Get the user ID to rate
     let ratedToId: string | undefined;
     if (ratingType === 'sender') {
@@ -653,7 +683,7 @@ const TrackScreen: React.FC = () => {
           setFeedback('');
           setLuggageRequests([]);
           setSelectedRideId(null);
-          
+
           // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['publishedRides'] });
           queryClient.invalidateQueries({ queryKey: ['bookedRides'] });
@@ -723,8 +753,8 @@ const TrackScreen: React.FC = () => {
           renderItem={renderRideCard}
           keyExtractor={(item) => item.id}
           contentContainerStyle={
-            rides && rides.length > 0 
-              ? styles.listContent 
+            rides && rides.length > 0
+              ? styles.listContent
               : [styles.emptyListContent, { minHeight: screenHeight * 0.8 }]
           }
           showsVerticalScrollIndicator={false}
@@ -764,7 +794,7 @@ const TrackScreen: React.FC = () => {
                   {isLoadingMore ? (
                     <ActivityIndicator size="small" color={Colors.textPrimary} />
                   ) : (
-                    <Text style={{color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold}}>View More</Text>
+                    <Text style={{ color: Colors.textPrimary, fontSize: Fonts.base, fontWeight: Fonts.weightSemiBold }}>View More</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -810,7 +840,7 @@ const TrackScreen: React.FC = () => {
           setIsBottomSheetOpen(false);
         }}
       >
-        <BottomSheetView style={[styles.bottomSheetContent, {flex: 1} ]}>
+        <BottomSheetView style={[styles.bottomSheetContent, { flex: 1 }]}>
           {!selectedLuggageRequest ? (
             // Luggage Request Selection Screen
             <>
@@ -877,67 +907,67 @@ const TrackScreen: React.FC = () => {
                   <Text style={styles.ratingSubtitle}>How was your experience with this ride?</Text>
                 </>
               ) : (
-                <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 4}}>
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => {
-                    setSelectedLuggageRequest(null);
-                    bottomSheetModalRef.current?.snapToIndex(0);
-                  }}
-                >
-                  <ChevronLeft size={24} color={Colors.textPrimary} />
-                </TouchableOpacity>
-                <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightSemiBold, color: Colors.textPrimary}}>How was your experience with</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => {
+                      setSelectedLuggageRequest(null);
+                      bottomSheetModalRef.current?.snapToIndex(0);
+                    }}
+                  >
+                    <ChevronLeft size={24} color={Colors.textPrimary} />
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: Fonts.lg, fontWeight: Fonts.weightSemiBold, color: Colors.textPrimary }}>How was your experience with</Text>
                 </View>
               )}
               {activeTab === 'Published' && (
                 <View style={styles.ratingProfileContainer}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <View style={styles.ratingProfileIcon}>
-                    {selectedLuggageRequest.senderProfilePhoto ? (
-                      <Image source={{ uri: selectedLuggageRequest.senderProfilePhoto }} style={styles.ratingProfileAvatar} />
-                    ) : (
-                      <SvgXml xml={ProfileUserIcon} height={24} width={24} />
-                    )}
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={styles.ratingProfileIcon}>
+                      {selectedLuggageRequest.senderProfilePhoto ? (
+                        <Image source={{ uri: selectedLuggageRequest.senderProfilePhoto }} style={styles.ratingProfileAvatar} />
+                      ) : (
+                        <SvgXml xml={ProfileUserIcon} height={24} width={24} />
+                      )}
+                    </View>
+                    <Text style={styles.ratingProfileName}>{selectedLuggageRequest.senderName || `${selectedLuggageRequest.sender?.first_name || ''} ${selectedLuggageRequest.sender?.last_name || ''}`.trim() || 'Unknown'}</Text>
                   </View>
-                  <Text style={styles.ratingProfileName}>{selectedLuggageRequest.senderName || `${selectedLuggageRequest.sender?.first_name || ''} ${selectedLuggageRequest.sender?.last_name || ''}`.trim() || 'Unknown'}</Text>
-                </View>
-                <View style={styles.starsContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => setRating(star)}
-                    activeOpacity={0.7}
-                  >
-                    <Star
-                      size={24}
-                      color={star <= rating ? '#FFD700' : '#E0E0E0'}
-                      fill={star <= rating ? '#FFD700' : 'transparent'}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
+                  <View style={styles.starsContainer}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        onPress={() => setRating(star)}
+                        activeOpacity={0.7}
+                      >
+                        <Star
+                          size={24}
+                          color={star <= rating ? '#FFD700' : '#E0E0E0'}
+                          fill={star <= rating ? '#FFD700' : 'transparent'}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
               )}
-              
+
               {activeTab === 'Booked' && (
-              <View style={styles.starsContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => setRating(star)}
-                    activeOpacity={0.7}
-                  >
-                    <Star
-                      size={24}
-                      color={star <= rating ? '#FFD700' : '#E0E0E0'}
-                      fill={star <= rating ? '#FFD700' : 'transparent'}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
+                <View style={styles.starsContainer}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity
+                      key={star}
+                      onPress={() => setRating(star)}
+                      activeOpacity={0.7}
+                    >
+                      <Star
+                        size={24}
+                        color={star <= rating ? '#FFD700' : '#E0E0E0'}
+                        fill={star <= rating ? '#FFD700' : 'transparent'}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
               )}
-              
+
               <TextInput
                 style={styles.feedbackInput}
                 placeholder="Write your feedback..."
@@ -948,7 +978,7 @@ const TrackScreen: React.FC = () => {
                 numberOfLines={4}
                 textAlignVertical="top"
               />
-              
+
               <GradientButton
                 title="Submit"
                 onPress={handleSubmitRating}
@@ -957,11 +987,11 @@ const TrackScreen: React.FC = () => {
                 disabled={createRatingMutation.isPending || rating <= 0}
               />
             </>
-            
+
           )}
           {selectedLuggageRequest && (
-            <ScrollView style={{height: 400}}>
-             
+            <ScrollView style={{ height: 400 }}>
+
             </ScrollView>
           )}
         </BottomSheetView>

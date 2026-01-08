@@ -45,11 +45,11 @@ type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splas
 
 const SplashScreen: React.FC = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
-  const {token, setUser, user} = useAuthStore();
+  const { token, setUser, user } = useAuthStore();
   const { clearSearchForm } = useSearchFormStore();
   const { clearCreateForm } = useCreateFormStore();
 
-  const {data: profile, isLoading} = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: () => getMyProfile(),
     enabled: !!token,
@@ -60,7 +60,7 @@ const SplashScreen: React.FC = () => {
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
   const hasAnimated = useRef(false); // Track if animation has run
   const hasNavigated = useRef(false); // Track if navigation has occurred
-  
+
   // Run animation only once on mount, after a slight delay to let everything stabilize
   useEffect(() => {
     const animationTimer = setTimeout(() => {
@@ -84,13 +84,13 @@ const SplashScreen: React.FC = () => {
 
     return () => clearTimeout(animationTimer);
   }, []); // Empty dependency array - runs only on mount
-  
+
 
   useEffect(() => {
 
     clearSearchForm();
     clearCreateForm();
-    
+
     // Prevent multiple navigation attempts
     if (hasNavigated.current) {
       return;
@@ -100,7 +100,7 @@ const SplashScreen: React.FC = () => {
       // Check for pending deep link
       const deepLink = getPendingDeepLink();
       const isPaymentDeepLink = deepLink?.includes('parcelbuddy://payment') ?? false;
-      
+
       if (!token?.access_token) {
         console.log('SplashScreen: Navigating to Auth no token');
         hasNavigated.current = true;
@@ -108,12 +108,16 @@ const SplashScreen: React.FC = () => {
           index: 0,
           routes: [{ name: 'Auth' }],
         });
-      } else if (profile) {
+      } else if (!isLoading && profile) { // Only navigate if profile is loaded
         hasNavigated.current = true;
         setUser(profile);
 
-        const profile_check = profile?.first_name && profile?.email && profile?.phone && profile?.date_of_birth && profile?.profile?.country;
-        
+        const profile_check = profile?.first_name && profile?.email && profile?.phone && profile?.date_of_birth && (profile?.country || profile?.profile?.country); // profile.date_of_birth is NOT ALWAYS in profile.profile
+        console.log('profile_check', profile_check);
+        // Check both root level and nested profile for date_of_birth and country
+
+        // Handle case where profile properties might be in different places depending on API
+
         // Check if user is suspended
         if (profile?.is_suspended === true) {
           console.log('SplashScreen: User is suspended, navigating to Suspended');
@@ -123,14 +127,14 @@ const SplashScreen: React.FC = () => {
           });
           return;
         }
-        
+
         // If we have a payment deep link, navigate directly to PaymentHistory screen
         if (isPaymentDeepLink && deepLink) {
           console.log('SplashScreen: Navigating to PaymentHistory via deep link');
-          
+
           // Clear the pending deep link
           clearPendingDeepLink();
-          
+
           navigation.reset({
             index: 0,
             routes: [
@@ -162,33 +166,37 @@ const SplashScreen: React.FC = () => {
           console.log('SplashScreen: Navigating to MainApp');
           // Normal navigation to MainApp
           navigation.reset({
-              index: 0,
-              routes: [{ name: 'MainApp' }],
-            });
-          } else {
-            console.log('SplashScreen: Navigating to ProfileSetup');
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
-            });
-          }
-        
-      } else {
-        console.log('SplashScreen: Navigating to Auth else');
+            index: 0,
+            routes: [{ name: 'MainApp' }],
+          });
+        } else {
+          console.log('SplashScreen: Navigating to ProfileSetup');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Auth', params: { screen: 'ProfileSetup' } }],
+          });
+        }
+
+      } else if (!isLoading && !profile && token?.access_token) {
+        // Profile failed to load but we have token - likely expired or error
+        // Ideally we should wait for isLoading to be false
+        console.log('SplashScreen: Navigating to Auth (profile load failed or empty)');
         hasNavigated.current = true;
         navigation.reset({
           index: 0,
           routes: [{ name: 'Auth' }],
         });
       }
+      // If isLoading is true, we simply do nothing and wait for the next effect execution
+
     }, 1500);
     return () => clearTimeout(timer);
-  }, [profile, token, user]); // Keep necessary dependencies
+  }, [profile, token, user, isLoading]); // Add isLoading to dependency array
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={'transparent'} translucent={true} />
-      
+
       {/* Top Left Ellipse */}
       <View style={styles.topEllipse}>
         <SvgXml xml={EllipseTop} width={480} height={340} />
@@ -200,7 +208,7 @@ const SplashScreen: React.FC = () => {
       </View>
 
       {/* Center Content */}
-      <Animated.View 
+      <Animated.View
         style={[
           styles.centerContent,
           {
@@ -249,7 +257,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoContainer: {
-   // marginBottom: 20,
+    // marginBottom: 20,
   },
   title: {
     fontSize: Fonts.xxxl,

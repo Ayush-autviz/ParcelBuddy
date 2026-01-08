@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, Image } from 'react-native';
 import { MapPin, Clock, User } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -23,6 +23,10 @@ export interface RideCardData {
   requestCount?: number;
   pendingRequestCount?: number;
   travelerName?: string;
+  approvedSenders?: Array<{
+    profilePhoto?: string | null;
+  }>;
+  travelerProfilePhoto?: string | null;
 }
 
 interface RideCardProps {
@@ -37,19 +41,64 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
   const isBookedRide = 'bookingRequest' in ride && (ride as any).bookingRequest !== undefined;
 
   const renderPassengerIcons = () => {
-    // Don't show passenger icons for booked rides
+    // For booked rides, allow showing the traveler's photo if available
     if (isBookedRide) {
-      return null;
+      if (ride.travelerProfilePhoto) {
+        return (
+          <View style={styles.passengerAvatar}>
+            <Image
+              source={{ uri: ride.travelerProfilePhoto }}
+              style={{ width: '100%', height: '100%', borderRadius: 16 }}
+              resizeMode="cover"
+            />
+          </View>
+        );
+      }
+      // If no photo, show fallback user icon
+      return (
+        <View style={styles.passengerAvatar}>
+          <SvgXml xml={FilledUserIcon} height={16} width={16} />
+        </View>
+      );
     }
 
+    // Use approvedSenders if available, otherwise fallback to counts
+    const senders = ride.approvedSenders || [];
+
+    // If we have approved senders, render their photos
+    if (senders.length > 0) {
+      const displayCount = Math.min(senders.length, 3); // Show max 3 icons
+
+      return senders.slice(0, displayCount).map((sender, index) => (
+        <View
+          key={index}
+          style={[
+            styles.passengerAvatar,
+            index > 0 && styles.passengerAvatarOverlap,
+          ]}
+        >
+          {sender.profilePhoto ? (
+            <Image
+              source={{ uri: sender.profilePhoto }}
+              style={{ width: '100%', height: '100%', borderRadius: 16 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <SvgXml xml={FilledUserIcon} height={16} width={16} />
+          )}
+        </View>
+      ));
+    }
+
+    // Fallback to existing logic if no approvedSenders array provided
     // Use requestCount if available, otherwise fall back to passengers or default to 0
     const count = ride.requestCount !== undefined ? ride.requestCount : (ride.passengers || 0);
     const displayCount = Math.min(count, 3); // Show max 3 icons
-    
+
     if (displayCount === 0) {
       return null;
     }
-    
+
     return Array.from({ length: displayCount }).map((_, index) => (
       <View
         key={index}
@@ -63,7 +112,7 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
     ));
   };
 
-console.log('ride.travelerName', ride.travelerName);
+  console.log('ride.travelerName', ride.travelerName);
 
   return (
     <TouchableOpacity
@@ -228,6 +277,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontWeight: Fonts.weightSemiBold,
     marginLeft: 4,
+    maxWidth: 150, // Limit width properly
   },
   passengerAvatar: {
     width: 32,
