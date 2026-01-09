@@ -92,7 +92,7 @@ const KYCVerificationScreen: React.FC = () => {
     if (user?.is_subscribed) {
       navigation.navigate('KYCVerification');
     } else {
-      navigation.navigate('SubscriptionScreen');
+      navigation.navigate('Subscription');
     }
   };
 

@@ -496,7 +496,7 @@ const ChatDetailScreen: React.FC = () => {
 
   const renderInputToolbar = (props: any) => {
     return (
-      <View style={[styles.inputToolbarContainer, { paddingBottom: luggageRequestStatus === 'approved' ? Platform.OS === 'ios' ? 10 : 0 : 0 }]}>
+      <View style={[styles.inputToolbarContainer, { paddingBottom: luggageRequestStatus === 'approved' ? Platform.OS === 'ios' ? 12 : 10 : 0 }]}>
         <InputToolbar
           {...props}
           containerStyle={styles.inputToolbar}
