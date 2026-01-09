@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Keyboard } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigatorScreenParams, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { View, Text, StyleSheet, Platform } from 'react-native';
@@ -44,19 +45,19 @@ const TabBarIcon: React.FC<{ focused: boolean; iconName: string; unreadCount?: n
     switch (iconName) {
       case 'Search':
         // return <Search size={iconSize} color={iconColor} />;
-        return <SvgXml xml={focused ? FocusedSearchIcon : SearchIcon} height={iconSize} width={iconSize}  />;
+        return <SvgXml xml={focused ? FocusedSearchIcon : SearchIcon} height={iconSize} width={iconSize} />;
       case 'Create':
         // return <PlusCircle size={iconSize} color={iconColor} />;
-        return <SvgXml xml={focused ? FocusedCreateIcon : CreateIcon} height={iconSize} width={iconSize}  />;
+        return <SvgXml xml={focused ? FocusedCreateIcon : CreateIcon} height={iconSize} width={iconSize} />;
       case 'Track':
         // return <ShoppingCart size={iconSize} color={iconColor} />;
-        return <SvgXml xml={focused ? FocusedTrackIcon : TrackIcon} height={iconSize} width={iconSize}  />;
+        return <SvgXml xml={focused ? FocusedTrackIcon : TrackIcon} height={iconSize} width={iconSize} />;
       case 'Chat':
         // return <MessageSquare size={iconSize} color={iconColor} />;
-        return <SvgXml xml={focused ? FocusedChatIcon : ChatIcon} height={iconSize} width={iconSize}  />;
+        return <SvgXml xml={focused ? FocusedChatIcon : ChatIcon} height={iconSize} width={iconSize} />;
       case 'Profile':
         // return <User size={iconSize} color={iconColor} />;
-        return <SvgXml xml={focused ? FocusedProfileIcon : ProfileIcon} height={iconSize} width={iconSize}  />;
+        return <SvgXml xml={focused ? FocusedProfileIcon : ProfileIcon} height={iconSize} width={iconSize} />;
       default:
         return null;
     }
@@ -81,6 +82,26 @@ const BottomTabNavigator: React.FC = () => {
   const { data: unreadCountData } = useUnreadChatCount();
   const unreadCount = unreadCountData?.total_unread || 0;
 
+  // Manual keyboard handling
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardShowEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const keyboardHideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(keyboardShowEvent, () => {
+      setKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener(keyboardHideEvent, () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
   // Main screen names where tabs should be visible
   const mainScreens: { [key: string]: string } = {
     Search: 'SearchList',
@@ -90,26 +111,29 @@ const BottomTabNavigator: React.FC = () => {
   };
 
   const getTabBarVisibility = (state: any) => {
+    // If keyboard is open, immediately hide tabs
+    if (isKeyboardVisible) return false;
+
     if (!state) return true;
-    
+
     const route = state.routes[state.index];
     if (!route) return true;
-    
-    // For Create screen, always show tabs
+
+    // For Create screen, always show tabs (unless keyboard is open, handled above)
     if (route.name === 'Create') {
       return true;
     }
-    
+
     // For navigators, check if we're on the main screen
     const focusedRouteName = getFocusedRouteNameFromRoute(route);
     const mainScreenName = mainScreens[route.name];
-    
+
     // If we can't get the focused route name, assume we're on the main screen (initial route)
     // If we can get it, check if it matches the main screen name
     if (mainScreenName) {
       return focusedRouteName === undefined || focusedRouteName === mainScreenName;
     }
-    
+
     return true;
   };
 
@@ -118,12 +142,12 @@ const BottomTabNavigator: React.FC = () => {
       screenOptions={({ route, navigation }) => {
         const state = navigation.getState();
         const shouldShowTabs = getTabBarVisibility(state);
-        
+
         return {
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon 
-              focused={focused} 
-              iconName={route.name} 
+            <TabBarIcon
+              focused={focused}
+              iconName={route.name}
               unreadCount={route.name === 'Chat' ? unreadCount : undefined}
             />
           ),

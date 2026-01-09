@@ -26,6 +26,7 @@ import { useCreateLuggageRequest } from '../../hooks/useLuggage';
 import { useToast } from '../../components/Toast';
 import { useAuthStore } from '../../services/store';
 import { fetchAndUpdateProfile } from '../../utils/profileUtils';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 type SendRequestScreenRouteProp = RouteProp<SearchStackParamList, 'SendRequest'>;
@@ -38,6 +39,7 @@ const SendRequestScreen: React.FC = () => {
   console.log('SendRequestScreen ride:', ride);
   console.log('SendRequestScreen ride.notes:', ride?.notes);
   const { showWarning, showError, showSuccess } = useToast();
+  const queryClient = useQueryClient();
   const createLuggageRequestMutation = useCreateLuggageRequest();
   const { user } = useAuthStore();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -203,6 +205,10 @@ const SendRequestScreen: React.FC = () => {
     createLuggageRequestMutation.mutate(formData, {
       onSuccess: (response) => {
         showSuccess('Request sent successfully!');
+
+        // Invalidate bookedRides query to refresh the list
+        queryClient.invalidateQueries({ queryKey: ['bookedRides'] });
+
         // Navigate to booking status screen
         navigation.navigate('BookingStatus', {
           bookingRequest: response,

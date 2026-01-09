@@ -76,7 +76,7 @@ const ChatDetailScreen: React.FC = () => {
   }, [luggage_request_status]);
 
   // Calculate dynamic bottom offset based on keyboard and action buttons
-  const ACTION_BAR_HEIGHT = (is_ride_created_by_me && luggageRequestStatus === 'pending') ? Platform.OS === 'ios' ? -45 : -70 : Platform.OS === 'ios' ? 25 : 5;
+  const ACTION_BAR_HEIGHT = (is_ride_created_by_me && luggageRequestStatus === 'pending') ? Platform.OS === 'ios' ? -45 : -70 : Platform.OS === 'ios' ? 35 : 25;
 
   // iOS: GiftedChat handles keyboard automatically via KeyboardAvoidingView internally
   // We only need to account for safe area + action buttons when keyboard is hidden

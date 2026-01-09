@@ -51,7 +51,7 @@ export const getCountryByCoordinates = async (lat: string, lon: string) => {
   const formData = new FormData();
   formData.append('lat', lat);
   formData.append('lon', lon);
-  
+
   const response = await apiClient.post('/auth/get-country/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -76,6 +76,13 @@ export const getPlans = async (region?: string) => {
 // send fcm token
 export const sendFcmToken = async (data: any) => {
   const response = await apiClient.post('/notifications/fcm-token/', data);
+  return response.data;
+};
+
+// delete fcm token
+// delete fcm token
+export const deleteFcmToken = async (data: any) => {
+  const response = await apiClient.delete('/notifications/fcm-token/bulk-delete/', { data });
   return response.data;
 };
 

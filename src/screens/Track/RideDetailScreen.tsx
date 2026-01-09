@@ -27,7 +27,9 @@ import { MapPinIcon } from '../../assets/icons/svg/main';
 import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
 
 export type TrackStackParamList = {
-  TrackList: undefined;
+  TrackList: {
+    initialTab?: 'Booked' | 'Published';
+  } | undefined;
   RideDetail: {
     rideId: string;
     date: string;
@@ -98,7 +100,7 @@ const RideDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="Ride Detail" showBackButton  />
+      <Header title="Ride Detail" showBackButton />
 
       <ScrollView
         style={styles.scrollView}
@@ -106,12 +108,12 @@ const RideDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
 
-<Card style={{ marginBottom: 16 }} padding={16}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Calendar size={20} color={Colors.primaryCyan} />
-              <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{date}</Text>
-            </View>
-          </Card>
+        <Card style={{ marginBottom: 16 }} padding={16}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Calendar size={20} color={Colors.primaryCyan} />
+            <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{date}</Text>
+          </View>
+        </Card>
 
 
         {/* Ride Information Card */}

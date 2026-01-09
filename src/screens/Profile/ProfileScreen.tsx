@@ -9,7 +9,9 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Image,
+  Platform,
 } from 'react-native';
+import messaging from '@react-native-firebase/messaging';
 import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
@@ -41,6 +43,7 @@ import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { SvgXml } from 'react-native-svg';
 import { ProfileKycIcon, ProfileRatingsIcon, ProfileSubscriptionIcon, ProfileUserIcon, ProfilePaymentHistoryIcon, ProfileTermsIcon, ProfileSupportIcon } from '../../assets/icons/svg/profileIcon';
 import { fetchAndUpdateProfile } from '../../utils/profileUtils';
+import { useDeleteFcmToken } from '../../hooks/useAuthMutations';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileList'>;
 
@@ -62,6 +65,27 @@ const ProfileScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   console.log('user', user);
   const queryClient = useQueryClient();
+  const deleteFcmTokenMutation = useDeleteFcmToken();
+
+  const cleanupFcmToken = async () => {
+    try {
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+        const payload = {
+          results: [
+            {
+              token: fcmToken,
+              device_type: 'ios',
+            },
+          ],
+        };
+        await deleteFcmTokenMutation.mutateAsync(payload);
+        console.log('FCM token deleted successfully');
+      }
+    } catch (error) {
+      console.error('Failed to delete FCM token:', error);
+    }
+  };
 
   // Fetch and update profile when screen comes into focus to get latest KYC status
   useFocusEffect(
@@ -76,6 +100,10 @@ const ProfileScreen: React.FC = () => {
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
+
+    // Delete FCM token before logging out
+    await cleanupFcmToken();
+
     queryClient.clear();
     await logout();
     // showSuccess('Logged out successfully');
@@ -96,6 +124,9 @@ const ProfileScreen: React.FC = () => {
     setShowDeleteAccountModal(false);
     setIsDeletingAccount(true);
     try {
+      // Step 0: Delete FCM token
+      await cleanupFcmToken();
+
       // Step 1: Delete account
       const result = await deleteAccount();
       console.log('Delete account result:', result);

@@ -14,7 +14,7 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, ArrowLeft, ChevronLeft } from 'lucide-react-native';
@@ -67,9 +67,19 @@ interface LuggageRequest {
 
 const TrackScreen: React.FC = () => {
   const navigation = useNavigation<TrackScreenNavigationProp>();
+  const route = useRoute<RouteProp<ExtendedTrackStackParamList, 'TrackList'>>();
   const { showError, showSuccess } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('Booked');
+
+  useEffect(() => {
+    if (route.params?.initialTab) {
+      setActiveTab(route.params.initialTab);
+      // Reset params so that if we switch tabs manually and come back, it doesn't force override again? 
+      // Actually standard behavior is fine.
+      navigation.setParams({ initialTab: undefined });
+    }
+  }, [route.params?.initialTab]);
   const [selectedLuggageRequest, setSelectedLuggageRequest] = useState<any | null>(null);
   const [luggageRequests, setLuggageRequests] = useState<any>([]);
   const [isLoadingLuggageRequests, setIsLoadingLuggageRequests] = useState(false);

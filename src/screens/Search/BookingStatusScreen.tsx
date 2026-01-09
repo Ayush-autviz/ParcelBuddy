@@ -15,6 +15,7 @@ import { Header, Card, GradientButton } from '../../components';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { TimeIcon } from '../../assets/icons/svg/main';
 import { SvgXml } from 'react-native-svg';
+import { useSearchFormStore } from '../../services/store';
 
 type BookingStatusScreenRouteProp = RouteProp<SearchStackParamList, 'BookingStatus'>;
 type BookingStatusScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'BookingStatus'>;
@@ -24,9 +25,12 @@ const BookingStatusScreen: React.FC = () => {
   const navigation = useNavigation<BookingStatusScreenNavigationProp>();
   const { bookingRequest } = route.params;
 
+  const { clearSearchForm } = useSearchFormStore();
+
   const handleSeeBookingRequest = () => {
     // Navigate to booking request details screen with request ID
     if (bookingRequest?.id) {
+      clearSearchForm();
       navigation.navigate('BookingRequestDetail', {
         requestId: bookingRequest.id,
       });
@@ -34,6 +38,7 @@ const BookingStatusScreen: React.FC = () => {
   };
 
   const handleBackToSearch = () => {
+    clearSearchForm();
     // Navigate back to search screen
     navigation.navigate('SearchList', {});
   };

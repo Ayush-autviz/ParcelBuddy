@@ -1,10 +1,10 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
-import { 
-  getOtpEmail, 
-  verifyOtpEmail, 
-  resendOtpEmail, 
-  profileSetup, 
-  sendFcmToken, 
+import {
+  getOtpEmail,
+  verifyOtpEmail,
+  resendOtpEmail,
+  profileSetup,
+  sendFcmToken,
   googleLogin,
   createPassword,
   loginEmail,
@@ -12,7 +12,8 @@ import {
   verifyResetOtp,
   resetPassword,
   requestKycPhoneOtp,
-  verifyKycPhoneOtp
+  verifyKycPhoneOtp,
+  deleteFcmToken
 } from '../services/api/auth';
 
 // Phone OTP hooks - COMMENTED OUT, using email OTP instead
@@ -56,6 +57,12 @@ export const useProfileSetup = (): UseMutationResult<any, Error, FormData, unkno
 export const useSendFcmToken = (): UseMutationResult<any, Error, { token: string; device_type: string }, unknown> => {
   return useMutation({
     mutationFn: (data: { token: string; device_type: string }) => sendFcmToken(data),
+  });
+};
+
+export const useDeleteFcmToken = (): UseMutationResult<any, Error, { results: { token: string; device_type: string }[] }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { results: { token: string; device_type: string }[] }) => deleteFcmToken(data),
   });
 };
 

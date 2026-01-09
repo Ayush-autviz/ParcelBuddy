@@ -11,6 +11,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../GradientButton';
 import { useToast } from '../Toast';
+import { useNavigation } from '@react-navigation/native';
 
 interface KycPhoneOtpFormProps {
   phone?: string;
@@ -29,7 +30,7 @@ interface KycPhoneOtpFormProps {
 // Helper function to parse phone number and determine country
 const parsePhoneNumber = (phone: string | undefined): { number: string; country: string } => {
   if (!phone) return { number: '', country: 'US' };
-  
+
   // Phone is stored as full number like +919418423051
   // Extract country code and determine country
   if (phone.startsWith('+1')) {
@@ -59,7 +60,7 @@ const parsePhoneNumber = (phone: string | undefined): { number: string; country:
   if (phone.startsWith('+82')) {
     return { number: phone.replace(/^\+82/, ''), country: 'KR' };
   }
-  
+
   // Try to extract country code (1-3 digits after +)
   const match = phone.match(/^\+(\d{1,3})(.+)/);
   if (match) {
@@ -68,7 +69,7 @@ const parsePhoneNumber = (phone: string | undefined): { number: string; country:
     // Default to US for unknown country codes
     return { number, country: 'US' };
   }
-  
+
   // Default fallback
   return { number: phone.replace(/^\+\d+/, ''), country: 'US' };
 };
@@ -84,7 +85,7 @@ const KycPhoneOtpForm: React.FC<KycPhoneOtpFormProps> = ({
   const parsedPhone = parsePhoneNumber(initialPhone);
   const [phoneNumber, setPhoneNumber] = useState(parsedPhone.number);
   const [selectedCountry, setSelectedCountry] = useState(parsedPhone.country);
-  
+
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
@@ -92,6 +93,7 @@ const KycPhoneOtpForm: React.FC<KycPhoneOtpFormProps> = ({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const phoneInputRef = useRef<any>(null);
   const { showError, showSuccess, showWarning } = useToast();
+  const navigation = useNavigation();
 
   // Function to start the timer with a specific value
   const startTimer = (timerValue: number) => {
@@ -134,12 +136,12 @@ const KycPhoneOtpForm: React.FC<KycPhoneOtpFormProps> = ({
   const handleRequestOTP = () => {
     // Use the full phone number from profile (already formatted)
     const phoneNumber = initialPhone || fullPhoneNumber;
-    
+
     if (!phoneNumber || phoneNumber.trim().length === 0) {
       showWarning('Phone number not found. Please update your phone number in Edit Profile.');
       return;
     }
-    
+
     setFullPhoneNumber(phoneNumber);
 
     requestMutation.mutate(
@@ -153,11 +155,11 @@ const KycPhoneOtpForm: React.FC<KycPhoneOtpFormProps> = ({
         },
         onError: (error: any) => {
           console.log('Error requesting OTP:', error);
-          const errorMessage = 
-            error?.response?.data?.message || 
-            error?.response?.data?.error || 
+          const errorMessage =
+            error?.response?.data?.message ||
+            error?.response?.data?.error ||
             error?.response?.data?.detail ||
-            error?.message || 
+            error?.message ||
             'Failed to send OTP. Please try again.';
           showError(errorMessage);
         },
@@ -181,11 +183,11 @@ const KycPhoneOtpForm: React.FC<KycPhoneOtpFormProps> = ({
         },
         onError: (error: any) => {
           console.log('Error verifying OTP:', error);
-          const errorMessage = 
-            error?.response?.data?.message || 
-            error?.response?.data?.error || 
+          const errorMessage =
+            error?.response?.data?.message ||
+            error?.response?.data?.error ||
             error?.response?.data?.detail ||
-            error?.message || 
+            error?.message ||
             'Invalid OTP. Please try again.';
           showError(errorMessage);
         },
@@ -215,11 +217,11 @@ const KycPhoneOtpForm: React.FC<KycPhoneOtpFormProps> = ({
         },
         onError: (error: any) => {
           console.log('Error resending OTP:', error);
-          const errorMessage = 
-            error?.response?.data?.message || 
-            error?.response?.data?.error || 
+          const errorMessage =
+            error?.response?.data?.message ||
+            error?.response?.data?.error ||
             error?.response?.data?.detail ||
-            error?.message || 
+            error?.message ||
             'Failed to resend OTP. Please try again.';
           showError(errorMessage);
         },
@@ -311,7 +313,9 @@ const KycPhoneOtpForm: React.FC<KycPhoneOtpFormProps> = ({
           {/* Edit Profile Note */}
           <Text style={styles.editProfileNote}>
             Want to change your phone number? You can update it in{' '}
-            <Text style={styles.editProfileLink}>Edit Profile</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
+              <Text style={styles.editProfileLink}>Edit Profile</Text>
+            </TouchableOpacity>
           </Text>
 
           <GradientButton

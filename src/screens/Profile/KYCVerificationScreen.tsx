@@ -28,18 +28,18 @@ type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParam
 
 
 const KYCVerificationScreen: React.FC = () => {
-  const navigation = useNavigation<KYCVerificationScreenNavigationProp>();
+  const navigation = useNavigation<any>();
   const { showError, showSuccess } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuthStore();
-  
+
   // Fetch profile data from API to get phone number
   const { data: profileData } = useMyProfile();
-  
+
   // KYC Phone OTP mutations
   const requestKycPhoneOtpMutation = useRequestKycPhoneOtp();
   const verifyKycPhoneOtpMutation = useVerifyKycPhoneOtp();
-  
+
   // Fetch and update profile when screen comes into focus to get latest KYC status
   useFocusEffect(
     useCallback(() => {
@@ -47,15 +47,15 @@ const KYCVerificationScreen: React.FC = () => {
     }, [])
   );
 
-  
+
   // Use profile data from API if available, otherwise fallback to user from store
   const currentProfile = user || profileData;
-  
+
   const kycStatus = currentProfile?.kyc_status;
   const isKYCApproved = kycStatus === 'Approved';
   const isKYCNotStarted = kycStatus === 'not_started' || kycStatus === 'Not Started' || !kycStatus;
   const isKYCInProgress = !isKYCApproved && !isKYCNotStarted; // Any other status (In Review, Rejected, Pending, etc.)
-  
+
   // Get phone number from profile data
   const phoneNumber = currentProfile?.phone;
 
@@ -63,7 +63,7 @@ const KYCVerificationScreen: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await kycVerification();
-      
+
       if (response && response.url) {
         // Navigate to WebView screen with the verification URL
         navigation.navigate('KYCWebView', {
@@ -83,13 +83,17 @@ const KYCVerificationScreen: React.FC = () => {
   const handleKycOtpVerifySuccess = async (response?: any) => {
     console.log('KYC OTP verification successful:', response);
     showSuccess('Phone number verified successfully!');
-    
+
     // Refresh profile to get updated KYC status
     await fetchAndUpdateProfile();
-    
+
     // Navigate to KYCVerificationScreen to show updated status
     // Use navigate instead of reset to maintain bottom tabs visibility
-    navigation.navigate('KYCVerification');
+    if (user?.is_subscribed) {
+      navigation.navigate('KYCVerification');
+    } else {
+      navigation.navigate('SubscriptionScreen');
+    }
   };
 
   return (
@@ -102,14 +106,14 @@ const KYCVerificationScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Title Section */}
-        {!isKYCApproved && 
-        <View style={styles.titleSection}>
-          <Text style={styles.title}>Verify Your Identity</Text>
-          <Text style={styles.description}>
-            For the community's safety, we need to quickly confirm you are who you say you are.
-          </Text>
-        </View>
-}
+        {!isKYCApproved &&
+          <View style={styles.titleSection}>
+            <Text style={styles.title}>Verify Your Identity</Text>
+            <Text style={styles.description}>
+              For the community's safety, we need to quickly confirm you are who you say you are.
+            </Text>
+          </View>
+        }
 
         {/* Approved Success Card */}
         {isKYCApproved ? (
@@ -130,7 +134,7 @@ const KYCVerificationScreen: React.FC = () => {
                 <Text style={styles.successDescription}>
                   Your identity has been successfully verified.
                 </Text>
-                 
+
               </View>
             </View>
           </View>
@@ -153,11 +157,11 @@ const KYCVerificationScreen: React.FC = () => {
                 <View style={styles.iconContainer}>
                   <SvgXml xml={DocumentIcon} width={32} height={32} />
                 </View>
-                <View> 
-                <Text style={styles.stepTitle}>Step 1: Document Upload</Text>
-                <Text style={styles.stepDescription}>
-                  Upload a valid government-issued ID (e.g., passport, driver's licence).
-                </Text>
+                <View>
+                  <Text style={styles.stepTitle}>Step 1: Document Upload</Text>
+                  <Text style={styles.stepDescription}>
+                    Upload a valid government-issued ID (e.g., passport, driver's licence).
+                  </Text>
                 </View>
               </View>
 
@@ -166,11 +170,11 @@ const KYCVerificationScreen: React.FC = () => {
                 <View style={styles.iconContainer}>
                   <SvgXml xml={SmileyIcon} width={32} height={32} />
                 </View>
-                <View> 
-                <Text style={styles.stepTitle}>Step 2: Live Selfie</Text>
-                <Text style={styles.stepDescription}>
-                  Take a live selfie to confirm your identity. Our system uses liveness detection to prevent fraud.
-                </Text>
+                <View>
+                  <Text style={styles.stepTitle}>Step 2: Live Selfie</Text>
+                  <Text style={styles.stepDescription}>
+                    Take a live selfie to confirm your identity. Our system uses liveness detection to prevent fraud.
+                  </Text>
                 </View>
               </View>
             </View>

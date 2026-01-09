@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import {  Package } from 'lucide-react-native';
+import { Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, SearchInput, SectionCard, TextArea, DatePickerInput, TimePickerInput, useToast } from '../../components';
@@ -46,12 +46,12 @@ const CreateScreen: React.FC = () => {
   const { showWarning, showSuccess, showError } = useToast();
 
   // Use Zustand store for origin/destination
-  const { 
-    origin, 
-    destination, 
-    originLatitude, 
-    originLongitude, 
-    destinationLatitude, 
+  const {
+    origin,
+    destination,
+    originLatitude,
+    originLongitude,
+    destinationLatitude,
     destinationLongitude,
     setOrigin,
     setDestination,
@@ -199,12 +199,15 @@ const CreateScreen: React.FC = () => {
         setWidth('');
         setLength('');
         setAdditionalNotes('');
-        
+
         // Invalidate published rides query to refresh the list
         queryClient.invalidateQueries({ queryKey: ['publishedRides'] });
-        
-        // Navigate to Track tab (Published tab is default in TrackScreen)
-        navigation.navigate('Track');
+
+        // Navigate to Track tab with Published tab active
+        navigation.navigate('Track', {
+          screen: 'TrackList',
+          params: { initialTab: 'Published' },
+        } as any);
       },
       onError: (error: any) => {
         console.log('Create ride error:', error.response.data.error);
@@ -303,7 +306,7 @@ const CreateScreen: React.FC = () => {
               </View> */}
             </View>
           </View>
-          
+
           {/* Arrival */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Arrival</Text>
@@ -342,43 +345,43 @@ const CreateScreen: React.FC = () => {
               containerStyle={styles.input}
             />
           </View>
-          <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8}}>Dimensions (cm)</Text>
-            <View style={styles.dimensionsRow}>
-              <View style={styles.dimensionItem}>
+          <Text style={{ fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8 }}>Dimensions (cm)</Text>
+          <View style={styles.dimensionsRow}>
+            <View style={styles.dimensionItem}>
               <Text style={styles.label}>Height</Text>
-                <SearchInput
-                  lucideIcon={Package}
+              <SearchInput
+                lucideIcon={Package}
                 placeholder="eg: 1"
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={height}
-                  onChangeText={setHeight}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
-              </View>
-              <View style={styles.dimensionItem}>
+                inputStyle={{ fontSize: Fonts.sm }}
+                value={height}
+                onChangeText={setHeight}
+                keyboardType="numeric"
+                containerStyle={styles.input}
+              />
+            </View>
+            <View style={styles.dimensionItem}>
               <Text style={styles.label}>Width</Text>
-                <SearchInput
-                  lucideIcon={Package}
-                placeholder="eg: 1" 
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={width}
-                  onChangeText={setWidth}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
-              </View>
-              <View style={styles.dimensionItem}>
-              <Text style={styles.label}>Length</Text>
-                <SearchInput
-                  lucideIcon={Package}
+              <SearchInput
+                lucideIcon={Package}
                 placeholder="eg: 1"
-                  inputStyle={{fontSize: Fonts.sm}}
-                  value={length}
-                  onChangeText={setLength}
-                  keyboardType="numeric"
-                  containerStyle={styles.input}
-                />
+                inputStyle={{ fontSize: Fonts.sm }}
+                value={width}
+                onChangeText={setWidth}
+                keyboardType="numeric"
+                containerStyle={styles.input}
+              />
+            </View>
+            <View style={styles.dimensionItem}>
+              <Text style={styles.label}>Length</Text>
+              <SearchInput
+                lucideIcon={Package}
+                placeholder="eg: 1"
+                inputStyle={{ fontSize: Fonts.sm }}
+                value={length}
+                onChangeText={setLength}
+                keyboardType="numeric"
+                containerStyle={styles.input}
+              />
             </View>
           </View>
         </SectionCard>
@@ -393,14 +396,14 @@ const CreateScreen: React.FC = () => {
           />
         </SectionCard>
 
-              {/* Publish Ride Button */}
-              <GradientButton
-                title="Publish Ride"
-                onPress={handlePublish}
-                style={styles.publishButton}
-                loading={createRideMutation.isPending}
-                disabled={createRideMutation.isPending}
-              />
+        {/* Publish Ride Button */}
+        <GradientButton
+          title="Publish Ride"
+          onPress={handlePublish}
+          style={styles.publishButton}
+          loading={createRideMutation.isPending}
+          disabled={createRideMutation.isPending}
+        />
       </KeyboardAwareScrollView>
 
       {/* Verification Required Modal */}
