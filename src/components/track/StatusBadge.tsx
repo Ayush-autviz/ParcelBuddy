@@ -6,7 +6,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../GradientButton';
 
-export type StatusType = 'new' | 'approved' | 'full' | 'completed' | 'pending' | 'active' | 'in_progress' | 'cancelled';
+export type StatusType = 'new' | 'approved' | 'full' | 'completed' | 'pending' | 'active' | 'in_progress' | 'cancelled' | 'rejected';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -68,6 +68,13 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
           showDot: false,
           dotColor: Colors.primaryTeal,
         };
+      case 'rejected':
+        return {
+          label: 'Rejected',
+          showIcon: false,
+          showDot: false,
+          dotColor: Colors.error,
+        };
       default:
         return {
           label: '',
@@ -94,9 +101,9 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
         end={{ x: 1, y: 0 }}
         style={styles.badge}
       > */}
-      {config.showIcon && (
+      {/* {config.showIcon && (
         <Bell size={14} color={Colors.textWhite} style={styles.icon} />
-      )}
+      )} */}
       <GradientButton
         title={config.label}
         onPress={() => { }}

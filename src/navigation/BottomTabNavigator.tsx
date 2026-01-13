@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Keyboard } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigatorScreenParams, getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Search, PlusCircle, ShoppingCart, MessageCircle, User, MessageSquare } from 'lucide-react-native';
 import { useUnreadChatCount } from '../hooks/useChat';
@@ -78,6 +79,7 @@ const TabBarIcon: React.FC<{ focused: boolean; iconName: string; unreadCount?: n
 };
 
 const BottomTabNavigator: React.FC = () => {
+  const insets = useSafeAreaInsets();
   // Fetch unread chat count
   const { data: unreadCountData } = useUnreadChatCount();
   const unreadCount = unreadCountData?.total_unread || 0;
@@ -156,7 +158,12 @@ const BottomTabNavigator: React.FC = () => {
               {route.name}
             </Text>
           ),
-          tabBarStyle: shouldShowTabs ? styles.tabBar : { display: 'none' },
+          tabBarStyle: shouldShowTabs ? {
+            ...styles.tabBar,
+            marginBottom: (Platform.OS === 'ios' ? 0 : 20) + insets.bottom,
+            height: (Platform.OS === 'ios' ? 65 : 60), // Keep height fixed
+            paddingBottom: Platform.OS === 'ios' ? 20 : 10, // Maintain internal padding
+          } : { display: 'none' },
           tabBarItemStyle: styles.tabBarItem,
           tabBarActiveTintColor: Colors.primaryCyan,
           tabBarInactiveTintColor: Colors.textLight,

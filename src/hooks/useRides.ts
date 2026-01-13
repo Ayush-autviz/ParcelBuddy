@@ -109,6 +109,7 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
           originTime: formatTime(ride.travel_time),
           destination: ride.destination_name || 'Unknown Destination',
           destinationTime: formatTime(ride.destination_time),
+          availableWeight: ride.available_weight_kg || undefined,
           passengers: 0, // Not available in API, set to 0 or calculate if needed
           showRateButton: showRate,
           requestCount: ride.total_request_count || 0,

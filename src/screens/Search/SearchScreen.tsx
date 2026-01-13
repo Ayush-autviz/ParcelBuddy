@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
   },
   bannerPlaceholder: {
     width: '100%',
-    height: 300,
+    height: 285,
     resizeMode: 'cover',
   },
   searchCard: {

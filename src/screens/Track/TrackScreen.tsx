@@ -342,6 +342,7 @@ const TrackScreen: React.FC = () => {
             originTime: formatTime(ride.travel_time),
             destination: ride.destination_name || 'Unknown Destination',
             destinationTime: formatTime(ride.destination_time),
+            availableWeight: ride.available_weight_kg || undefined,
             passengers: 0,
             showRateButton: showRate,
             requestCount: ride.total_request_count || 0,
@@ -466,6 +467,7 @@ const TrackScreen: React.FC = () => {
       destination: ride.destination,
       destinationTime: ride.destinationTime,
       status: ride.status,
+      weight: ride.availableWeight,
     });
   };
 

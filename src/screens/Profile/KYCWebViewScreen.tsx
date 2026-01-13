@@ -22,7 +22,7 @@ type KYCWebViewScreenNavigationProp = StackNavigationProp<ProfileStackParamList,
 const KYCWebViewScreen: React.FC = () => {
   const route = useRoute<KYCWebViewScreenRouteProp>();
   const navigation = useNavigation<KYCWebViewScreenNavigationProp>();
-  const { url } = route.params;
+  const { url, fromProfile } = route.params;
   const { showSuccess, showInfo, showError } = useToast();
   const { user, setUser } = useAuthStore();
 
@@ -37,9 +37,9 @@ const KYCWebViewScreen: React.FC = () => {
   // Check URL for status parameters
   const checkStatusInUrl = (urlToCheck: string) => {
     if (!urlToCheck || statusCheckedRef.current) return;
-    
+
     console.log('🔍 [KYC WebView] Checking URL for status:', urlToCheck);
-    
+
     // Check for status=In+Review or status=In%20Review (URL encoded)
     if (urlToCheck.includes('status=In+Review') || urlToCheck.includes('status=In%20Review')) {
       console.log('✅ [KYC WebView] Status detected: In Review');
@@ -56,24 +56,24 @@ const KYCWebViewScreen: React.FC = () => {
       }, 2000);
       return;
     }
-    
+
     // Check for status=Approved
     if (urlToCheck.includes('status=Approved')) {
       console.log('✅ [KYC WebView] Status detected: Approved');
       statusCheckedRef.current = true;
       showSuccess('Your KYC verification has been approved!');
-      
+
       // Fetch updated profile and check subscription status
       fetchAndUpdateProfile().then(() => {
         // Wait a bit for the profile to update, then check subscription
         setTimeout(async () => {
           const updatedUser = useAuthStore.getState().user;
-          
-          // If user is not subscribed, navigate to subscription screen
-          if (updatedUser && !updatedUser.is_subscribed) {
+
+          // If user is not subscribed and didn't come from profile, navigate to subscription screen
+          if (updatedUser && !updatedUser.is_subscribed && !fromProfile) {
             navigation.navigate('Subscription');
           } else {
-            // If subscribed, go back to previous screen
+            // If subscribed or came from profile, go back to previous screen
             navigation.goBack();
           }
         }, 1000);
@@ -92,7 +92,7 @@ const KYCWebViewScreen: React.FC = () => {
       console.log('❌ [KYC WebView] Status detected: Declined');
       statusCheckedRef.current = true;
       showError('Your KYC verification has been declined. Please try again.');
-      
+
       // Fetch updated profile to get latest KYC status
       fetchAndUpdateProfile().then(() => {
         // Wait a bit for the profile to update, then go back
@@ -119,7 +119,7 @@ const KYCWebViewScreen: React.FC = () => {
       canGoForward: navState.canGoForward,
     });
     setLoading(navState.loading);
-    
+
     // Check URL for status when navigation completes
     if (!navState.loading && navState.url) {
       checkStatusInUrl(navState.url);
@@ -142,7 +142,7 @@ const KYCWebViewScreen: React.FC = () => {
       title: nativeEvent.title,
       loading: nativeEvent.loading,
     });
-    
+
     // Check URL for status when page finishes loading
     if (nativeEvent.url) {
       checkStatusInUrl(nativeEvent.url);
@@ -174,7 +174,7 @@ const KYCWebViewScreen: React.FC = () => {
       navigationType: request.navigationType,
       mainDocumentURL: request.mainDocumentURL,
     });
-    
+
     // Check URL for status before allowing navigation
     if (request.url) {
       // If URL contains status parameter, block navigation and handle status
@@ -184,7 +184,7 @@ const KYCWebViewScreen: React.FC = () => {
         return false; // Block navigation
       }
     }
-    
+
     return true; // Allow navigation
   };
 

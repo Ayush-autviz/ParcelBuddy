@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Edit, Trash2, Package, Briefcase, Calendar } from 'lucide-react-native';
+import { Edit, Trash2, Package, Briefcase, Calendar, Weight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -38,6 +38,7 @@ export type TrackStackParamList = {
     destination: string;
     destinationTime: string;
     status?: string;
+    weight?: string;
   };
 };
 
@@ -47,7 +48,7 @@ type RideDetailScreenNavigationProp = StackNavigationProp<ExtendedTrackStackPara
 const RideDetailScreen: React.FC = () => {
   const route = useRoute<RideDetailScreenRouteProp>();
   const navigation = useNavigation<RideDetailScreenNavigationProp>();
-  const { rideId, date, origin, originTime, destination, destinationTime, status } = route.params;
+  const { rideId, date, origin, originTime, destination, destinationTime, status, weight } = route.params;
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useToast();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -109,9 +110,17 @@ const RideDetailScreen: React.FC = () => {
       >
 
         <Card style={{ marginBottom: 16 }} padding={16}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Calendar size={20} color={Colors.primaryCyan} />
-            <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{date}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Calendar size={20} color={Colors.primaryCyan} />
+              <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{date}</Text>
+            </View>
+            {weight && (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Weight size={20} color={Colors.primaryCyan} />
+                <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{Number(weight).toFixed(2)} kg</Text>
+              </View>
+            )}
           </View>
         </Card>
 

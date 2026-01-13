@@ -5,7 +5,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { useNavigation, useFocusEffect, CommonActions } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, CommonActions, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
@@ -29,6 +29,8 @@ type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParam
 
 const KYCVerificationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<ProfileStackParamList, 'KYCVerification'>>();
+  const { fromProfile } = route.params || {};
   const { showError, showSuccess } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuthStore();
@@ -54,7 +56,7 @@ const KYCVerificationScreen: React.FC = () => {
   const kycStatus = currentProfile?.kyc_status;
   const isKYCApproved = kycStatus === 'Approved';
   const isKYCNotStarted = kycStatus === 'not_started' || kycStatus === 'Not Started' || !kycStatus;
-  const isKYCInProgress = !isKYCApproved && !isKYCNotStarted; // Any other status (In Review, Rejected, Pending, etc.)
+  const isKYCRejected = kycStatus === 'Declined'; // Any other status (In Review, Rejected, Pending, etc.)
 
   // Get phone number from profile data
   const phoneNumber = currentProfile?.phone;
@@ -68,6 +70,7 @@ const KYCVerificationScreen: React.FC = () => {
         // Navigate to WebView screen with the verification URL
         navigation.navigate('KYCWebView', {
           url: response.url,
+          fromProfile: fromProfile,
         });
       } else {
         showError('Failed to get verification URL. Please try again.');
@@ -92,7 +95,12 @@ const KYCVerificationScreen: React.FC = () => {
     if (user?.is_subscribed) {
       navigation.navigate('KYCVerification');
     } else {
-      navigation.navigate('Subscription');
+      if (fromProfile) {
+        // If came from profile, go back instead of to subscription
+        navigation.goBack();
+      } else {
+        navigation.navigate('Subscription');
+      }
     }
   };
 
@@ -138,7 +146,7 @@ const KYCVerificationScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        ) : isKYCInProgress ? (
+        ) : isKYCRejected ? (
           /* Phone OTP Verification for In Progress Status */
           <KycPhoneOtpForm
             phone={phoneNumber}
@@ -183,7 +191,7 @@ const KYCVerificationScreen: React.FC = () => {
       </ScrollView>
 
       {/* Continue Button - Only show for not_started status */}
-      {isKYCNotStarted && (
+      {!isKYCRejected && !isKYCApproved && (
         <View style={styles.buttonContainer}>
           <GradientButton
             title={isLoading ? 'Loading...' : 'Continue'}

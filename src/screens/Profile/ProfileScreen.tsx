@@ -215,7 +215,7 @@ const ProfileScreen: React.FC = () => {
       subtitle: user?.kyc_status === 'Approved' ? 'Verified' : user?.kyc_status === 'In Review' ? 'In Review' : user?.kyc_status === 'Rejected' ? 'Rejected' : 'Not Verified',
       icon: ProfileKycIcon,
       onPress: () => {
-        navigation.navigate('KYCVerification');
+        navigation.navigate('KYCVerification', { fromProfile: true });
       },
     },
     {

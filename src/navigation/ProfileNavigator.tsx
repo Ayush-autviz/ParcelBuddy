@@ -13,9 +13,10 @@ import RatingsScreen from '../screens/Profile/RatingsScreen';
 export type ProfileStackParamList = {
   ProfileList: undefined;
   EditProfile: undefined;
-  KYCVerification: undefined;
+  KYCVerification: { fromProfile?: boolean } | undefined;
   KYCWebView: {
     url: string;
+    fromProfile?: boolean;
   };
   Support: undefined;
   TermsAndPolicy: undefined;
@@ -48,5 +49,5 @@ const ProfileNavigator: React.FC = () => {
 };
 
 export default ProfileNavigator;
-export type { ProfileStackParamList };
+
 

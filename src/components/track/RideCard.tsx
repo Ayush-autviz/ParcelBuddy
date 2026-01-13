@@ -11,6 +11,7 @@ import { FilledTimeIcon, FilledUserIcon, MapPinIcon } from '../../assets/icons/s
 
 export interface RideCardData {
   id: string;
+  availableWeight?: string;
   status: StatusType;
   date: string;
   origin: string;
