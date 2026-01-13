@@ -48,9 +48,9 @@ const BookingRequestDetailScreen: React.FC = () => {
   const actualRequestId = requestId || paramBookingRequest?.id;
 
   // Fetch luggage request detail by ID if requestId is provided
-  const { 
-    data: luggageRequestDetail, 
-    isLoading, 
+  const {
+    data: luggageRequestDetail,
+    isLoading,
     isError,
     error,
     refetch: refetchRequestDetail
@@ -122,7 +122,7 @@ const BookingRequestDetailScreen: React.FC = () => {
         refetchRequestDetail();
         // Navigate back after a short delay
         setTimeout(() => {
-          navigation.goBack();
+          navigation.navigate('Track');
         }, 1500);
       },
       onError: (error: any) => {
@@ -135,7 +135,7 @@ const BookingRequestDetailScreen: React.FC = () => {
   const handleTravelerPress = () => {
     // Try multiple sources for traveler data
     const travelerData = ride?.traveler || bookingRequest?.ride?.traveler || bookingRequest?.traveler;
-    
+
     if (travelerData) {
       console.log('Navigating to UserProfile with traveler:', travelerData);
       navigation.navigate('UserProfile', {
@@ -154,13 +154,13 @@ const BookingRequestDetailScreen: React.FC = () => {
   const length = bookingRequest?.length_cm ? String(bookingRequest.length_cm) : '';
   const itemDescription = bookingRequest?.item_description || '';
   const specialInstructions = bookingRequest?.special_instructions || '';
-  
+
   // Handle luggage_photo (new API) or luggage_photos (old API)
-  const luggagePhotos = bookingRequest?.luggage_photo 
+  const luggagePhotos = bookingRequest?.luggage_photo
     ? bookingRequest.luggage_photo.map((photo: any) => ({
-        url: photo.luggage_image,
-        uri: photo.luggage_image,
-      }))
+      url: photo.luggage_image,
+      uri: photo.luggage_image,
+    }))
     : bookingRequest?.luggage_photos || [];
   const itemCount = luggagePhotos.length || 1; // Default to 1 if no photos
 
@@ -172,8 +172,8 @@ const BookingRequestDetailScreen: React.FC = () => {
   const destination = rideData?.destination_name || rideData?.destination || 'Unknown Destination';
   const destinationTime = rideData?.destination_time || null;
   const traveler = rideData?.traveler || bookingRequest?.traveler;
-  const travelerName = traveler 
-    ? `${traveler.first_name || ''} ${traveler.last_name || ''}`.trim() 
+  const travelerName = traveler
+    ? `${traveler.first_name || ''} ${traveler.last_name || ''}`.trim()
     : 'Unknown Traveler';
   const travelerProfilePhoto = traveler?.profile?.profile_photo;
 
@@ -215,31 +215,31 @@ const BookingRequestDetailScreen: React.FC = () => {
         {/* Status Card */}
 
         {luggageRequestDetail?.status === 'pending' && (
-        <Card style={styles.statusCard} padding={16}>
-          <View style={styles.statusContent}>
-            <View style={styles.iconContainer}>
-            <SvgXml xml={TimeIcon} height={24} width={24} />
+          <Card style={styles.statusCard} padding={16}>
+            <View style={styles.statusContent}>
+              <View style={styles.iconContainer}>
+                <SvgXml xml={TimeIcon} height={24} width={24} />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.statusMessage}>
+                  Your Booking is awaiting the traveller's approval.
+                </Text>
+                <Text style={styles.statusSubMessage}>
+                  The traveller will respond soon.
+                </Text>
+              </View>
             </View>
-            <View style={styles.textContainer}>
-              <Text style={styles.statusMessage}>
-                Your Booking is awaiting the traveller's approval.
-              </Text>
-              <Text style={styles.statusSubMessage}>
-                The traveller will respond soon.
-              </Text>
-            </View>
-          </View>
-        </Card>
+          </Card>
         )}
 
         {/* Date Card */}
         {travelDate && (
           <Card style={{ marginBottom: 16 }} padding={16}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Calendar size={20} color={Colors.primaryCyan} />
-            <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{formatDate(travelDate)}</Text>
-          </View>
-        </Card>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Calendar size={20} color={Colors.primaryCyan} />
+              <Text style={{ fontSize: Fonts.base, fontWeight: Fonts.weightMedium, color: Colors.textPrimary, marginLeft: 12 }}>{formatDate(travelDate)}</Text>
+            </View>
+          </Card>
         )}
 
         {/* Location Details Card */}
@@ -318,14 +318,14 @@ const BookingRequestDetailScreen: React.FC = () => {
               containerStyle={styles.input}
             />
           </View>
-          <Text style={{fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8}}>Dimensions (cm)</Text>
+          <Text style={{ fontSize: Fonts.lg, fontWeight: Fonts.weightBold, color: Colors.textPrimary, marginBottom: 8 }}>Dimensions (cm)</Text>
           <View style={styles.dimensionsRow}>
             <View style={styles.dimensionItem}>
               <Text style={styles.label}>Height</Text>
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={height || ''}
                 editable={false}
                 containerStyle={styles.input}
@@ -336,7 +336,7 @@ const BookingRequestDetailScreen: React.FC = () => {
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={width || ''}
                 editable={false}
                 containerStyle={styles.input}
@@ -347,7 +347,7 @@ const BookingRequestDetailScreen: React.FC = () => {
               <SearchInput
                 lucideIcon={Package}
                 placeholder="eg: 1"
-                inputStyle={{fontSize: Fonts.sm}}
+                inputStyle={{ fontSize: Fonts.sm }}
                 value={length || ''}
                 editable={false}
                 containerStyle={styles.input}
@@ -404,13 +404,13 @@ const BookingRequestDetailScreen: React.FC = () => {
 
         {/* Cancel Request Button */}
         {luggageRequestDetail?.status === 'pending' && (
-        <GradientButton
-          title="Cancel Request"
-          onPress={handleCancelRequest}
-          style={styles.cancelButton}
-          disabled={cancelRequestMutation.isPending}
-          loading={cancelRequestMutation.isPending}
-        />
+          <GradientButton
+            title="Cancel Request"
+            onPress={handleCancelRequest}
+            style={styles.cancelButton}
+            disabled={cancelRequestMutation.isPending}
+            loading={cancelRequestMutation.isPending}
+          />
         )}
         {/* <Text style={styles.cancelNote}>
           (Allowed for 15 minutes only)

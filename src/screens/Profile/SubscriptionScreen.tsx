@@ -74,20 +74,20 @@ const SubscriptionScreen: React.FC = () => {
   // Transform API data to UI format
   const subscriptionPlans: SubscriptionPlan[] = useMemo(() => {
     if (!plansData?.plans) return [];
-    
+
     // Check if any plan has is_current_plan: true
     const hasCurrentPlan = plansData.plans.some((plan) => plan.is_current_plan === true);
-    
+
     return plansData.plans
       .filter((plan) => plan.is_active)
       .map((plan) => {
         // Format price
         const priceText = `${plan.currency} ${plan.price}/${plan.duration_days === 30 ? 'month' : `${plan.duration_days} days`}`;
-        
+
         // Build features array
         const features: PlanFeature[] = [
-          { text: `Create up to ${plan.rides_per_month} rides/month.` },
-          { text: 'Search rides unlimited.' },
+          // { text: `Create up to ${plan.rides_per_month} rides/month.` },
+          // { text: 'Search rides unlimited.' },
           { text: `Send requests to ${plan.requests_per_month} travellers/month.` },
           ...(plan.features || []).map((feature) => ({ text: feature })),
         ];
@@ -143,10 +143,10 @@ const SubscriptionScreen: React.FC = () => {
       },
       onError: (error: any) => {
         console.error('Error cancelling subscription:', error);
-        const errorMessage = error?.response?.data?.message || 
-                            error?.response?.data?.error || 
-                            error?.message || 
-                            'Failed to cancel subscription. Please try again.';
+        const errorMessage = error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          'Failed to cancel subscription. Please try again.';
         showError(errorMessage);
       },
     });
@@ -160,7 +160,7 @@ const SubscriptionScreen: React.FC = () => {
   const handleConfirmPurchase = () => {
     setShowAutoRenewalModal(false);
     if (!selectedPlanId) return;
-    
+
     setLoadingPlanId(selectedPlanId);
     createSubscriptionMutation.mutate(
       { plan_id: selectedPlanId },
@@ -184,10 +184,10 @@ const SubscriptionScreen: React.FC = () => {
           console.error('Error creating subscription:', error);
           setLoadingPlanId(null); // Clear loading state on error
           setSelectedPlanId(null);
-          const errorMessage = error?.response?.data?.message || 
-                              error?.response?.data?.error || 
-                              error?.message || 
-                              'Failed to create subscription. Please try again.';
+          const errorMessage = error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            error?.message ||
+            'Failed to create subscription. Please try again.';
           showError(errorMessage);
         },
       }
@@ -285,64 +285,64 @@ const SubscriptionScreen: React.FC = () => {
             </View>
           ) : (
             subscriptionPlans.map((plan) => (
-            <View key={plan.id} style={styles.planCardWrapper}>
-              {plan.isCurrent ? (
-                <LinearGradient
-                  colors={[Colors.gradientStart, Colors.gradientEnd]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.planCardGradient}
-                >
-                  <View style={{ padding: 20 }}>
-                  <View style={styles.planHeader}>
-                    <Text style={styles.planNameActive}>{plan.name}</Text>
-                    <Text style={styles.planPriceActive}>{plan.price}</Text>
-                  </View>
-                  <View style={styles.planFeatures}>
-                    {plan.features.map((feature, index) => (
-                      <View key={index} style={styles.featureRow}>
-                        <Check size={18} color={Colors.textWhite} />
-                        <Text style={styles.featureTextActive}>{feature.text}</Text>
-                      </View>
-                    ))}
-                  </View>
-                  <TouchableOpacity
-                    style={styles.cancelPlanButton}
-                    onPress={handleCancelPlan}
-                    disabled={cancelSubscriptionMutation.isPending}
+              <View key={plan.id} style={styles.planCardWrapper}>
+                {plan.isCurrent ? (
+                  <LinearGradient
+                    colors={[Colors.gradientStart, Colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.planCardGradient}
                   >
-                    <Text style={styles.cancelPlanButtonText}>
-                      {cancelSubscriptionMutation.isPending ? 'Cancelling...' : 'Cancel Plan'}
-                    </Text>
-                  </TouchableOpacity>
-                  </View>
-                </LinearGradient>
-              ) : (
-                <View style={styles.planCard}>
-                  <View style={styles.planHeader}>
-                    <Text style={styles.planName}>{plan.name}</Text>
-                    <Text style={styles.planPrice}>{plan.price}</Text>
-                  </View>
-                  <View style={styles.planFeatures}>
-                    {plan.features.map((feature, index) => (
-                      <View key={index} style={styles.featureRow}>
-                        <Check size={18} color={Colors.textPrimary} />
-                        <Text style={styles.featureText}>{feature.text}</Text>
+                    <View style={{ padding: 20 }}>
+                      <View style={styles.planHeader}>
+                        <Text style={styles.planNameActive}>{plan.name}</Text>
+                        <Text style={styles.planPriceActive}>{plan.price}</Text>
                       </View>
-                    ))}
+                      <View style={styles.planFeatures}>
+                        {plan.features.map((feature, index) => (
+                          <View key={index} style={styles.featureRow}>
+                            <Check size={18} color={Colors.textWhite} />
+                            <Text style={styles.featureTextActive}>{feature.text}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      <TouchableOpacity
+                        style={styles.cancelPlanButton}
+                        onPress={handleCancelPlan}
+                        disabled={cancelSubscriptionMutation.isPending}
+                      >
+                        <Text style={styles.cancelPlanButtonText}>
+                          {cancelSubscriptionMutation.isPending ? 'Cancelling...' : 'Cancel Plan'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.planCard}>
+                    <View style={styles.planHeader}>
+                      <Text style={styles.planName}>{plan.name}</Text>
+                      <Text style={styles.planPrice}>{plan.price}</Text>
+                    </View>
+                    <View style={styles.planFeatures}>
+                      {plan.features.map((feature, index) => (
+                        <View key={index} style={styles.featureRow}>
+                          <Check size={18} color={Colors.textPrimary} />
+                          <Text style={styles.featureText}>{feature.text}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    {plan.showUpgrade && (
+                      <GradientButton
+                        title="Buy"
+                        onPress={() => handleUpgrade(plan.id)}
+                        style={styles.upgradeButton}
+                        loading={loadingPlanId === plan.id}
+                        disabled={loadingPlanId !== null}
+                      />
+                    )}
                   </View>
-                  {plan.showUpgrade && (
-                    <GradientButton
-                      title="Buy"
-                      onPress={() => handleUpgrade(plan.id)}
-                      style={styles.upgradeButton}
-                      loading={loadingPlanId === plan.id}
-                      disabled={loadingPlanId !== null}
-                    />
-                  )}
-                </View>
-              )}
-            </View>
+                )}
+              </View>
             ))
           )}
         </View>

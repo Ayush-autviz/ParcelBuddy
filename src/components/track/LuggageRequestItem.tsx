@@ -35,6 +35,8 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
         return { backgroundColor: Colors.primaryTeal + '20', borderColor: Colors.primaryTeal };
       case 'cancelled':
         return { backgroundColor: '#FF3B30' + '20', borderColor: '#FF3B30' };
+      case 'rejected':
+        return { backgroundColor: '#F5F5F5', borderColor: '#000000' };
       default:
         return { backgroundColor: Colors.borderLight, borderColor: Colors.borderLight };
     }
@@ -48,6 +50,8 @@ const LuggageRequestItem: React.FC<LuggageRequestItemProps> = ({
         return { color: Colors.primaryTeal };
       case 'cancelled':
         return { color: '#FF3B30' };
+      case 'rejected':
+        return { color: '#000000' };
       default:
         return { color: Colors.textSecondary };
     }
