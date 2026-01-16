@@ -214,7 +214,7 @@ const RideDetailScreen: React.FC = () => {
                 ) : (
                   <>
                     <Trash2 size={20} color={Colors.primaryCyan} style={styles.deleteIcon} />
-                    <Text style={styles.deleteButtonText}>Delete</Text>
+                    <Text style={styles.deleteButtonText}>Cancel</Text>
                   </>
                 )}
               </TouchableOpacity>
