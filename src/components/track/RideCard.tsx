@@ -171,7 +171,7 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
             <Text style={styles.travelerName}>{ride.travelerName}</Text>
           )}
         </View>
-        {ride.showRateButton && (
+        {ride.showRateButton && ride.status === 'completed' && (
           ride.isRated ? (
             <></>
           ) : onRatePress ? (

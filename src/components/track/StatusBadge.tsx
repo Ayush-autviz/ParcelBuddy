@@ -90,33 +90,30 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
     return null;
   }
 
-  return (
-    <View style={[styles.container, style]}>
-      {/* {config.showDot && (
-        <View style={[styles.dot, { backgroundColor: config.dotColor }]} />
-      )} */}
-      {/* <LinearGradient
-        colors={[Colors.gradientStart, Colors.gradientEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.badge}
-      > */}
-      {/* {config.showIcon && (
-        <Bell size={14} color={Colors.textWhite} style={styles.icon} />
-      )} */}
-      <GradientButton
-        title={config.label}
-        onPress={() => { }}
-        style={styles.button}
-        textStyle={styles.text}
+  if (config.label === 'Approved' || config.label === 'Completed') {
+    return (
+      <View style={[styles.container, style]}>
 
-      />
-      {/* <Text style={[styles.text, { color: Colors.textWhite }]}>
+        <GradientButton
+          title={config.label}
+          onPress={() => { }}
+          style={styles.button}
+          textStyle={styles.text}
+
+        />
+      </View>
+    );
+  }
+
+  else {
+    return (
+      <View style={[styles.outlineContainer, style, config.label === 'Rejected' && { borderColor: Colors.error }]}>
+        <Text style={[styles.text, { color: config.label === 'Rejected' ? Colors.error : Colors.primaryCyan }]}>
           {config.label}
-        </Text> */}
-      {/* </LinearGradient> */}
-    </View>
-  );
+        </Text>
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
@@ -124,6 +121,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
+  },
+  outlineContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: Colors.primaryTeal,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   badge: {
     flexDirection: 'row',
