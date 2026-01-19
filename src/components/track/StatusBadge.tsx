@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primaryTeal,
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 2,
   },
   badge: {
     flexDirection: 'row',
