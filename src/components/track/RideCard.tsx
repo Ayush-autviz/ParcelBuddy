@@ -124,7 +124,7 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
       <View style={styles.header}>
         <View style={styles.statusContainer}>
           <StatusBadge status={ride.status} />
-          {ride.pendingRequestCount !== undefined && ride.pendingRequestCount > 0 && (
+          {ride.pendingRequestCount !== undefined && ride.pendingRequestCount > 0 && ride.status !== 'completed' && (
             <Text style={styles.pendingText}>{ride.pendingRequestCount} pending</Text>
           )}
         </View>

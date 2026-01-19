@@ -135,6 +135,35 @@ const SplashScreen: React.FC = () => {
           // Clear the pending deep link
           clearPendingDeepLink();
 
+          // navigation.reset({
+          //   index: 0,
+          //   routes: [
+          //     {
+          //       name: 'MainApp',
+          //       state: {
+          //         routes: [
+          //           { name: 'Search' },
+          //           { name: 'Create' },
+          //           { name: 'Track' },
+          //           { name: 'Chat' },
+          //           {
+          //             name: 'Profile',
+          //             state: {
+          //               routes: [
+          //                 { name: 'ProfileList' },
+          //                 { name: 'PaymentHistory' },
+          //               ],
+          //               index: 1,
+          //             },
+          //           },
+          //         ],
+          //         index: 4, // Profile tab
+          //       },
+          //     },
+          //   ],
+          // });
+
+
           navigation.reset({
             index: 0,
             routes: [
@@ -146,22 +175,15 @@ const SplashScreen: React.FC = () => {
                     { name: 'Create' },
                     { name: 'Track' },
                     { name: 'Chat' },
-                    {
-                      name: 'Profile',
-                      state: {
-                        routes: [
-                          { name: 'ProfileList' },
-                          { name: 'PaymentHistory' },
-                        ],
-                        index: 1,
-                      },
-                    },
+                    { name: 'Profile' },
                   ],
-                  index: 4, // Profile tab
+                  index: 0, // ✅ Search tab
                 },
               },
             ],
           });
+
+
         } else if (profile_check) {
           console.log('SplashScreen: Navigating to MainApp');
           // Normal navigation to MainApp

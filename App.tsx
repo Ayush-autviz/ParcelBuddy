@@ -127,10 +127,7 @@ function App() {
             CommonActions.navigate({
               name: 'MainApp',
               params: {
-                screen: 'Profile',
-                params: {
-                  screen: 'PaymentHistory',
-                },
+                screen: 'Search',
               },
             } as any)
           );
