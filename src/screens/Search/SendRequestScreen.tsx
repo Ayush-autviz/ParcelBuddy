@@ -230,6 +230,13 @@ const SendRequestScreen: React.FC = () => {
   const enteredWeight = parseFloat(weight || '0');
   const isOverWeight = weight !== '' && !isNaN(enteredWeight) && enteredWeight > availableWeight;
 
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchAndUpdateProfile();
+    }, [])
+  )
+
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Send Request" showBackButton />
