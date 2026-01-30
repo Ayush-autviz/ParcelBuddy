@@ -16,8 +16,7 @@ import { Colors } from './src/constants/colors';
 import { RootStackParamList } from './src/navigation/RootNavigator';
 import { navigationRef } from './src/navigation/navigationRef';
 import messaging from '@react-native-firebase/messaging';
-import notifee from '@notifee/react-native';
-import { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 
 // React Query client
 const queryClient = new QueryClient({
@@ -34,6 +33,74 @@ import { setPendingDeepLink } from './src/screens/Splash/SplashScreen';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
+
+  const handleNotificationNavigation = (data: any) => {
+    let type = data?.type;
+    console.log('🔔 [App] Handling push notification navigation');
+    console.log('🔔 [App] Data:', JSON.stringify(data, null, 2));
+
+    // Fallback logic if type is missing
+    if (!type) {
+      if (data?.ride_id) {
+        type = 'ride';
+        console.log('🔔 [App] Inferred type "ride" from ride_id');
+      } else if (data?.roomId || data?.chat_room_id) {
+        type = 'chat';
+        console.log('🔔 [App] Inferred type "chat" from roomId/chat_room_id');
+      }
+    }
+
+    console.log('🔔 [App] Final Type:', type);
+    console.log('🔔 [App] Navigation Ready:', navigationRef.isReady());
+
+    if (!type) {
+      console.log('⚠️ [App] No notification type found, aborting navigation');
+      return;
+    }
+
+    if (navigationRef.isReady()) {
+      let targetTab = 'Search';
+      let targetScreen = 'SearchList';
+
+      switch (type) {
+        case 'ride':
+        case 'request':
+          targetTab = 'Track';
+          targetScreen = 'TrackList';
+          break;
+        case 'chat':
+          targetTab = 'Chat';
+          targetScreen = 'ChatList';
+          break;
+        case 'rating':
+          targetTab = 'Profile';
+          targetScreen = 'Ratings';
+          break;
+        case 'general':
+        default:
+          targetTab = 'Search';
+          targetScreen = 'SearchList';
+          break;
+      }
+
+      console.log(`🔔 [App] Navigating to ${targetTab} -> ${targetScreen}`);
+
+      navigationRef.dispatch(
+        CommonActions.navigate({
+          name: 'MainApp',
+          params: {
+            screen: targetTab,
+            params: {
+              screen: targetScreen,
+              params: data, // Pass the notification data key-values to the screen
+            },
+          },
+        })
+      );
+    } else {
+      console.log('❌ [App] Navigation not ready - cannot navigate');
+    }
+  };
 
   async function requestPermission() {
     if (Platform.OS === 'android') {
@@ -89,7 +156,7 @@ function App() {
 
       // Create single channel (Android)
       await notifee.createChannel({
-        id: 'default',
+        id: 'default_channel',
         name: 'Default Channel',
         importance: AndroidImportance.HIGH,
         vibration: true,
@@ -100,13 +167,15 @@ function App() {
       await notifee.displayNotification({
         title: remoteMessage.notification?.title,
         body: remoteMessage.notification?.body,
+        data: remoteMessage.data,
         ios: {
           sound: 'default',
         },
         android: {
-          channelId: 'default',
+          channelId: 'default_channel',
           pressAction: {
             id: 'default',
+            launchActivity: 'default',
           },
           sound: 'default',
         },
@@ -115,6 +184,52 @@ function App() {
 
     return unsubscribe;
   }, [queryClient]);
+
+  // Handle foreground notification interaction
+  useEffect(() => {
+    return notifee.onForegroundEvent(({ type, detail }) => {
+      console.log(`🔔 [App] Foreground Event: ${type} (PRESS=${EventType.PRESS}, ACTION_PRESS=${EventType.ACTION_PRESS})`);
+      switch (type) {
+        case EventType.PRESS:
+        case EventType.ACTION_PRESS:
+          console.log('🔔 [App] User pressed foreground notification', detail.notification);
+          if (detail.notification?.data) {
+            handleNotificationNavigation(detail.notification.data);
+          } else {
+            console.log('⚠️ [App] No data in foreground notification');
+          }
+          break;
+      }
+    });
+  }, []);
+
+  // Handle background and quit state notifications
+  useEffect(() => {
+    // App opened from background
+    messaging().onNotificationOpenedApp(remoteMessage => {
+      console.log('🔔 [App] Notification opened app from background:', remoteMessage);
+      handleNotificationNavigation(remoteMessage.data);
+    });
+
+    // App opened from quit state
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        if (remoteMessage) {
+          console.log('🔔 [App] Notification opened app from quit state:', remoteMessage);
+          if (remoteMessage.data?.type) {
+            console.log('🔔 [App] Waiting for app initialization before navigation...');
+            // Wait for navigation to be ready and splash screen to likely finish
+            setTimeout(() => {
+              console.log('🔔 [App] Executing delayed quit-state navigation');
+              handleNotificationNavigation(remoteMessage.data);
+            }, 2500);
+          }
+        } else {
+          console.log('🔔 [App] No initial notification found');
+        }
+      });
+  }, []);
 
 
   useEffect(() => {

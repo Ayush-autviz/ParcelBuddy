@@ -127,7 +127,7 @@ const TrackScreen: React.FC = () => {
     failureReason: failureReasonBooked
   } = useBookedRides();
 
-  console.log();
+  console.log('bookedRidesData', bookedRidesData);
 
 
   // Initialize data only when switching to a tab that hasn't been initialized yet
@@ -160,7 +160,7 @@ const TrackScreen: React.FC = () => {
       }
 
       // Create a simple hash to detect if data actually changed
-      const dataHash = bookedRidesData.rides.map(r => r.id).join(',');
+      const dataHash = bookedRidesData.rides.map(r => `${r.id}-${r.status}-${r.isRated}-${r.requestCount}`).join(',');
       if (lastDataRef.current.booked !== dataHash) {
         lastDataRef.current.booked = dataHash;
         const initialPageSize = initialPageSizeRef.current.booked;
@@ -185,7 +185,7 @@ const TrackScreen: React.FC = () => {
       }
 
       // Create a simple hash to detect if data actually changed
-      const dataHash = publishedRidesData.rides.map(r => r.id).join(',');
+      const dataHash = publishedRidesData.rides.map(r => `${r.id}-${r.status}-${r.isRated}-${r.requestCount}`).join(',');
       if (lastDataRef.current.published !== dataHash) {
         lastDataRef.current.published = dataHash;
         const initialPageSize = initialPageSizeRef.current.published;
