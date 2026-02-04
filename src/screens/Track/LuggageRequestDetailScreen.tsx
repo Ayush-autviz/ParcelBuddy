@@ -152,7 +152,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
           queryClient.invalidateQueries({ queryKey: ['chatList'] });
         },
         onError: (error: any) => {
-          showError(error?.response?.data?.message || error?.message || 'Failed to create chat room. Please try again.');
+          showError(error?.response?.data?.error || error?.message || 'Failed to create chat room. Please try again.');
         },
       }
     );

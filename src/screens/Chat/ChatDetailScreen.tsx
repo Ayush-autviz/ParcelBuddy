@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TouchableOpacity, Image, TextInput, BackHandler, Keyboard, StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send, LoadEarlier } from 'react-native-gifted-chat';
+import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send, LoadEarlier, SystemMessage } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ArrowLeft, ChevronRight, Image as ImageIcon, Mic, SendIcon } from 'lucide-react-native';
+import { ArrowLeft, ChevronRight, Image as ImageIcon, Info, Mic, SendIcon } from 'lucide-react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
 import { Colors } from '../../constants/colors';
@@ -145,6 +145,7 @@ const ChatDetailScreen: React.FC = () => {
       sent: true,
       received: true,
       pending: false,
+      system: chatMessage.message_type === 'system',
     };
   }, []);
 
@@ -364,6 +365,7 @@ const ChatDetailScreen: React.FC = () => {
       const response = await getConversationMessages(roomId);
 
       if (response && response.results) {
+        console.log('✅ Fetched messages:', response.results);
         const convertedMessages = response.results.map(convertApiMessageToIMessage);
         setMessages(convertedMessages);
         setNextPageUrl(response.pagination?.next_page || null);
@@ -386,6 +388,7 @@ const ChatDetailScreen: React.FC = () => {
       const response = await getConversationMessagesByUrl(nextPageUrl);
 
       if (response && response.results) {
+        console.log('✅ Loaded earlier messages:', response.results);
         const convertedMessages = response.results.map(convertApiMessageToIMessage);
         setMessages((prevMessages) => GiftedChat.prepend(prevMessages, convertedMessages));
         setNextPageUrl(response.pagination?.next_page || null);
@@ -416,8 +419,6 @@ const ChatDetailScreen: React.FC = () => {
 
   // Custom render functions for GiftedChat
   const renderBubble = (props: any) => {
-    const isCurrentUser = props.currentMessage?.user?._id === currentUserId;
-
     return (
       <Bubble
         {...props}
@@ -491,6 +492,17 @@ const ChatDetailScreen: React.FC = () => {
           right: { display: 'none' },
         }}
       />
+    );
+  };
+
+  const renderSystemMessage = (props: any) => {
+    return (
+      <View style={styles.systemMessageContainer}>
+        <View style={styles.systemMessageContent}>
+          <Info size={22} color={Colors.gradientStart} strokeWidth={2.5} style={{ marginRight: 8 }} />
+          <Text style={styles.systemMessageText}>{props.currentMessage.text}</Text>
+        </View>
+      </View>
     );
   };
 
@@ -734,6 +746,7 @@ const ChatDetailScreen: React.FC = () => {
             renderInputToolbar={renderInputToolbar}
             renderSend={renderSend}
             renderLoadEarlier={renderLoadEarlier}
+            renderSystemMessage={renderSystemMessage}
             scrollToBottomComponent={() => null}
             infiniteScroll
             minInputToolbarHeight={60}
@@ -1186,6 +1199,29 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Fonts.xs,
     fontStyle: 'italic',
+  },
+  // System Message Styles
+  systemMessageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 12,
+    paddingHorizontal: 20,
+  },
+  systemMessageContent: {
+    backgroundColor: 'rgba(48, 149, 203, 0.08)',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(48, 149, 203, 0.15)',
+  },
+  systemMessageText: {
+    color: Colors.textPrimary,
+    fontSize: 12,
+    fontWeight: Fonts.weightMedium,
+    textAlign: 'center',
   },
   // Bottom Sheet Styles
   bottomSheetBackground: {
