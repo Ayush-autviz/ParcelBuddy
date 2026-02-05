@@ -39,6 +39,7 @@ interface SubscriptionPlan {
   showUpgrade: boolean;
   startDate?: string;
   endDate?: string;
+  description?: string;
 }
 
 const SubscriptionScreen: React.FC = () => {
@@ -71,6 +72,7 @@ const SubscriptionScreen: React.FC = () => {
     }
   }, [region, refetch]);
 
+
   // Transform API data to UI format
   const subscriptionPlans: SubscriptionPlan[] = useMemo(() => {
     if (!plansData?.plans) return [];
@@ -86,7 +88,7 @@ const SubscriptionScreen: React.FC = () => {
 
         // Build features array
         const features: PlanFeature[] = [
-          // { text: `Create up to ${plan.rides_per_month} rides/month.` },
+          { text: `Create up to ${plan.rides_per_month} rides/month.` },
           // { text: 'Search rides unlimited.' },
           { text: `Send requests to ${plan.requests_per_month} travellers/month.` },
           ...(plan.features || []).map((feature) => ({ text: feature })),
@@ -101,6 +103,7 @@ const SubscriptionScreen: React.FC = () => {
           showUpgrade: !hasCurrentPlan, // Only show upgrade if no plan is current
           startDate: plan.current_plan_details?.start_date,
           endDate: plan.current_plan_details?.end_date,
+          description: plan.description,
         };
       });
   }, [plansData]);
@@ -298,6 +301,9 @@ const SubscriptionScreen: React.FC = () => {
                         <Text style={styles.planNameActive}>{plan.name}</Text>
                         <Text style={styles.planPriceActive}>{plan.price}</Text>
                       </View>
+                      {plan.description && (
+                        <Text style={[styles.planDescription, { color: Colors.textWhite }]}>{plan.description}</Text>
+                      )}
                       <View style={styles.planFeatures}>
                         {plan.features.map((feature, index) => (
                           <View key={index} style={styles.featureRow}>
@@ -323,6 +329,9 @@ const SubscriptionScreen: React.FC = () => {
                       <Text style={styles.planName}>{plan.name}</Text>
                       <Text style={styles.planPrice}>{plan.price}</Text>
                     </View>
+                    {plan.description && (
+                      <Text style={styles.planDescription}>{plan.description}</Text>
+                    )}
                     <View style={styles.planFeatures}>
                       {plan.features.map((feature, index) => (
                         <View key={index} style={styles.featureRow}>
@@ -495,6 +504,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
+  },
+  planDescription: {
+    fontSize: Fonts.sm,
+    color: Colors.textPrimary,
+    marginBottom: 16,
   },
   planHeader: {
     flexDirection: 'row',
