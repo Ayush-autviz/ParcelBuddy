@@ -65,6 +65,11 @@ const ResetPasswordScreen: React.FC = () => {
         onSuccess: (response: any) => {
           console.log('Reset Password Response:', response);
           showSuccess('Password reset successfully!');
+
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
           
           // Store tokens if provided
           // if (response.tokens) {
@@ -87,12 +92,12 @@ const ResetPasswordScreen: React.FC = () => {
           //   });
           // } else {
             // Navigate to root MainApp
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'MainApp' as never }],
-              })
-            );
+            // navigation.dispatch(
+            //   CommonActions.reset({
+            //     index: 0,
+            //     routes: [{ name: 'MainApp' as never }],
+            //   })
+            // );
           // }
         },
         onError: (error: any) => {

@@ -186,7 +186,7 @@ const SplashScreen: React.FC = () => {
 
         } else if (profile_check) {
           console.log('SplashScreen: Navigating to MainApp');
-          // Normal navigation to MainApp
+          // Normal navigation to MainApp 
           navigation.reset({
             index: 0,
             routes: [{ name: 'MainApp' }],
