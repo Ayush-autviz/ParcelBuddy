@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { Colors } from '../constants/colors';
@@ -13,6 +14,10 @@ interface AuthMethodButtonsProps {
   onGooglePress: () => void;
   onEmailPress: () => void;
   onApplePress: () => void;
+  /** Show loading state on Apple button (e.g. while performing request) */
+  appleLoading?: boolean;
+  /** Set false to hide Apple button (e.g. on Android). Default true */
+  showAppleButton?: boolean;
 }
 
 // Apple SVG (black Apple logo)
@@ -49,20 +54,31 @@ const AuthMethodButtons: React.FC<AuthMethodButtonsProps> = ({
   onGooglePress,
   onEmailPress,
   onApplePress,
+  appleLoading = false,
+  showAppleButton = true,
 }) => {
   return (
     <View style={styles.container}>
-      {/* Apple Button - First */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={onApplePress}
-        activeOpacity={0.8}
-      >
-        <View style={styles.buttonContent}>
-          <SvgXml xml={AppleIcon} width={20} height={20} />
-          <Text style={styles.buttonText}>Continue with Apple</Text>
-        </View>
-      </TouchableOpacity>
+      {/* Apple Button - First (iOS only when showAppleButton is true) */}
+      {showAppleButton && (
+        <TouchableOpacity
+          style={[styles.button, appleLoading && styles.buttonDisabled]}
+          onPress={onApplePress}
+          activeOpacity={0.8}
+          disabled={appleLoading}
+        >
+          <View style={styles.buttonContent}>
+            {appleLoading ? (
+              <ActivityIndicator size="small" color={Colors.textPrimary} />
+            ) : (
+              <SvgXml xml={AppleIcon} width={20} height={20} />
+            )}
+            <Text style={styles.buttonText}>
+              {appleLoading ? 'Signing in with Apple...' : 'Continue with Apple'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
 
       {/* Google Button */}
       <TouchableOpacity
@@ -115,6 +131,9 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     fontWeight: Fonts.weightSemiBold,
     color: Colors.textPrimary,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
 

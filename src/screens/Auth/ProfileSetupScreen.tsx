@@ -70,6 +70,7 @@ const ProfileSetupScreen: React.FC = () => {
   const [countryCode, setCountryCode] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
   const [bio, setBio] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
@@ -288,10 +289,10 @@ const ProfileSetupScreen: React.FC = () => {
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
-    }
-    if (selectedDate) {
-      setDateOfBirth(selectedDate);
-      // Don't close on iOS - let user click Done
+      if (selectedDate) setDateOfBirth(selectedDate);
+    } else {
+      // iOS: update temp date only; Done button commits to dateOfBirth
+      if (selectedDate) setTempDate(selectedDate);
     }
   };
 
@@ -504,7 +505,9 @@ const ProfileSetupScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.dateInputWrapper}
               onPress={() => {
-                setShowDatePicker(true)}}
+                setTempDate(dateOfBirth || new Date());
+                setShowDatePicker(true);
+              }}
               activeOpacity={0.7}
             >
               <Calendar size={20} color={Colors.textLight} style={styles.calendarIcon} />
@@ -536,20 +539,19 @@ const ProfileSetupScreen: React.FC = () => {
                       <Text style={styles.modalTitle}>Select Date of Birth</Text>
                       <TouchableOpacity
                         onPress={() => {
-                          if (dateOfBirth) {
-                            setShowDatePicker(false);
-                          }
+                          setDateOfBirth(tempDate);
+                          setShowDatePicker(false);
                         }}
                         style={styles.modalDoneButton}
                       >
-                        <Text style={[styles.modalDoneText, !dateOfBirth && styles.modalDoneTextDisabled]}>
+                        <Text style={styles.modalDoneText}>
                           Done
                         </Text>
                       </TouchableOpacity>
                     </View>
                     <View style={styles.datePickerContainer}>
                       <DateTimePicker
-                        value={dateOfBirth || new Date()}
+                        value={tempDate}
                         mode="date"
                         display="spinner"
                         onChange={handleDateChange}
@@ -911,10 +913,6 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     color: Colors.primaryCyan,
     fontWeight: Fonts.weightSemiBold,
-  },
-  modalDoneTextDisabled: {
-    color: Colors.textLight,
-    opacity: 0.5,
   },
   datePickerContainer: {
     paddingVertical: 20,

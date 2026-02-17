@@ -92,6 +92,12 @@ export const googleLogin = async (data: { token: string }) => {
   return response.data;
 };
 
+// apple login
+export const appleLogin = async (data: { token: string }) => {
+  const response = await publicApiClient.post('/auth/apple-login/', data);
+  return response.data;
+};
+
 // password management
 export const createPassword = async (data: { email: string; password: string; confirm_password: string }) => {
   console.log('data', data);

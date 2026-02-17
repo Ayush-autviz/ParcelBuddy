@@ -6,6 +6,7 @@ import {
   profileSetup,
   sendFcmToken,
   googleLogin,
+  appleLogin,
   createPassword,
   loginEmail,
   forgotPassword,
@@ -69,6 +70,12 @@ export const useDeleteFcmToken = (): UseMutationResult<any, Error, { results: { 
 export const useGoogleLogin = (): UseMutationResult<any, Error, { token: string }, unknown> => {
   return useMutation({
     mutationFn: (data: { token: string }) => googleLogin(data),
+  });
+};
+
+export const useAppleLogin = (): UseMutationResult<any, Error, { token: string }, unknown> => {
+  return useMutation({
+    mutationFn: (data: { token: string }) => appleLogin(data),
   });
 };
 

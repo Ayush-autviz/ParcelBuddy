@@ -6,8 +6,10 @@ import {
   Dimensions,
   TouchableOpacity,
   Image,
-  TextInput
+  TextInput,
+  Platform,
 } from 'react-native';
+import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,7 +21,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import GradientButton from '../../components/GradientButton';
-import { useGetOtpEmail, useGoogleLogin, useVerifyOtpEmail, useResendOtpEmail } from '../../hooks/useAuthMutations';
+import { useGetOtpEmail, useGoogleLogin, useAppleLogin, useVerifyOtpEmail, useResendOtpEmail } from '../../hooks/useAuthMutations';
 import { useToast } from '../../components/Toast';
 import AuthMethodButtons from '../../components/AuthMethodButtons';
 import { useGoogleSignIn } from '../../hooks/useGoogleSignIn';
@@ -38,7 +40,8 @@ const LoginScreen: React.FC = () => {
   // const [countryCode, setCountryCode] = useState('');
   const [email, setEmail] = useState('');
   const [step, setStep] = useState<'auth-methods' | 'email-login' | 'otp-verification'>('auth-methods');
-  
+  const [isAppleSignInLoading, setIsAppleSignInLoading] = useState(false);
+
   // Check if we should show OTP flow from route params
   useEffect(() => {
     const params = route.params as { showOtpFlow?: boolean } | undefined;
@@ -51,6 +54,7 @@ const LoginScreen: React.FC = () => {
   const verifyOtpMutation = useVerifyOtpEmail();
   const resendOtpMutation = useResendOtpEmail();
   const googleLoginMutation = useGoogleLogin();
+  const appleLoginMutation = useAppleLogin();
   const { showWarning, showError } = useToast();
   const { signIn: signInWithGoogle, isLoading: isGoogleSignInLoading } = useGoogleSignIn();
   const { setToken, setUser } = useAuthStore();
@@ -226,9 +230,107 @@ const LoginScreen: React.FC = () => {
     navigation.navigate('EmailLogin');
   };
 
-  const handleApplePress = () => {
-    // TODO: Implement Apple authentication
-    console.log('Apple login');
+  const handleApplePress = async () => {
+    if (Platform.OS !== 'ios') {
+      showWarning('Continue with Apple is only available on iOS.');
+      return;
+    }
+
+    setIsAppleSignInLoading(true);
+    try {
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+      });
+
+      const { identityToken, fullName, email: appleEmail } = appleAuthRequestResponse;
+
+      if (identityToken) {
+        console.log('[Apple Sign-In] identityToken:', identityToken);
+        appleLoginMutation.mutate(
+          { token: identityToken },
+          {
+            onSuccess: (response: any) => {
+              console.log('Apple Login API Response:', response);
+
+              if (response.tokens) {
+                setToken({
+                  access_token: response.tokens.access,
+                  refresh_token: response.tokens.refresh,
+                });
+              }
+
+              if (response.profile) {
+                setUser(response.profile);
+              }
+
+              if (response.profile?.is_suspended === true) {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Suspended' as never }],
+                  })
+                );
+                return;
+              }
+
+              if (response.profile_setup === false) {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'ProfileSetup' }],
+                });
+              } else {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'MainApp' as never }],
+                  })
+                );
+              }
+            },
+            onError: (error: any) => {
+              console.error('Apple Login API Error:', error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message);
+
+              if (error?.response?.data?.is_suspended === true) {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Suspended' as never }],
+                  })
+                );
+                return;
+              }
+
+              const errorMessage =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message ||
+                'Failed to login with Apple';
+              showError(errorMessage);
+            },
+            onSettled: () => {
+              setIsAppleSignInLoading(false);
+            },
+          }
+        );
+        return;
+      } else {
+        console.warn('[Apple Sign-In] No identityToken in response');
+        showError('Apple Sign-In did not return a token. Please try again.');
+      }
+    } catch (error: any) {
+      if (error?.code === appleAuth.Error.CANCELED) {
+        console.log('[Apple Sign-In] User canceled');
+        return;
+      }
+      console.error('[Apple Sign-In] Error:', error);
+      const message = error?.message || 'Apple Sign-In failed. Please try again.';
+      showError(message);
+    } finally {
+      setIsAppleSignInLoading(false);
+    }
   };
 
   const handleBackPress = () => {
@@ -284,6 +386,8 @@ const LoginScreen: React.FC = () => {
                 onGooglePress={handleGooglePress}
                 onEmailPress={handleEmailPress}
                 onApplePress={handleApplePress}
+                appleLoading={isAppleSignInLoading}
+                showAppleButton={Platform.OS === 'ios'}
               />
             </>
           ) : step === 'email-login' ? (

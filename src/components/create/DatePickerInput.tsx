@@ -28,6 +28,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
   displayFormat = 'default',
 }) => {
   const [showPicker, setShowPicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
 
   const formatDate = (date: Date): string => {
     if (displayFormat === 'month-year') {
@@ -47,10 +48,9 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowPicker(false);
-    }
-    if (selectedDate) {
-      onChange(selectedDate);
-      // Don't close on iOS - let user click Done
+      if (selectedDate) onChange(selectedDate);
+    } else {
+      if (selectedDate) setTempDate(selectedDate);
     }
   };
 
@@ -60,7 +60,10 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
     <View style={containerStyle}>
       <TouchableOpacity
         style={styles.container}
-        onPress={() => setShowPicker(true)}
+        onPress={() => {
+          setTempDate(value || new Date());
+          setShowPicker(true);
+        }}
         activeOpacity={0.7}
       >
         <View style={[styles.iconContainer, iconContainerStyle]}>
@@ -96,20 +99,19 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
                 <Text style={styles.modalTitle}>Select Date</Text>
                 <TouchableOpacity
                   onPress={() => {
-                    if (value) {
-                      setShowPicker(false);
-                    }
+                    onChange(tempDate);
+                    setShowPicker(false);
                   }}
                   style={styles.modalDoneButton}
                 >
-                  <Text style={[styles.modalDoneText, !value && styles.modalDoneTextDisabled]}>
+                  <Text style={styles.modalDoneText}>
                     Done
                   </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.datePickerContainer}>
                 <DateTimePicker
-                  value={value || new Date()}
+                  value={tempDate}
                   mode="date"
                   display="spinner"
                   onChange={handleDateChange}
@@ -206,10 +208,6 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     color: Colors.primaryCyan,
     fontWeight: Fonts.weightSemiBold,
-  },
-  modalDoneTextDisabled: {
-    color: Colors.textLight,
-    opacity: 0.5,
   },
   datePickerContainer: {
     paddingVertical: 20,
