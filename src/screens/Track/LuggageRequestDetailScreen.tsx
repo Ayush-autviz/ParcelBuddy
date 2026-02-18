@@ -27,6 +27,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCreateChatRoom } from '../../hooks/useChat';
 import VerificationRequiredModal from '../../components/Modal/VerificationRequiredModal';
 import { useAuthStore } from '../../services/store';
+import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 
 type LuggageRequestDetailParams = {
   LuggageRequestDetail: {
@@ -47,6 +48,7 @@ const LuggageRequestDetailScreen: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const { user } = useAuthStore();
 
   // Respond to luggage request mutation
@@ -117,10 +119,14 @@ const LuggageRequestDetailScreen: React.FC = () => {
     setRejectionReason(''); // Clear rejection reason when canceling
   };
 
-  const handleChat = () => {
+  const handleChat = async () => {
+    setIsFetchingProfile(true);
+    const updatedUser = await fetchAndUpdateProfile();
+    setIsFetchingProfile(false);
 
-    const needsKYC = user && !(user as any)?.is_kyc_verified;
-    const needsSubscription = user && !(user as any)?.is_subscribed;
+    const currentUser = updatedUser || user;
+    const needsKYC = currentUser && !(currentUser as any)?.is_kyc_verified;
+    const needsSubscription = currentUser && !(currentUser as any)?.is_subscribed;
 
     // Show combined modal if either is needed
     if (needsKYC || needsSubscription) {
@@ -456,7 +462,8 @@ const LuggageRequestDetailScreen: React.FC = () => {
               onPress={handleChat}
               style={styles.chatButton}
               icon={<MessageCircle size={20} color={Colors.textWhite} style={styles.chatIcon} />}
-              disabled={respondToRequestMutation.isPending || createChatRoomMutation.isPending}
+              // loading={createChatRoomMutation.isPending || isFetchingProfile}
+              disabled={respondToRequestMutation.isPending || createChatRoomMutation.isPending || isFetchingProfile}
             />
           </View>
         )}

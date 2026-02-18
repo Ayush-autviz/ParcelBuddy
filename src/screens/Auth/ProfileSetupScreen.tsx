@@ -12,7 +12,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { SvgXml } from 'react-native-svg';
@@ -34,6 +34,7 @@ import { getCurrentLocation, LocationCoordinates, PermissionResult } from '../..
 import { ActivityIndicator } from 'react-native';
 import PermissionModal from '../../components/Modal/PermissionModal';
 import { getCountryByCoordinates } from '../../services/api/auth';
+import { useQueryClient } from '@tanstack/react-query';
 
 const { width } = Dimensions.get('window');
 
@@ -79,23 +80,24 @@ const ProfileSetupScreen: React.FC = () => {
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [isFetchingCountry, setIsFetchingCountry] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const queryClient = useQueryClient();
   const [permissionModalData, setPermissionModalData] = useState<{
     title: string;
     message: string;
     showOpenSettings: boolean;
   } | null>(null);
-  const {setUser, user} = useAuthStore();
+  const { setUser, user, logout } = useAuthStore();
 
   const formattedCountry = country.slice(0, 2).toUpperCase();
 
-  
+
   const profileSetupMutation = useProfileSetup();
   const { showWarning, showError } = useToast();
 
   // Pre-fill form data from route params or user store if available
   useEffect(() => {
     const routeEmail = route.params?.email;
-    
+
     // Pre-fill email from route params first, then from user store
     if (routeEmail) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -106,15 +108,15 @@ const ProfileSetupScreen: React.FC = () => {
       setEmail(user.email);
       setEmailVerified(emailRegex.test(user.email));
     }
-    
+
     if (user) {
-      
+
       // Pre-fill full name from first_name and last_name
       if (user.first_name || user.last_name) {
         const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
         setFullName(fullName);
       }
-      
+
       // Pre-fill date of birth if available
       if (user.date_of_birth) {
         const dob = new Date(user.date_of_birth);
@@ -122,7 +124,7 @@ const ProfileSetupScreen: React.FC = () => {
           setDateOfBirth(dob);
         }
       }
-      
+
       // Pre-fill phone number if available
       if (user.phone) {
         // If phone starts with country code, try to extract it
@@ -210,7 +212,7 @@ const ProfileSetupScreen: React.FC = () => {
       return;
     }
 
-   
+
 
     // Split full name into first and last name
     const nameParts = fullName.trim()?.split(' ');
@@ -229,12 +231,12 @@ const ProfileSetupScreen: React.FC = () => {
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
+
     formData.append('date_of_birth', formatDateForAPI(dateOfBirth));
     formData.append('email', email.trim());
     formData.append('phone', fullPhoneNumber);
     formData.append('profile.bio', bio.trim() || '');
-    
+
 
     // Append country
     if (country) {
@@ -245,7 +247,7 @@ const ProfileSetupScreen: React.FC = () => {
     if (profileImageAsset && profileImageAsset.uri) {
       const fileExtension = profileImageAsset.uri?.split('.').pop() || 'jpg';
       const fileName = profileImageAsset.fileName || `profile_photo.${fileExtension}`;
-      
+
       formData.append('profile.profile_photo', {
         uri: profileImageAsset.uri,
         type: profileImageAsset.type || `image/${fileExtension}`,
@@ -266,13 +268,13 @@ const ProfileSetupScreen: React.FC = () => {
       },
       onError: (error: any) => {
         console.log('Error saving profile:', error.response);
-        const errorMessage = 
-        error?.response?.data?.phone?.[0] ||
-        error?.response?.data?.profile?.country?.[0] ||
-        error?.response?.data?.error || 
-                            error?.response?.data?.message || 
-                            error?.message || 
-                            'Failed to save profile. Please try again.';
+        const errorMessage =
+          error?.response?.data?.phone?.[0] ||
+          error?.response?.data?.profile?.country?.[0] ||
+          error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          error?.message ||
+          'Failed to save profile. Please try again.';
         showError(errorMessage);
       },
     });
@@ -308,12 +310,12 @@ const ProfileSetupScreen: React.FC = () => {
     setIsFetchingLocation(true);
     try {
       const result = await getCurrentLocation();
-      
+
       // Check if result is LocationCoordinates (has latitude property)
       if ('latitude' in result && 'longitude' in result) {
         const locationData = result as LocationCoordinates;
         setLocation(locationData);
-        
+
         // Fetch country using coordinates
         setIsFetchingCountry(true);
         try {
@@ -353,12 +355,25 @@ const ProfileSetupScreen: React.FC = () => {
     }
   };
 
+  const handleBackToLogin = async () => {
+    queryClient.clear();
+    await logout();
+    // showSuccess('Logged out successfully');
+    // Navigate to root Auth screen
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Auth' as never }],
+      })
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroundLight} />
       {/* Header */}
       <Header title="Profile Setup" />
-      
+
       <KeyboardAwareScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
@@ -644,7 +659,7 @@ const ProfileSetupScreen: React.FC = () => {
               <Text style={styles.linkText} onPress={handleTermsPress}>
                 Terms & Conditions
               </Text>
-              
+
             </Text>
           </View>
 
@@ -657,6 +672,10 @@ const ProfileSetupScreen: React.FC = () => {
             style={styles.saveButton}
           />
         </View>
+
+        <TouchableOpacity onPress={handleBackToLogin} style={styles.skipButton}>
+          <Text style={styles.skipButtonText}>Get Back to Login</Text>
+        </TouchableOpacity>
       </KeyboardAwareScrollView>
 
       {/* Permission Modal */}
@@ -951,6 +970,15 @@ const styles = StyleSheet.create({
   },
   locationInputPlaceholder: {
     color: Colors.textLight,
+  },
+  skipButton: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  skipButtonText: {
+    fontSize: Fonts.base,
+    color: Colors.primaryCyan,
+    fontWeight: Fonts.weightSemiBold,
   },
 });
 

@@ -50,6 +50,7 @@ const SendRequestScreen: React.FC = () => {
   const [itemDescription, setItemDescription] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [images, setImages] = useState<ImagePicker.Asset[]>([]);
+  const [isFetchingProfile, setIsFetchingProfile] = useState(false);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -90,9 +91,14 @@ const SendRequestScreen: React.FC = () => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleBookNow = () => {
-    const needsKYC = user && !(user as any)?.is_kyc_verified;
-    const needsSubscription = user && !(user as any)?.is_subscribed;
+  const handleBookNow = async () => {
+    setIsFetchingProfile(true);
+    const updatedUser = await fetchAndUpdateProfile();
+    setIsFetchingProfile(false);
+
+    const currentUser = updatedUser || user;
+    const needsKYC = currentUser && !(currentUser as any)?.is_kyc_verified;
+    const needsSubscription = currentUser && !(currentUser as any)?.is_subscribed;
 
     // Show combined modal if either is needed
     if (needsKYC || needsSubscription) {
@@ -490,8 +496,8 @@ const SendRequestScreen: React.FC = () => {
           title="Book Now"
           onPress={handleBookNow}
           style={styles.bookButton}
-          loading={createLuggageRequestMutation.isPending}
-          disabled={createLuggageRequestMutation.isPending}
+          loading={createLuggageRequestMutation.isPending || isFetchingProfile}
+          disabled={createLuggageRequestMutation.isPending || isFetchingProfile}
         />
 
         {/* Disclaimer Section */}
