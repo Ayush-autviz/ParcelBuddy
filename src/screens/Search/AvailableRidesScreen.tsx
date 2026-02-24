@@ -40,6 +40,10 @@ const AvailableRidesScreen: React.FC = () => {
   const formattedDate = formatDate(date);
 
   const handleSendRequest = (ride: AvailableRideData) => {
+    const availableWeight = parseFloat(ride.available_weight_kg).toFixed(0);
+    if (availableWeight === '0') {
+      return;
+    }
     navigation.navigate('SendRequest', { ride });
   };
 

@@ -8,6 +8,7 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  InteractionManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, User, MessageCircle } from 'lucide-react-native';
@@ -51,6 +52,7 @@ const ChatScreen: React.FC = () => {
   const initializedRef = useRef(false);
   const initialPageSizeRef = useRef<number>(0);
   const lastDataRef = useRef<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Handle search on Enter press
   const handleSearch = () => {
@@ -75,37 +77,47 @@ const ChatScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       console.log('[ChatScreen] Screen focused - refetching chat list');
-      refetch();
+      InteractionManager.runAfterInteractions(() => {
+        refetch();
+      });
     }, [refetch])
   );
 
   // Custom handleRefresh that invalidates cache and forces fresh data
   const handleRefresh = React.useCallback(async () => {
-    // Invalidate cache to force fresh fetch
-    queryClient.invalidateQueries({ queryKey: ['chatList'] });
+    setRefreshing(true);
+    try {
+      // Invalidate cache to force fresh fetch
+      queryClient.invalidateQueries({ queryKey: ['chatList'] });
 
-    // Reset pagination state
-    setNextPageUrl(null);
-    setIsLoadingMore(false);
+      // Reset pagination state
+      setNextPageUrl(null);
+      setIsLoadingMore(false);
 
-    // Reset data hash to force update
-    lastDataRef.current = null;
+      // Reset data hash to force update
+      lastDataRef.current = null;
 
-    // Reset initial page size to force full refresh
-    initialPageSizeRef.current = 0;
-    initializedRef.current = false;
+      // Reset initial page size to force full refresh
+      initialPageSizeRef.current = 0;
+      initializedRef.current = false;
 
-    // Refetch data
-    const result = await refetch();
+      // Refetch data
+      const result = await refetch();
 
-    // Update local state with fresh data
-    if (result.data?.results) {
-      setAllChatRooms(result.data.results);
-      setNextPageUrl(result.data.pagination?.next_page || null);
-      // Update data hash
-      lastDataRef.current = result.data.results.map(r => r.id).join(',');
-      initialPageSizeRef.current = result.data.results.length;
-      initializedRef.current = true;
+      // Update local state with fresh data
+      if (result.data?.results) {
+        setAllChatRooms(result.data.results);
+        setNextPageUrl(result.data.pagination?.next_page || null);
+        // Update data hash
+        lastDataRef.current = result.data.results.map(r => r.id).join(',');
+        initialPageSizeRef.current = result.data.results.length;
+        initializedRef.current = true;
+      }
+    } finally {
+      // Small delay fixes iOS collapsing bug
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 300);
     }
   }, [queryClient, refetch]);
 
@@ -371,7 +383,7 @@ const ChatScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
+              refreshing={refreshing}
               onRefresh={handleRefresh}
               colors={[Colors.primaryCyan]}
               tintColor={Colors.primaryCyan}

@@ -54,8 +54,7 @@ const SubscriptionScreen: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showAutoRenewalModal, setShowAutoRenewalModal] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+
 
   // Refetch data when screen comes into focus (e.g., from deep link)
   useFocusEffect(
@@ -156,22 +155,13 @@ const SubscriptionScreen: React.FC = () => {
   };
 
   const handleUpgrade = (planId: string) => {
-    setSelectedPlanId(planId);
-    setShowAutoRenewalModal(true);
-  };
-
-  const handleConfirmPurchase = () => {
-    setShowAutoRenewalModal(false);
-    if (!selectedPlanId) return;
-
-    setLoadingPlanId(selectedPlanId);
+    setLoadingPlanId(planId);
     createSubscriptionMutation.mutate(
-      { plan_id: selectedPlanId },
+      { plan_id: planId },
       {
         onSuccess: (response) => {
           console.log('Subscription created successfully:', response);
           setLoadingPlanId(null); // Clear loading state
-          setSelectedPlanId(null);
           if (response.checkout_url) {
             // Open checkout URL in device browser
             Linking.openURL(response.checkout_url).catch((err) => {
@@ -186,7 +176,6 @@ const SubscriptionScreen: React.FC = () => {
         onError: (error: any) => {
           console.error('Error creating subscription:', error);
           setLoadingPlanId(null); // Clear loading state on error
-          setSelectedPlanId(null);
           const errorMessage = error?.response?.data?.message ||
             error?.response?.data?.error ||
             error?.message ||
@@ -358,7 +347,7 @@ const SubscriptionScreen: React.FC = () => {
 
         {/* Footer Disclaimer */}
         <Text style={styles.disclaimer}>
-          All prices are exclusive of taxes and other fees. Payments are processed securely{user?.profile?.country === 'IN' ? ' via Razorpay' : user?.profile?.country === 'CA' ? ' via Stripe' : '.'}.
+          All prices are exclusive of taxes and other fees. Payments are processed securely via Razorpay.
         </Text>
       </ScrollView>
 
@@ -374,20 +363,7 @@ const SubscriptionScreen: React.FC = () => {
         type="destructive"
       />
 
-      {/* Auto-Renewal Confirmation Modal */}
-      <ConfirmationModal
-        visible={showAutoRenewalModal}
-        title="Auto-Renewal Notice"
-        message="Your subscription will be automatically renewed at the end of each billing period. You can cancel anytime you want. Do you want to proceed with the purchase?"
-        confirmText="Yes, Proceed"
-        cancelText="Cancel"
-        onConfirm={handleConfirmPurchase}
-        onCancel={() => {
-          setShowAutoRenewalModal(false);
-          setSelectedPlanId(null);
-        }}
-        type="default"
-      />
+
     </SafeAreaView>
   );
 };

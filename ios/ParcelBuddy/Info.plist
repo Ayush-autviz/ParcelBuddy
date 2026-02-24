@@ -59,8 +59,11 @@
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to take a profile picture.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to complete your profile setup.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
+<string>Parcel Buddy needs your location to show nearby rides and complete bookings.</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>Parcel Buddy needs access to your location in the background to track active rides and provide accurate delivery updates.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to select a profile image.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
