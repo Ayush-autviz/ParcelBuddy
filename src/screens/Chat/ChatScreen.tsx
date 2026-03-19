@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 100,
+    // paddingTop: 100,
   },
   viewMoreContainer: {
     paddingVertical: 20,

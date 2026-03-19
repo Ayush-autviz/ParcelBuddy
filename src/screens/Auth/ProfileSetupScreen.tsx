@@ -75,6 +75,7 @@ const ProfileSetupScreen: React.FC = () => {
   const [bio, setBio] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [hasReadTerms, setHasReadTerms] = useState(false);
   const [location, setLocation] = useState<LocationCoordinates | null>(null);
   const [country, setCountry] = useState<string>('');
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
@@ -212,6 +213,10 @@ const ProfileSetupScreen: React.FC = () => {
       return;
     }
 
+    if (!hasReadTerms) {
+      showError('Please confirm that you have read the Terms & Conditions');
+      return;
+    }
 
 
     // Split full name into first and last name
@@ -663,6 +668,24 @@ const ProfileSetupScreen: React.FC = () => {
             </Text>
           </View>
 
+          {/* Read Terms Checkbox */}
+          <View style={[styles.checkboxContainer, { marginBottom: 16 }]}>
+            <TouchableOpacity
+              style={[styles.checkbox, hasReadTerms && styles.checkboxActive]}
+              onPress={() => setHasReadTerms(!hasReadTerms)}
+            >
+              {hasReadTerms && (
+                <Check size={14} color={Colors.textWhite} strokeWidth={3} />
+              )}
+            </TouchableOpacity>
+            <Text style={styles.checkboxText}>
+              I have read the{' '}
+              <Text style={styles.linkText} onPress={handleTermsPress}>
+                Terms & Conditions
+              </Text>
+            </Text>
+          </View>
+
           {/* Save Profile Button */}
           <GradientButton
             title={profileSetupMutation.isPending ? 'Saving...' : 'Save Profile'}
@@ -855,7 +878,7 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 24,
+    // marginBottom: 24,
     paddingTop: 10,
   },
   checkbox: {

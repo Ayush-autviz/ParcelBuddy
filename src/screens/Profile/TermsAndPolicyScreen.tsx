@@ -160,7 +160,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           </Text>
           <Text style={styles.subsectionTitle}>2.3 Scope of Services</Text>
           <Text style={styles.sectionText}>
-            – ParcelBuddy acts solely as a technology intermediary. For the avoidance of doubt, the Company's role is limited to providing the Platform; the Company is not a party to and does not assume responsibility for any contract, transaction, service or arrangement made between Users (Travelers and Senders).
+            – ParcelBuddy acts solely as a technology intermediary. For the avoidance of doubt, the Company's role is limited to providing the Platform; the Company is not a party to and does not assume responsibility for any contract, transaction, service or arrangement made between Users (Travelers and Senders). The platform is for "Traveler Assistance" rather than "Parcel Shipping." The platform is connecting people who need a favor, not people who are running a business.
           </Text>
           <Text style={styles.sectionText}>
             The Company:
@@ -169,7 +169,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.listItem}>• does not provide transportation, carriage, or delivery services, and does not issue waybills, bills of lading, or consignment notes or arrange shipments. We do not handle, store, or transport goods.</Text>
           <Text style={styles.listItem}>• does not guarantee or endorse the reliability, legality, or solvency of any User.</Text>
           <Text style={styles.listItem}>• is not a logistics service provider, freight forwarder, courier company, or Goods Transport Agency (GTA)</Text>
-          <Text style={styles.listItem}>• does not control, endorse, or take part in any agreements or transactions that may arise between Travelers and Users.</Text>
+          <Text style={styles.listItem}>• does not control, endorse, or take part in any agreements or transactions that may arise between Travelers and senders.</Text>
           <Text style={styles.sectionText}>
             The platform is a technology tool designed to connect individuals who:
           </Text>
@@ -206,7 +206,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             – Users shall comply with:
           </Text>
-          <Text style={styles.listItem}>• Domestic and international transport laws (road, air, rail).</Text>
+          <Text style={styles.listItem}>• Domestic and international transport laws (road, air, rail, water).</Text>
           <Text style={styles.listItem}>• Customs and import/export regulations.</Text>
           <Text style={styles.listItem}>• Aviation and safety laws.</Text>
           <Text style={styles.listItem}>• Data privacy laws (DPDP Act, 2023).</Text>
@@ -232,7 +232,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>4.1 Intermediary Role</Text>
           <Text style={styles.sectionText}>
-            – ParcelBuddy is a technology platform connecting Travelers and Senders. The Company is solely a technology intermediary and does not provide carriage, warehousing, logistics, or courier services.
+            – ParcelBuddy is a technology platform connecting Travelers and Senders. The Company is solely a technology intermediary and does not provide carriage, warehousing, logistics, or courier services. Parcelbuddy is a "Traveler Assistance Community" rather than a "Shipping App." The platform is for social connection and that any exchange of items is a private, non-guaranteed favor between individuals.
           </Text>
           <Text style={styles.subsectionTitle}>4.2 No Custody or Bailment</Text>
           <Text style={styles.sectionText}>
@@ -296,7 +296,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           </Text>
           <Text style={styles.subsectionTitle}>5.2 Authentication & Security</Text>
           <Text style={styles.sectionText}>
-            – Users are required to secure their accounts via OTP, 2-factor authentication (2FA), and/or biometric verification where required. Users are solely responsible for safeguarding their credentials.
+            – Users are required to secure their accounts. Users are solely responsible for safeguarding their credentials.
           </Text>
           <Text style={styles.subsectionTitle}>5.3 KYC Compliance</Text>
           <Text style={styles.sectionText}>
@@ -332,20 +332,32 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.listItem}>• Travelers shall act as independent individuals, not agents, employees, or contractors of ParcelBuddy.</Text>
           <Text style={styles.listItem}>• Trips shall not be used for illegal or criminal purposes.</Text>
           <Text style={styles.listItem}>• That the Trip shall not be for any fraudulent, unlawful or criminal activity.</Text>
-          <Text style={styles.listItem}>• That the Travelers shall not accept Goods which are prohibited or undeclared. Travelers shall require opening and inspection of packages when reasonably necessary.</Text>
+          <Text style={styles.listItem}>• That the Travelers shall not accept Goods which are prohibited or undeclared. Travelers shall require opening and inspection of packages always.</Text>
+          <Text style={styles.listItem}>• Transparency & "Open Box" Rule - Mandatory Inspection: Senders must provide parcels in an unsealed state. Travelers have the absolute right to inspect every item, including opening individual retail packaging if they feel it is necessary for safety.</Text>
           <Text style={styles.listItem}>• Travelers must immediately notify Senders of any changes to scheduled Trips. Consent from affected Senders must be obtained for changes; refusal entitles Senders to a full refund.</Text>
           <Text style={styles.listItem}>• Travelers shall comply with all domestic and international laws including airline baggage rules, aviation regulations, customs, quarantine and immigration laws of origin, transit and destination.</Text>
-          <Text style={styles.listItem}>• Travelers shall inspect Goods when reasonably required to ensure legality and safety.</Text>
+          <Text style={styles.listItem}>• Travelers shall inspect Goods always to ensure legality and safety.</Text>
           <Text style={styles.listItem}>• Travelers shall not hold ParcelBuddy responsible for fines, detentions, or legal proceedings arising from carriage.</Text>
+          <Text style={styles.listItem}>• Travelers will diligently take the parcel and will give to the concerned person.</Text>
           <Text style={styles.subsectionTitle}>6.2 Sender Obligations</Text>
+          <Text style={styles.listItem}>• Sender shall act as independent individuals, not agents, employees, or contractors of ParcelBuddy.</Text>
           <Text style={styles.listItem}>• Senders shall ensure Goods are lawful, non-hazardous, accurately described, and properly documented.</Text>
+          <Text style={styles.listItem}>• Transparency & "Open Box" Rule - Mandatory Inspection: Senders must provide parcels in an unsealed state. Travelers have the absolute right to inspect every item, including opening individual retail packaging if they feel it is necessary for safety.</Text>
           <Text style={styles.listItem}>• Senders shall cooperate with Travelers for lawful carriage, customs clearance, and provide all necessary permits, licenses, or labels.</Text>
           <Text style={styles.listItem}>• Senders indemnify Travelers and ParcelBuddy against claims arising from misdescription, concealment, or prohibited items.</Text>
           <Text style={styles.listItem}>• Sender to ensure that the Trip shall not be for any fraudulent, unlawful or criminal activity.</Text>
           <Text style={styles.listItem}>• Sender ensures that they will immediately inform the Traveler if they are required to cancel a Trip.</Text>
+          <Text style={styles.listItem}>• When the traveler/carrier will reach at the destination with the items of delivery, it shall be the duty of the sender principally to ensure that the receiving of the items of delivery unless and until otherwise specific agreement/contract is agreed and entered between the carrier and sender.</Text>
+          <Text style={styles.listItem}>• Sender shall not hold ParcelBuddy responsible for fines, detentions, or legal proceedings arising from carriage.</Text>
           <Text style={styles.subsectionTitle}>6.3 Joint Responsibilities</Text>
           <Text style={styles.listItem}>• Both parties shall maintain records and communication to support compliance and dispute resolution.</Text>
           <Text style={styles.listItem}>• Users shall act in good faith to ensure safe, legal, and efficient transport of Goods.</Text>
+          <Text style={styles.listItem}>• Transparency & "Open Box" Rule - Mandatory Inspection: Senders must provide parcels in an unsealed state. Travelers have the absolute right to inspect every item, including opening individual retail packaging if they feel it is necessary for safety.</Text>
+          <Text style={styles.listItem}>• Both agree that the platform would not be responsible for any damage or loss of the items of delivery, and the carrier and sender agrees that no legal action will be taken against the platform as the platform specifically declare that it would not be having any role in physical dealing of the items of delivery and any such issue would be dealt by any applicable/existing civil or criminal law governing the subject matter at the place of jurisdiction to sue with respect to the cause of action.</Text>
+          <Text style={styles.listItem}>• Respect for Sovereign Law (The Customs Rule):</Text>
+          <Text style={styles.listItem}>    - No Tax Evasion: Travelers shall not be asked to lie to Customs officers.</Text>
+          <Text style={styles.listItem}>    - Truthful Declaration: Both parties agree that any item carried is a "Third-Party Favor." If the traveler is asked by authorities, "Is this your bag?", they are encouraged to answer truthfully: "I am carrying this for a contact I met on a social platform."</Text>
+          <Text style={styles.listItem}>    - Duty Responsibility: The platform is not responsible for any duty/tax assessed at the airport. This is a private matter between the Sender and Traveler.</Text>
         </Card>
 
         {/* Section 7: Prohibited Goods & Activities */}
@@ -361,6 +373,10 @@ const TermsAndPolicyScreen: React.FC = () => {
           <Text style={styles.sectionText}>
             include (but are not limited to): narcotics, firearms, explosives, radioactive materials, counterfeit goods, endangered species, human biological materials, currency in violation of law, and goods prohibited by Customs Act, DGCA, IATA, or other applicable laws.
           </Text>
+          <Text style={styles.listItem}>• Narcotics & Psychotropics: Any form of illegal drugs or unlabeled medicines.</Text>
+          <Text style={styles.listItem}>• Currency & Financial Instruments: Cash, signed cheques, or activated credit cards.</Text>
+          <Text style={styles.listItem}>• High-Value Smuggle-Risk Items: Gold bullion, raw diamonds, or restricted weaponry.</Text>
+          <Text style={styles.listItem}>• Bio-Hazards: Homemade food (Ghee, pickles), seeds, or soil (per International Bio-Security laws).</Text>
           <Text style={styles.subsectionTitle}>7.2 Prohibited Activities</Text>
           <Text style={styles.sectionText}>
             – Users shall not use the App for illegal trade, trafficking, money laundering, evasion of customs law, or facilitation of unlawful acts.
@@ -386,7 +402,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>8.1 Subscription Plans</Text>
           <Text style={styles.sectionText}>
-            – Tiered subscriptions (Silver, Gold, Diamond) are offered, with features, billing cycles, and trial periods specified in Annexure D.
+            – Tiered subscriptions are offered, with features, billing cycles, and trial periods specified in Annexure D. A subscription fee is for "access to the community" only and not "per parcel transaction" and not for "payment for delivery."
           </Text>
           <Text style={styles.subsectionTitle}>8.2 Payment Providers</Text>
           <Text style={styles.sectionText}>
@@ -394,7 +410,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           </Text>
           <Text style={styles.subsectionTitle}>8.3 Automatic Renewal</Text>
           <Text style={styles.sectionText}>
-            – Paid subscriptions auto-renew unless cancelled in advance. Fees are subject to prevailing taxes.
+            – Paid subscriptions does not auto-renew. Fees are subject to prevailing taxes.
           </Text>
           <Text style={styles.subsectionTitle}>8.4 Non-Refundable Nature</Text>
           <Text style={styles.sectionText}>
@@ -425,7 +441,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           </Text>
           <Text style={styles.subsectionTitle}>9.3 Dispute Resolution</Text>
           <Text style={styles.sectionText}>
-            – Refund disputes must be submitted in writing within thirty (30) days to contact@parcelbuddys.com, with supporting evidence.
+            – Refund disputes must be submitted in writing within thirty (30) days to contact@huvinatech.com, with supporting evidence.
           </Text>
         </Card>
 
@@ -781,7 +797,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           <View style={styles.sectionDivider} />
           <Text style={styles.subsectionTitle}>21.1 Notices</Text>
           <Text style={styles.sectionText}>
-            – To Company: registered office or contact@parcelbuddys.com; To Users: registered email or in-app messaging.
+            – To Company: registered office or contact@huvinatech.com; To Users: registered email or in-app messaging.
           </Text>
           <Text style={styles.subsectionTitle}>21.2 Grievance Procedure</Text>
           <Text style={styles.sectionText}>
@@ -819,6 +835,9 @@ const TermsAndPolicyScreen: React.FC = () => {
             – No third-party beneficiaries unless expressly stated.
           </Text>
         </Card>
+
+        {/* Annexures Section */}
+        <Text style={styles.annexuresHeading}>ANNEXURES</Text>
 
         {/* Annexure A: Privacy & Cookies Policy */}
         <Card style={styles.annexureCard} padding={20}>
@@ -944,7 +963,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           </Text>
           <Text style={styles.subsectionTitle}>9. User Rights under DPDP Act</Text>
           <Text style={styles.sectionText}>
-            Users may exercise the following rights via contact@parcelbuddys.com:
+            Users may exercise the following rights via contact@huvinatech.com:
           </Text>
           <Text style={styles.listItem}>• Right to access, confirm, and correct data;</Text>
           <Text style={styles.listItem}>• Right to withdraw consent;</Text>
@@ -1153,6 +1172,15 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: 12,
     paddingLeft: 52,
+  },
+  annexuresHeading: {
+    fontSize: Fonts.xl,
+    fontWeight: Fonts.weightBold,
+    color: Colors.primaryCyan,
+    marginTop: 24,
+    marginBottom: 16,
+    textAlign: 'center',
+    letterSpacing: 1,
   },
 });
 

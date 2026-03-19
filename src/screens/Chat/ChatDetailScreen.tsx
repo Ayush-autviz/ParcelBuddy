@@ -4,7 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { GiftedChat, IMessage, User, Bubble, InputToolbar, Send, LoadEarlier, SystemMessage } from 'react-native-gifted-chat';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ArrowLeft, ChevronRight, Image as ImageIcon, Info, Mic, SendIcon } from 'lucide-react-native';
+import { ArrowLeft, Check, ChevronRight, Image as ImageIcon, Info, Mic, SendIcon } from 'lucide-react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { ChatStackParamList } from '../../navigation/ChatNavigator';
 import { Colors } from '../../constants/colors';
@@ -98,6 +98,7 @@ const ChatDetailScreen: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [weight, setWeight] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
   const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
   const typingTimeoutRef = useRef<any>(null);
@@ -800,6 +801,7 @@ const ChatDetailScreen: React.FC = () => {
                 console.log('BottomSheet ref:', bottomSheetRef.current);
                 try {
                   if (bottomSheetRef.current) {
+                    setIsVerified(false);
                     bottomSheetRef.current.expand();
                     console.log('Called expand()');
                   } else {
@@ -864,9 +866,24 @@ const ChatDetailScreen: React.FC = () => {
               </View>
             </View>
 
+            <TouchableOpacity
+              style={styles.checkboxContainer}
+              activeOpacity={0.8}
+              onPress={() => setIsVerified(!isVerified)}
+            >
+              <View style={[styles.checkbox, isVerified && styles.checkboxChecked]}>
+                {isVerified && <Check size={14} color={Colors.textWhite} strokeWidth={3} />}
+              </View>
+              <Text style={styles.checkboxLabel}>I have verified the items</Text>
+            </TouchableOpacity>
+
             <GradientButton
               title="Approve"
               onPress={() => {
+                if (!isVerified) {
+                  showError('Please confirm that you have verified the items');
+                  return;
+                }
                 // Validate weight
                 if (!weight || weight.trim() === '') {
                   showError('Please enter weight or click "Match Request" to use the request weight');
@@ -907,6 +924,7 @@ const ChatDetailScreen: React.FC = () => {
                         showSuccess('Luggage request approved successfully');
                         bottomSheetRef.current?.close();
                         setWeight(''); // Reset weight
+                        setIsVerified(false);
                       },
                       onError: (error: any) => {
                         console.error('Approve luggage request error:', error);
@@ -935,6 +953,7 @@ const ChatDetailScreen: React.FC = () => {
                               showSuccess('Luggage request approved successfully');
                               bottomSheetRef.current?.close();
                               setWeight(''); // Reset weight
+                              setIsVerified(false);
                             },
                             onError: (error: any) => {
                               console.error('Approve luggage request error:', error);
@@ -1092,6 +1111,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundLight,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
+    marginBottom: Platform.OS === 'ios' ? 4 : 0,
     position: 'relative',
     paddingBottom: Platform.OS === 'ios' ? 0 : 10,
   },
@@ -1278,6 +1298,30 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.borderLight,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: Colors.borderLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.gradientStart,
+    borderColor: Colors.gradientStart,
+  },
+  checkboxLabel: {
+    fontSize: Fonts.base,
+    color: Colors.textPrimary,
+    fontWeight: Fonts.weightMedium,
   },
   bottomSheetApproveButton: {
     width: '100%',
