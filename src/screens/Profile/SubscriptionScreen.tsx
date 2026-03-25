@@ -9,7 +9,7 @@ import {
   Linking,
   RefreshControl,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Shield, Check } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -44,6 +44,8 @@ interface SubscriptionPlan {
 
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation<SubscriptionScreenNavigationProp>();
+  const route = useRoute<RouteProp<ProfileStackParamList, 'Subscription'>>();
+  const { returnTo, returnScreen, returnParams } = route.params || {};
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   // Get region from user profile, fallback to empty string if not available
@@ -110,8 +112,25 @@ const SubscriptionScreen: React.FC = () => {
   const currentPlan = subscriptionPlans.find((plan) => plan.isCurrent);
   const currentPlanFromAPI = plansData?.plans?.find((plan) => plan.is_current_plan === true);
 
-  console.log('currentPlan', currentPlan);
   console.log('subscriptionPlans', subscriptionPlans);
+
+  // Automatic return logic when subscription is detected
+  useEffect(() => {
+    if (currentPlan && returnTo) {
+      console.log('Subscription detected, automatically returning to:', returnTo, returnScreen);
+      const timer = setTimeout(() => {
+        if (returnScreen) {
+          (navigation as any).navigate(returnTo, {
+            screen: returnScreen,
+            params: returnParams,
+          });
+        } else {
+          (navigation as any).navigate(returnTo, returnParams);
+        }
+      }, 1500); // 1.5s delay to show the "Current Plan" state
+      return () => clearTimeout(timer);
+    }
+  }, [currentPlan, returnTo, returnScreen, returnParams, navigation]);
 
   // Format date for display
   const formatDate = (dateString: string | undefined): string => {

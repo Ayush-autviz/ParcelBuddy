@@ -509,7 +509,7 @@ const ChatDetailScreen: React.FC = () => {
 
   const renderInputToolbar = (props: any) => {
     return (
-      <View style={[styles.inputToolbarContainer, { paddingBottom: luggageRequestStatus === 'approved' ? Platform.OS === 'ios' ? 12 : 0 : 0 }]}>
+      <View style={[styles.inputToolbarContainer, { paddingBottom: luggageRequestStatus === 'approved' ? Platform.OS === 'ios' ? 12 : 0 : Platform.OS === 'ios' ? 12 : 0 }]}>
         <InputToolbar
           {...props}
           containerStyle={styles.inputToolbar}
@@ -1111,7 +1111,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundLight,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
-    marginBottom: Platform.OS === 'ios' ? 4 : 0,
+    marginBottom: Platform.OS === 'ios' ? 0 : 0,
     position: 'relative',
     paddingBottom: Platform.OS === 'ios' ? 0 : 10,
   },

@@ -30,7 +30,7 @@ type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParam
 const KYCVerificationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<ProfileStackParamList, 'KYCVerification'>>();
-  const { fromProfile } = route.params || {};
+  const { fromProfile, returnTo, returnScreen, returnParams } = route.params || {};
   const { showError, showSuccess } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuthStore();
@@ -49,7 +49,6 @@ const KYCVerificationScreen: React.FC = () => {
     }, [])
   );
 
-
   // Use profile data from API if available, otherwise fallback to user from store
   const currentProfile = user || profileData;
 
@@ -57,6 +56,24 @@ const KYCVerificationScreen: React.FC = () => {
   const isKYCApproved = kycStatus === 'Approved';
   const isKYCNotStarted = kycStatus === 'not_started' || kycStatus === 'Not Started' || !kycStatus;
   const isKYCRejected = kycStatus === 'Declined'; // Any other status (In Review, Rejected, Pending, etc.)
+
+  // Automatic return logic when KYC is approved
+  useEffect(() => {
+    if (isKYCApproved && returnTo) {
+      console.log('KYC approved, automatically returning to:', returnTo, returnScreen);
+      const timer = setTimeout(() => {
+        if (returnScreen) {
+          (navigation as any).navigate(returnTo, {
+            screen: returnScreen,
+            params: returnParams,
+          });
+        } else {
+          (navigation as any).navigate(returnTo, returnParams);
+        }
+      }, 1500); // 1.5s delay to show the success state
+      return () => clearTimeout(timer);
+    }
+  }, [isKYCApproved, returnTo, returnScreen, returnParams, navigation]);
 
   // Get phone number from profile data
   const phoneNumber = currentProfile?.phone;
@@ -71,6 +88,9 @@ const KYCVerificationScreen: React.FC = () => {
         navigation.navigate('KYCWebView', {
           url: response.url,
           fromProfile: fromProfile,
+          returnTo: returnTo,
+          returnScreen: returnScreen,
+          returnParams: returnParams,
         });
       } else {
         showError('Failed to get verification URL. Please try again.');
@@ -89,6 +109,19 @@ const KYCVerificationScreen: React.FC = () => {
 
     // Refresh profile to get updated KYC status
     await fetchAndUpdateProfile();
+
+    // Handle return to caller if specified
+    if (returnTo) {
+      if (returnScreen) {
+        (navigation as any).navigate(returnTo, {
+          screen: returnScreen,
+          params: returnParams,
+        });
+      } else {
+        (navigation as any).navigate(returnTo, returnParams);
+      }
+      return;
+    }
 
     // Navigate to KYCVerificationScreen to show updated status
     // Use navigate instead of reset to maintain bottom tabs visibility

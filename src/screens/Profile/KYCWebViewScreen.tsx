@@ -22,7 +22,7 @@ type KYCWebViewScreenNavigationProp = StackNavigationProp<ProfileStackParamList,
 const KYCWebViewScreen: React.FC = () => {
   const route = useRoute<KYCWebViewScreenRouteProp>();
   const navigation = useNavigation<KYCWebViewScreenNavigationProp>();
-  const { url, fromProfile } = route.params;
+  const { url, fromProfile, returnTo, returnScreen, returnParams } = route.params;
   const { showSuccess, showInfo, showError } = useToast();
   const { user, setUser } = useAuthStore();
 
@@ -71,7 +71,7 @@ const KYCWebViewScreen: React.FC = () => {
 
           // If user is not subscribed and didn't come from profile, navigate to subscription screen
           if (updatedUser && !updatedUser.is_subscribed && !fromProfile) {
-            navigation.navigate('Subscription');
+            navigation.navigate('Subscription', { returnTo, returnScreen, returnParams });
           } else {
             // If subscribed or came from profile, go back to previous screen
             navigation.goBack();

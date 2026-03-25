@@ -559,10 +559,20 @@ const LuggageRequestDetailScreen: React.FC = () => {
           if (user && !(user as any)?.is_kyc_verified) {
             navigation.navigate('Profile', {
               screen: 'KYCVerification',
+              params: {
+                returnTo: 'Track',
+                returnScreen: 'LuggageRequestDetail',
+                returnParams: { requestId },
+              },
             });
           } else if (user && !(user as any)?.is_subscribed) {
             navigation.navigate('Profile', {
               screen: 'Subscription',
+              params: {
+                returnTo: 'Track',
+                returnScreen: 'LuggageRequestDetail',
+                returnParams: { requestId },
+              },
             });
           }
         }}

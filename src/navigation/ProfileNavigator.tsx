@@ -13,15 +13,27 @@ import RatingsScreen from '../screens/Profile/RatingsScreen';
 export type ProfileStackParamList = {
   ProfileList: undefined;
   EditProfile: undefined;
-  KYCVerification: { fromProfile?: boolean } | undefined;
+  KYCVerification: {
+    fromProfile?: boolean;
+    returnTo?: string;
+    returnScreen?: string;
+    returnParams?: any;
+  } | undefined;
   KYCWebView: {
     url: string;
     fromProfile?: boolean;
+    returnTo?: string;
+    returnScreen?: string;
+    returnParams?: any;
   };
   Support: undefined;
   TermsAndPolicy: undefined;
   PaymentHistory: undefined;
-  Subscription: undefined;
+  Subscription: {
+    returnTo?: string;
+    returnScreen?: string;
+    returnParams?: any;
+  } | undefined;
   Ratings: undefined;
 };
 

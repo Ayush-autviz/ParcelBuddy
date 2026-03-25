@@ -531,10 +531,20 @@ const SendRequestScreen: React.FC = () => {
           if (user && !(user as any)?.is_kyc_verified) {
             (parent as any)?.navigate('Profile', {
               screen: 'KYCVerification',
+              params: {
+                returnTo: 'Search',
+                returnScreen: 'SendRequest',
+                returnParams: { ride },
+              },
             });
           } else if (user && !(user as any)?.is_subscribed) {
             (parent as any)?.navigate('Profile', {
               screen: 'Subscription',
+              params: {
+                returnTo: 'Search',
+                returnScreen: 'SendRequest',
+                returnParams: { ride },
+              },
             });
           }
         }}
