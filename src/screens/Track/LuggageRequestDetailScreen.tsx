@@ -26,6 +26,7 @@ import { useLuggageRequestDetail, useRespondToLuggageRequest } from '../../hooks
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreateChatRoom } from '../../hooks/useChat';
 import VerificationRequiredModal from '../../components/Modal/VerificationRequiredModal';
+import SubscriptionLimitModal from '../../components/Modal/SubscriptionLimitModal';
 import { useAuthStore } from '../../services/store';
 import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 
@@ -47,6 +48,8 @@ const LuggageRequestDetailScreen: React.FC = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitError, setLimitError] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const { user } = useAuthStore();
@@ -158,7 +161,14 @@ const LuggageRequestDetailScreen: React.FC = () => {
           queryClient.invalidateQueries({ queryKey: ['chatList'] });
         },
         onError: (error: any) => {
-          showError(error?.response?.data?.error || error?.message || 'Failed to create chat room. Please try again.');
+          const errorMessage = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Failed to create chat room. Please try again.';
+          
+          if (errorMessage.includes('reached your ride limit') || errorMessage.includes('Upgrade your plan')) {
+            setLimitError(errorMessage);
+            setShowLimitModal(true);
+          } else {
+            showError(errorMessage);
+          }
         },
       }
     );
@@ -577,6 +587,24 @@ const LuggageRequestDetailScreen: React.FC = () => {
           }
         }}
         onClose={() => setShowVerificationModal(false)}
+      />
+
+      <SubscriptionLimitModal
+        visible={showLimitModal}
+        errorText={limitError}
+        onContinue={() => {
+          setShowLimitModal(false);
+          navigation.navigate('Profile', {
+            screen: 'Subscription',
+            params: {
+              returnTo: 'Track',
+              returnScreen: 'LuggageRequestDetail',
+              returnParams: { requestId },
+              isUpgradeFlow: true,
+            },
+          });
+        }}
+        onClose={() => setShowLimitModal(false)}
       />
     </SafeAreaView>
   );

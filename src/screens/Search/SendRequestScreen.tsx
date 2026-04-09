@@ -16,6 +16,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, Card, GradientButton, SectionCard, SearchInput } from '../../components';
 import VerificationRequiredModal from '../../components/Modal/VerificationRequiredModal';
+import SubscriptionLimitModal from '../../components/Modal/SubscriptionLimitModal';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
 import { SvgXml } from 'react-native-svg';
@@ -43,6 +44,8 @@ const SendRequestScreen: React.FC = () => {
   const createLuggageRequestMutation = useCreateLuggageRequest();
   const { user } = useAuthStore();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitError, setLimitError] = useState('');
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
   const [height, setHeight] = useState('');
@@ -222,7 +225,13 @@ const SendRequestScreen: React.FC = () => {
       },
       onError: (error: any) => {
         const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Failed to send request';
-        showError(errorMessage);
+        
+        if (errorMessage.includes('reached your request limit') || errorMessage.includes('upgrade your plan')) {
+          setLimitError(errorMessage);
+          setShowLimitModal(true);
+        } else {
+          showError(errorMessage);
+        }
       },
     });
   };
@@ -549,6 +558,25 @@ const SendRequestScreen: React.FC = () => {
           }
         }}
         onClose={() => setShowVerificationModal(false)}
+      />
+
+      <SubscriptionLimitModal
+        visible={showLimitModal}
+        errorText={limitError}
+        onContinue={() => {
+          setShowLimitModal(false);
+          const parent = navigation.getParent();
+          (parent as any)?.navigate('Profile', {
+            screen: 'Subscription',
+            params: {
+              returnTo: 'Search',
+              returnScreen: 'SendRequest',
+              returnParams: { ride },
+              isUpgradeFlow: true,
+            },
+          });
+        }}
+        onClose={() => setShowLimitModal(false)}
       />
 
     </SafeAreaView>

@@ -116,7 +116,11 @@ const SubscriptionScreen: React.FC = () => {
 
   // Automatic return logic when subscription is detected
   useEffect(() => {
-    if (currentPlan && returnTo) {
+    // Only auto-return if we have a current plan AND we are NOT in an upgrade flow
+    // If in upgrade flow, we want the user to stay and pick a new plan
+    const isUpgradeFlow = route.params?.isUpgradeFlow;
+
+    if (currentPlan && returnTo && !isUpgradeFlow) {
       console.log('Subscription detected, automatically returning to:', returnTo, returnScreen);
       const timer = setTimeout(() => {
         if (returnScreen) {
@@ -130,7 +134,7 @@ const SubscriptionScreen: React.FC = () => {
       }, 1500); // 1.5s delay to show the "Current Plan" state
       return () => clearTimeout(timer);
     }
-  }, [currentPlan, returnTo, returnScreen, returnParams, navigation]);
+  }, [currentPlan, returnTo, returnScreen, returnParams, navigation, route.params?.isUpgradeFlow]);
 
   // Format date for display
   const formatDate = (dateString: string | undefined): string => {
@@ -205,6 +209,14 @@ const SubscriptionScreen: React.FC = () => {
     );
   };
 
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    setIsManualRefreshing(true);
+    await refetch();
+    setIsManualRefreshing(false);
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -238,8 +250,8 @@ const SubscriptionScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isFetching}
-            onRefresh={refetch}
+            refreshing={isManualRefreshing}
+            onRefresh={handleManualRefresh}
             colors={[Colors.primaryCyan]}
             tintColor={Colors.primaryCyan}
           />

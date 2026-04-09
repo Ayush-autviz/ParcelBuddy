@@ -33,6 +33,7 @@ export type ProfileStackParamList = {
     returnTo?: string;
     returnScreen?: string;
     returnParams?: any;
+    isUpgradeFlow?: boolean;
   } | undefined;
   Ratings: undefined;
 };
