@@ -15,7 +15,7 @@ interface ProfileHeaderProps {
   titleStyle?: TextStyle;
 }
 
-type ProfileHeaderNavigationProp = StackNavigationProp<ProfileStackParamList>;
+type ProfileHeaderNavigationProp = any;
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   title,
@@ -27,8 +27,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const navigation = useNavigation<ProfileHeaderNavigationProp>();
 
   const handleBackPress = () => {
-    // Always navigate to ProfileList screen
-    navigation.navigate('ProfileList');
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Subscription');
+    }
   };
 
   const isCentered = variant === 'centered';

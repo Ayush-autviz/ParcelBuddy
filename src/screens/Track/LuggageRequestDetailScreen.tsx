@@ -576,13 +576,10 @@ const LuggageRequestDetailScreen: React.FC = () => {
               },
             });
           } else if (user && !(user as any)?.is_subscribed) {
-            navigation.navigate('Profile', {
-              screen: 'Subscription',
-              params: {
-                returnTo: 'Track',
-                returnScreen: 'LuggageRequestDetail',
-                returnParams: { requestId },
-              },
+            navigation.navigate('Subscription', {
+              returnTo: 'Track',
+              returnScreen: 'LuggageRequestDetail',
+              returnParams: { requestId },
             });
           }
         }}
@@ -594,14 +591,11 @@ const LuggageRequestDetailScreen: React.FC = () => {
         errorText={limitError}
         onContinue={() => {
           setShowLimitModal(false);
-          navigation.navigate('Profile', {
-            screen: 'Subscription',
-            params: {
-              returnTo: 'Track',
-              returnScreen: 'LuggageRequestDetail',
-              returnParams: { requestId },
-              isUpgradeFlow: true,
-            },
+          navigation.navigate('Subscription', {
+            returnTo: 'Track',
+            returnScreen: 'LuggageRequestDetail',
+            returnParams: { requestId },
+            isUpgradeFlow: true,
           });
         }}
         onClose={() => setShowLimitModal(false)}

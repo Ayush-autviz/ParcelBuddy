@@ -17,14 +17,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { ProfileHeader, GradientButton } from '../../components';
-import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
+import { RootStackParamList } from '../../navigation/types';
 import { useSubscriptionPlans, useCreateSubscription, useCancelSubscription } from '../../hooks/useSubscription';
+import { setPaymentReturnDestination } from '../../utils/paymentReturnStore';
 import { useToast } from '../../components/Toast';
 import { useAuthStore } from '../../services/store';
 import ConfirmationModal from '../../components/Modal/ConfirmationModal';
 import { useQueryClient } from '@tanstack/react-query';
 
-type SubscriptionScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'Subscription'>;
+type SubscriptionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Subscription'>;
 
 interface PlanFeature {
   text: string;
@@ -44,7 +45,7 @@ interface SubscriptionPlan {
 
 const SubscriptionScreen: React.FC = () => {
   const navigation = useNavigation<SubscriptionScreenNavigationProp>();
-  const route = useRoute<RouteProp<ProfileStackParamList, 'Subscription'>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'Subscription'>>();
   const { returnTo, returnScreen, returnParams } = route.params || {};
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -186,6 +187,14 @@ const SubscriptionScreen: React.FC = () => {
           console.log('Subscription created successfully:', response);
           setLoadingPlanId(null); // Clear loading state
           if (response.checkout_url) {
+            // Persist return destination so App.tsx can navigate back after payment
+            if (returnTo) {
+              setPaymentReturnDestination({
+                returnTo,
+                returnScreen,
+                returnParams,
+              });
+            }
             // Open checkout URL in device browser
             Linking.openURL(response.checkout_url).catch((err) => {
               console.error('Failed to open checkout URL:', err);

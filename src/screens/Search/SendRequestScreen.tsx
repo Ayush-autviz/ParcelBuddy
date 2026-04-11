@@ -46,13 +46,13 @@ const SendRequestScreen: React.FC = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitError, setLimitError] = useState('');
-  const [weight, setWeight] = useState('');
-  const [length, setLength] = useState('');
-  const [height, setHeight] = useState('');
-  const [width, setWidth] = useState('');
-  const [itemDescription, setItemDescription] = useState('');
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  const [images, setImages] = useState<ImagePicker.Asset[]>([]);
+  const [weight, setWeight] = useState(route.params?.weight || '');
+  const [length, setLength] = useState(route.params?.length || '');
+  const [height, setHeight] = useState(route.params?.height || '');
+  const [width, setWidth] = useState(route.params?.width || '');
+  const [itemDescription, setItemDescription] = useState(route.params?.itemDescription || '');
+  const [specialInstructions, setSpecialInstructions] = useState(route.params?.specialInstructions || '');
+  const [images, setImages] = useState<ImagePicker.Asset[]>(route.params?.images || []);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
 
   const formatDate = (dateString: string): string => {
@@ -547,12 +547,18 @@ const SendRequestScreen: React.FC = () => {
               },
             });
           } else if (user && !(user as any)?.is_subscribed) {
-            (parent as any)?.navigate('Profile', {
-              screen: 'Subscription',
-              params: {
-                returnTo: 'Search',
-                returnScreen: 'SendRequest',
-                returnParams: { ride },
+            navigation.navigate('Subscription', {
+              returnTo: 'Search',
+              returnScreen: 'SendRequest',
+              returnParams: { 
+                ride,
+                weight,
+                length,
+                height,
+                width,
+                itemDescription,
+                specialInstructions,
+                images
               },
             });
           }
@@ -565,15 +571,20 @@ const SendRequestScreen: React.FC = () => {
         errorText={limitError}
         onContinue={() => {
           setShowLimitModal(false);
-          const parent = navigation.getParent();
-          (parent as any)?.navigate('Profile', {
-            screen: 'Subscription',
-            params: {
-              returnTo: 'Search',
-              returnScreen: 'SendRequest',
-              returnParams: { ride },
-              isUpgradeFlow: true,
+          navigation.navigate('Subscription', {
+            returnTo: 'Search',
+            returnScreen: 'SendRequest',
+            returnParams: { 
+              ride,
+              weight,
+              length,
+              height,
+              width,
+              itemDescription,
+              specialInstructions,
+              images
             },
+            isUpgradeFlow: true,
           });
         }}
         onClose={() => setShowLimitModal(false)}

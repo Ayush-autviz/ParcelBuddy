@@ -419,8 +419,9 @@ const CreateScreen: React.FC = () => {
               screen: 'KYCVerification',
             });
           } else if (user && !(user as any)?.is_subscribed) {
-            navigation.navigate('Profile', {
-              screen: 'Subscription',
+            navigation.navigate('Subscription', {
+              returnTo: 'Create',
+              returnScreen: 'CreateRide',
             });
           }
         }}

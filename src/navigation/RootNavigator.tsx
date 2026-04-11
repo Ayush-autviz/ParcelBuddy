@@ -6,15 +6,10 @@ import SplashScreen from '../screens/Splash/SplashScreen';
 import AuthNavigator from './AuthNavigator';
 import BottomTabNavigator from './BottomTabNavigator';
 import SuspendedScreen from '../screens/Auth/SuspendedScreen';
+import SubscriptionScreen from '../screens/Profile/SubscriptionScreen';
 import { useAuth } from '../contexts/AuthContext';
 
-// Define the root stack navigator param list
-export type RootStackParamList = {
-  Splash: undefined;
-  Auth: undefined;
-  MainApp: undefined;
-  Suspended: undefined;
-};
+import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -68,6 +63,10 @@ const RootNavigator: React.FC = () => {
           headerShown: false,
           gestureEnabled: false, // Prevent going back when suspended
         }}
+      />
+      <Stack.Screen
+        name="Subscription"
+        component={SubscriptionScreen}
       />
     </Stack.Navigator>
   );

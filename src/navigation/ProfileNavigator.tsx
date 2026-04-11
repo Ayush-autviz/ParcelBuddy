@@ -7,7 +7,6 @@ import KYCWebViewScreen from '../screens/Profile/KYCWebViewScreen';
 import SupportScreen from '../screens/Profile/SupportScreen';
 import TermsAndPolicyScreen from '../screens/Profile/TermsAndPolicyScreen';
 import PaymentHistoryScreen from '../screens/Profile/PaymentHistoryScreen';
-import SubscriptionScreen from '../screens/Profile/SubscriptionScreen';
 import RatingsScreen from '../screens/Profile/RatingsScreen';
 
 export type ProfileStackParamList = {
@@ -29,12 +28,6 @@ export type ProfileStackParamList = {
   Support: undefined;
   TermsAndPolicy: undefined;
   PaymentHistory: undefined;
-  Subscription: {
-    returnTo?: string;
-    returnScreen?: string;
-    returnParams?: any;
-    isUpgradeFlow?: boolean;
-  } | undefined;
   Ratings: undefined;
 };
 
@@ -55,7 +48,6 @@ const ProfileNavigator: React.FC = () => {
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="TermsAndPolicy" component={TermsAndPolicyScreen} />
       <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
-      <Stack.Screen name="Subscription" component={SubscriptionScreen} />
       <Stack.Screen name="Ratings" component={RatingsScreen} />
     </Stack.Navigator>
   );

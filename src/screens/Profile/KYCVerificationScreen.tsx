@@ -126,13 +126,29 @@ const KYCVerificationScreen: React.FC = () => {
     // Navigate to KYCVerificationScreen to show updated status
     // Use navigate instead of reset to maintain bottom tabs visibility
     if (user?.is_subscribed) {
-      navigation.navigate('KYCVerification');
+      if (returnTo) {
+        if (returnScreen) {
+          (navigation as any).navigate(returnTo, {
+            screen: returnScreen,
+            params: returnParams,
+          });
+        } else {
+          (navigation as any).navigate(returnTo, returnParams);
+        }
+      } else {
+        navigation.navigate('KYCVerification');
+      }
     } else {
       if (fromProfile) {
         // If came from profile, go back instead of to subscription
         navigation.goBack();
       } else {
-        navigation.navigate('Subscription');
+        // Pass return parameters to Subscription screen so it can return back to caller
+        navigation.navigate('Subscription', {
+          returnTo,
+          returnScreen,
+          returnParams,
+        });
       }
     }
   };

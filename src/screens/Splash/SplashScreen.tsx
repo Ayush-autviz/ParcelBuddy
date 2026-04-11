@@ -18,6 +18,10 @@ import { EllipseBottom, EllipseTop } from '../../constants/svg';
 import { useQuery } from '@tanstack/react-query';
 import { getMyProfile } from '../../services/api/profile';
 import { useAuthStore, useSearchFormStore, useCreateFormStore } from '../../services/store';
+import {
+  getPaymentReturnDestination,
+  clearPaymentReturnDestination,
+} from '../../utils/paymentReturnStore';
 
 // Store for pending deep link (shared with App.tsx)
 export let pendingDeepLink: string | null = null;
@@ -128,60 +132,66 @@ const SplashScreen: React.FC = () => {
           return;
         }
 
-        // If we have a payment deep link, navigate directly to PaymentHistory screen
+        // If we have a payment deep link, navigate to the origin screen or fallback to Search
         if (isPaymentDeepLink && deepLink) {
-          console.log('SplashScreen: Navigating to PaymentHistory via deep link');
-
-          // Clear the pending deep link
+          console.log('SplashScreen: Handling payment deep link return');
           clearPendingDeepLink();
 
-          // navigation.reset({
-          //   index: 0,
-          //   routes: [
-          //     {
-          //       name: 'MainApp',
-          //       state: {
-          //         routes: [
-          //           { name: 'Search' },
-          //           { name: 'Create' },
-          //           { name: 'Track' },
-          //           { name: 'Chat' },
-          //           {
-          //             name: 'Profile',
-          //             state: {
-          //               routes: [
-          //                 { name: 'ProfileList' },
-          //                 { name: 'PaymentHistory' },
-          //               ],
-          //               index: 1,
-          //             },
-          //           },
-          //         ],
-          //         index: 4, // Profile tab
-          //       },
-          //     },
-          //   ],
-          // });
+          const dest = getPaymentReturnDestination();
+          clearPaymentReturnDestination();
 
+          if (dest?.returnTo) {
+            console.log('[SplashScreen] Resetting stack with history:', dest.returnTo, dest.returnScreen);
+            
+            const initialScreen = dest.returnTo === 'Search' ? 'SearchList' : 'TrackList';
 
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'MainApp',
-                state: {
-                  routes: [
-                    { name: 'Search' },
-                    { name: 'Create' },
-                    { name: 'Track' },
-                    { name: 'Chat' },
-                    { name: 'Profile' },
-                  ],
-                  index: 0, // ✅ Search tab
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'MainApp',
+                  state: {
+                    routes: [
+                      {
+                        name: dest.returnTo,
+                        state: {
+                          routes: [
+                            { name: initialScreen },
+                            { 
+                              name: dest.returnScreen, 
+                              params: dest.returnParams 
+                            }
+                          ],
+                          index: 1
+                        }
+                      }
+                    ],
+                    index: 0
+                  }
                 },
-              },
-            ],
-          });
+              ],
+            });
+          } else {
+            // Fallback: go to Search
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'MainApp',
+                  state: {
+                    routes: [
+                      { name: 'Search' },
+                      { name: 'Create' },
+                      { name: 'Track' },
+                      { name: 'Chat' },
+                      { name: 'Profile' },
+                    ],
+                    index: 0,
+                  },
+                },
+              ],
+            });
+          }
 
 
         } else if (profile_check) {

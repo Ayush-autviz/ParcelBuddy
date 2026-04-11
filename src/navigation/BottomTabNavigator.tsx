@@ -205,6 +205,16 @@ const BottomTabNavigator: React.FC = () => {
         options={{
           title: 'Profile',
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            // Navigate to Profile stack and reset it to ProfileList
+            navigation.navigate('Profile', {
+              screen: 'ProfileList',
+            });
+          },
+        })}
       />
     </Tab.Navigator>
   );

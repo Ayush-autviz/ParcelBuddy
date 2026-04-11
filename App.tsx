@@ -30,6 +30,10 @@ const queryClient = new QueryClient({
 
 
 import { setPendingDeepLink } from './src/screens/Splash/SplashScreen';
+import {
+  getPaymentReturnDestination,
+  clearPaymentReturnDestination,
+} from './src/utils/paymentReturnStore';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -238,14 +242,49 @@ function App() {
 
       if (url.includes('parcelbuddy://payment')) {
         if (navigationRef.isReady()) {
-          navigationRef.dispatch(
-            CommonActions.navigate({
-              name: 'MainApp',
-              params: {
-                screen: 'Search',
-              },
-            } as any)
-          );
+          const dest = getPaymentReturnDestination();
+          clearPaymentReturnDestination();
+
+          if (dest?.returnTo) {
+            // Reset the Root stack to remove Subscription and focus on MainApp
+            // We also deeply nest the state to ensure "Back" button works correctly
+            console.log('[DeepLink] Resetting stack with history:', dest.returnTo, dest.returnScreen);
+            
+            const initialScreen = dest.returnTo === 'Search' ? 'SearchList' : 'TrackList';
+            
+            navigationRef.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'MainApp',
+                  state: {
+                    routes: [
+                      {
+                        name: dest.returnTo,
+                        state: {
+                          routes: [
+                            { name: initialScreen },
+                            { 
+                              name: dest.returnScreen, 
+                              params: dest.returnParams 
+                            }
+                          ],
+                          index: 1
+                        }
+                      }
+                    ],
+                    index: 0
+                  }
+                },
+              ],
+            });
+          } else {
+            // No stored destination — fall back to Search tab
+            navigationRef.reset({
+              index: 0,
+              routes: [{ name: 'MainApp' }],
+            });
+          }
         }
       }
     };
