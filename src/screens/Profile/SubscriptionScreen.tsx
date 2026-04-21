@@ -86,13 +86,13 @@ const SubscriptionScreen: React.FC = () => {
       .filter((plan) => plan.is_active)
       .map((plan) => {
         // Format price
-        const priceText = `${plan.currency} ${plan.price}/${plan.duration_days === 30 ? 'month' : `${plan.duration_days} days`}`;
+        const priceText = `${plan.currency} ${plan.price}`;
 
         // Build features array
         const features: PlanFeature[] = [
-          { text: `Create up to ${plan.rides_per_month} rides/month.` },
+          { text: `Create up to ${plan.rides_per_month} rides.` },
           // { text: 'Search rides unlimited.' },
-          { text: `Send requests to ${plan.requests_per_month} travellers/month.` },
+          { text: `Send requests to ${plan.requests_per_month} travellers.` },
           ...(plan.features || []).map((feature) => ({ text: feature })),
         ];
 
@@ -288,11 +288,11 @@ const SubscriptionScreen: React.FC = () => {
                         Start: {formatDate(currentPlan.startDate)}
                       </Text>
                     )}
-                    {currentPlan.endDate && (
+                    {/* {currentPlan.endDate && (
                       <Text style={styles.dateText}>
                         End: {formatDate(currentPlan.endDate)}
                       </Text>
-                    )}
+                    )} */}
                   </View>
                 )}
               </View>
