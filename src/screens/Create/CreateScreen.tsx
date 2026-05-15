@@ -183,6 +183,7 @@ const CreateScreen: React.FC = () => {
       is_price_negotiable: true,
       notes: additionalNotes || '',
       status: 'active',
+      is_domestic: isDomestic,
     };
 
     // Call API

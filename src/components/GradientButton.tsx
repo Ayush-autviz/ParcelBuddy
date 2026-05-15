@@ -47,7 +47,7 @@ const GradientButton: React.FC<GradientButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   gradient: {

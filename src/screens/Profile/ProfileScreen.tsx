@@ -41,7 +41,7 @@ import ConfirmationModal from '../../components/Modal/ConfirmationModal';
 
 import { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 import { SvgXml } from 'react-native-svg';
-import { ProfileKycIcon, ProfileRatingsIcon, ProfileSubscriptionIcon, ProfileUserIcon, ProfilePaymentHistoryIcon, ProfileTermsIcon, ProfileSupportIcon } from '../../assets/icons/svg/profileIcon';
+import { ProfileKycIcon, ProfileRatingsIcon, ProfileSubscriptionIcon, ProfileUserIcon, ProfilePaymentHistoryIcon, ProfileTermsIcon, ProfileSupportIcon, ProfilePromoIcon } from '../../assets/icons/svg/profileIcon';
 import { fetchAndUpdateProfile } from '../../utils/profileUtils';
 import { useDeleteFcmToken } from '../../hooks/useAuthMutations';
 
@@ -241,6 +241,14 @@ const ProfileScreen: React.FC = () => {
       icon: ProfilePaymentHistoryIcon,
       onPress: () => {
         navigation.navigate('PaymentHistory');
+      },
+    },
+    {
+      id: 'promo',
+      title: 'Promo Codes',
+      icon: ProfilePromoIcon,
+      onPress: () => {
+        navigation.navigate('PromoCodes' as any);
       },
     },
     {

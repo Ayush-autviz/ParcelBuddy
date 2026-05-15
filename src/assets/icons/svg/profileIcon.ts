@@ -98,3 +98,15 @@ export const ProfileSupportIcon = `
 </defs>
 </svg>
 `;
+
+export const ProfilePromoIcon = `
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="url(#paint0_linear_promo)"/>
+<defs>
+<linearGradient id="paint0_linear_promo" x1="22" y1="12" x2="2" y2="12" gradientUnits="userSpaceOnUse">
+<stop stop-color="#4DBAA5"/>
+<stop offset="1" stop-color="#3095CB"/>
+</linearGradient>
+</defs>
+</svg>
+`;

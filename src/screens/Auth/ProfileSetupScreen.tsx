@@ -73,6 +73,7 @@ const ProfileSetupScreen: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(new Date());
   const [bio, setBio] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [hasReadTerms, setHasReadTerms] = useState(false);
@@ -246,6 +247,11 @@ const ProfileSetupScreen: React.FC = () => {
     // Append country
     if (country) {
       formData.append('profile.country', formattedCountry);
+    }
+
+    // Append referral code
+    if (referralCode.trim()) {
+      formData.append('referral_code', referralCode.trim());
     }
 
     // Append profile photo if available
@@ -647,6 +653,22 @@ const ProfileSetupScreen: React.FC = () => {
                 </View>
               )}
             </TouchableOpacity>
+          </View>
+
+          {/* Referral Code Section */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              Referral Code (Optional)
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter referral code"
+              placeholderTextColor={Colors.textLight}
+              value={referralCode}
+              onChangeText={setReferralCode}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
           </View>
 
           {/* Terms and Privacy Checkbox */}

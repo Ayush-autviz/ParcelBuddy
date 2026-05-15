@@ -1,5 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { Colors } from '../constants/colors';
+import { colors } from 'react-native-keyboard-controller/lib/typescript/components/KeyboardToolbar/colors';
 
 interface ButtonProps {
   title: string;
@@ -59,19 +61,19 @@ const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   },
   // Variants
   primary: {
-    backgroundColor: '#007AFF',
+    backgroundColor: Colors.primaryCyan,
   },
   secondary: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: Colors.primaryCyan,
   },
   danger: {
     backgroundColor: '#FF3B30',
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   secondaryText: {
-    color: '#007AFF',
+    color: Colors.primaryCyan,
   },
   dangerText: {
     color: 'white',

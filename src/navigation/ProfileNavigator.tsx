@@ -8,6 +8,7 @@ import SupportScreen from '../screens/Profile/SupportScreen';
 import TermsAndPolicyScreen from '../screens/Profile/TermsAndPolicyScreen';
 import PaymentHistoryScreen from '../screens/Profile/PaymentHistoryScreen';
 import RatingsScreen from '../screens/Profile/RatingsScreen';
+import PromoCodesScreen from '../screens/Profile/PromoCodesScreen';
 
 export type ProfileStackParamList = {
   ProfileList: undefined;
@@ -29,6 +30,7 @@ export type ProfileStackParamList = {
   TermsAndPolicy: undefined;
   PaymentHistory: undefined;
   Ratings: undefined;
+  PromoCodes: undefined;
 };
 
 const Stack = createStackNavigator<ProfileStackParamList>();
@@ -49,6 +51,7 @@ const ProfileNavigator: React.FC = () => {
       <Stack.Screen name="TermsAndPolicy" component={TermsAndPolicyScreen} />
       <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
       <Stack.Screen name="Ratings" component={RatingsScreen} />
+      <Stack.Screen name="PromoCodes" component={PromoCodesScreen} />
     </Stack.Navigator>
   );
 };

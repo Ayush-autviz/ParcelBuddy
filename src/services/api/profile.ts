@@ -26,3 +26,10 @@ export const deleteAccount = async () => {
   console.log('Delete account response status:', response.status);
   return response.data;
 };
+
+// get my rewards / promo code
+export const getMyRewards = async () => {
+  const response = await apiClient.get('/auth/my-rewards/');
+  console.log('🎁 [API] getMyRewards response:', response.data);
+  return response.data;
+};

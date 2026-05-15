@@ -21,7 +21,7 @@ const TermsAndPolicyScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-    <ProfileHeader title="Terms & Conditions" />
+      <ProfileHeader title="Terms & Conditions" />
 
       <ScrollView
         style={styles.scrollView}
@@ -755,7 +755,7 @@ const TermsAndPolicyScreen: React.FC = () => {
           </Text>
           <Text style={styles.subsectionTitle}>19.3 Termination Option</Text>
           <Text style={styles.sectionText}>
-            – If force majeure persists >90 days, either party may terminate with written notice.
+            – If force majeure persists &gt;90 days, either party may terminate with written notice.
           </Text>
         </Card>
 

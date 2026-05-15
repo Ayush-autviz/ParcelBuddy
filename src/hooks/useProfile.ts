@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { getMyProfile, getProfileById } from '../services/api/profile';
+import { getMyProfile, getProfileById, getMyRewards } from '../services/api/profile';
 import { getContactSupport } from '../services/api/auth';
 
 export interface ProfileData {
@@ -113,6 +113,19 @@ export const useContactSupport = (): UseQueryResult<ContactSupportResponse, Erro
       return response as ContactSupportResponse;
     },
     staleTime: 300000, // Cache for 5 minutes (support email doesn't change often)
+    retry: 1,
+  });
+};
+
+// Get my rewards hook
+export const useMyRewards = (): UseQueryResult<any, Error> => {
+  return useQuery({
+    queryKey: ['myRewards'],
+    queryFn: async () => {
+      const response = await getMyRewards();
+      return response;
+    },
+    staleTime: 30000, // Cache for 30 seconds
     retry: 1,
   });
 };
