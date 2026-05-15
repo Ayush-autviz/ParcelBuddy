@@ -4,12 +4,17 @@ import { Package } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import Card from '../Card';
+import GradientButton from '../GradientButton';
 
 interface EmptyStateCardProps {
   icon?: React.ComponentType<{ size: number; color: string }>;
   title: string;
   description: string;
   style?: ViewStyle;
+  buttonLabel?: string;
+  onButtonPress?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
 const EmptyStateCard: React.FC<EmptyStateCardProps> = ({
@@ -17,15 +22,28 @@ const EmptyStateCard: React.FC<EmptyStateCardProps> = ({
   title,
   description,
   style,
+  buttonLabel,
+  onButtonPress,
+  loading,
+  disabled,
 }) => {
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, style]}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Icon size={40} color={Colors.primaryTeal} strokeWidth={1.5} />
         </View>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
+        {buttonLabel && onButtonPress && (
+          <GradientButton
+            title={buttonLabel}
+            onPress={onButtonPress}
+            style={styles.button}
+            loading={loading}
+            disabled={disabled}
+          />
+        )}
       </View>
     </View>
   );
@@ -74,6 +92,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     marginHorizontal: 30,
+  },
+  button: {
+    marginTop: 24,
+    width: '100%',
   },
 });
 

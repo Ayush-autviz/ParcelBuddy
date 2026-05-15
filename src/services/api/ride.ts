@@ -103,3 +103,29 @@ export const searchRides = async (params: {
     const response = await apiClient.post('/ride/search/', requestBody);
     return response.data;
 };
+
+// request raise
+export const requestRaise = async (data: {
+    destination_name: string;
+    origin_name: string;
+    travel_date: string;
+    destination_lat: number;
+    destination_lng: number;
+    origin_lat: number;
+    origin_lng: number;
+}) => {
+    const response = await apiClient.post('/ride/request-raise/', data);
+    return response.data;
+};
+
+// get my raised requests
+export const getMyRaisedRequests = async () => {
+    const response = await apiClient.get('/ride/my-requests/');
+    return response.data;
+};
+
+// cancel raised request
+export const cancelRaisedRequest = async (id: string) => {
+    const response = await apiClient.patch(`/ride/request/${id}/cancel/`);
+    return response.data;
+};

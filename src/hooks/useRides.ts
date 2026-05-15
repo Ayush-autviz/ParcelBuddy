@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { getPublishedRides } from '../services/api/ride';
+import { getPublishedRides, getMyRaisedRequests } from '../services/api/ride';
 import { RideCardData, StatusType } from '../components/track';
 
 export interface PublishedRideResponse {
@@ -132,6 +132,17 @@ export const usePublishedRides = (): UseQueryResult<PaginatedPublishedRidesRespo
     },
     staleTime: 30000, // Cache for 30 seconds
     retry: 1,
+  });
+};
+
+export const useRaisedRequests = (): UseQueryResult<any[], Error> => {
+  return useQuery({
+    queryKey: ['raisedRequests'],
+    queryFn: async () => {
+      const response = await getMyRaisedRequests();
+      return Array.isArray(response) ? response : (response?.data || response?.results || []);
+    },
+    staleTime: 30000,
   });
 };
 

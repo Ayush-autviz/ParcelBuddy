@@ -18,6 +18,8 @@ import { AvailableRideCard, SearchCriteriaCard } from '../../components/search';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
 import { Package } from 'lucide-react-native';
+import { useToast } from '../../components/Toast';
+import { useRequestRaise } from '../../hooks/useRideMutations';
 
 type AvailableRidesScreenRouteProp = RouteProp<SearchStackParamList, 'AvailableRides'>;
 type AvailableRidesScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'AvailableRides'>;
@@ -25,8 +27,19 @@ type AvailableRidesScreenNavigationProp = StackNavigationProp<SearchStackParamLi
 const AvailableRidesScreen: React.FC = () => {
   const route = useRoute<AvailableRidesScreenRouteProp>();
   const navigation = useNavigation<AvailableRidesScreenNavigationProp>();
-  const { rides, from, to, date } = route.params;
+  const {
+    rides,
+    from,
+    to,
+    date,
+    fromLatitude,
+    fromLongitude,
+    toLatitude,
+    toLongitude
+  } = route.params;
   const [searchQuery, setSearchQuery] = React.useState(`${from} to ${to}`);
+  const { showSuccess } = useToast();
+  const requestRaiseMutation = useRequestRaise();
 
 
   const formatDate = (dateString: string): string => {
@@ -54,6 +67,28 @@ const AvailableRidesScreen: React.FC = () => {
 
   const handleClearSearch = () => {
     setSearchQuery('');
+  };
+
+  const handleRequestRaise = () => {
+    const payload = {
+      destination_name: to,
+      origin_name: from,
+      travel_date: date,
+      destination_lat: toLatitude || 0,
+      destination_lng: toLongitude || 0,
+      origin_lat: fromLatitude || 0,
+      origin_lng: fromLongitude || 0,
+    };
+
+    requestRaiseMutation.mutate(payload, {
+      onSuccess: (response) => {
+        console.log('Request Raise Response:', response);
+        showSuccess('Request raised successfully! You will be notified when a ride is available.');
+      },
+      onError: (error: any) => {
+        console.error('Request Raise Error:', error?.response?.data || error.message);
+      }
+    });
   };
 
   const renderRideCard = ({ item }: { item: AvailableRideData }) => (
@@ -96,6 +131,24 @@ const AvailableRidesScreen: React.FC = () => {
         />
       </View>
 
+      {rides.length > 0 && (
+        <View style={styles.footerRequestContainer}>
+          <View style={styles.footerRequestContent}>
+            <Text style={styles.footerRequestTitle}>Didn't find a suitable ride?</Text>
+            <Text style={styles.footerRequestSub}>We can notify you when new rides matching your search are posted.</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.footerRequestButton}
+            onPress={handleRequestRaise}
+            disabled={requestRaiseMutation.isPending}
+          >
+            <Text style={styles.footerRequestButtonText}>
+              {requestRaiseMutation.isPending ? 'Requesting...' : 'Request Raise'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Available Rides List */}
       {rides.length > 0 ? (
         <FlatList
@@ -110,7 +163,11 @@ const AvailableRidesScreen: React.FC = () => {
           <EmptyStateCard
             icon={Package}
             title="No rides found"
-            description="Try adjusting your search criteria to find more rides."
+            description="You will get notification for the rides when someone post it"
+            buttonLabel="Request Raise"
+            onButtonPress={handleRequestRaise}
+            loading={requestRaiseMutation.isPending}
+            disabled={requestRaiseMutation.isPending}
           />
         </View>
       )}
@@ -163,6 +220,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  footerRequestContainer: {
+    backgroundColor: Colors.backgroundWhite,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  footerRequestContent: {
+    flex: 1,
+  },
+  footerRequestTitle: {
+    fontSize: Fonts.base,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  footerRequestSub: {
+    fontSize: Fonts.xs,
+    color: Colors.textTertiary,
+  },
+  footerRequestButton: {
+    backgroundColor: Colors.primaryTeal,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    minWidth: 110,
+    alignItems: 'center',
+  },
+  footerRequestButtonText: {
+    color: Colors.backgroundWhite,
+    fontSize: Fonts.sm,
+    fontWeight: Fonts.weightSemiBold,
   },
 });
 

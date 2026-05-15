@@ -1,5 +1,5 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
-import { createRide, deleteRide } from '../services/api/ride';
+import { createRide, deleteRide, requestRaise, cancelRaisedRequest } from '../services/api/ride';
 
 export interface CreateRideRequest {
   origin_name: string;
@@ -22,6 +22,16 @@ export interface CreateRideRequest {
   status: string;
 }
 
+export interface RequestRaiseData {
+  destination_name: string;
+  origin_name: string;
+  travel_date: string;
+  destination_lat: number;
+  destination_lng: number;
+  origin_lat: number;
+  origin_lng: number;
+}
+
 export const useCreateRide = (): UseMutationResult<any, Error, CreateRideRequest, unknown> => {
   return useMutation({
     mutationFn: (data: CreateRideRequest) => createRide(data),
@@ -31,6 +41,18 @@ export const useCreateRide = (): UseMutationResult<any, Error, CreateRideRequest
 export const useDeleteRide = (): UseMutationResult<any, Error, string, unknown> => {
   return useMutation({
     mutationFn: (id: string) => deleteRide(id),
+  });
+};
+
+export const useRequestRaise = (): UseMutationResult<any, Error, RequestRaiseData, unknown> => {
+  return useMutation({
+    mutationFn: (data: RequestRaiseData) => requestRaise(data),
+  });
+};
+
+export const useCancelRaisedRequest = (): UseMutationResult<any, Error, string, unknown> => {
+  return useMutation({
+    mutationFn: (id: string) => cancelRaisedRequest(id),
   });
 };
 

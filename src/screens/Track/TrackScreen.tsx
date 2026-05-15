@@ -23,8 +23,9 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, TabButton, RideCard, RideCardData, EmptyStateCard } from '../../components';
 import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
-import { usePublishedRides } from '../../hooks/useRides';
-import { useBookedRides, BookedRideCardData } from '../../hooks/useLuggage';
+import { usePublishedRides, useRaisedRequests } from '../../hooks/useRides';
+import { useBookedRides, BookedRideCardData, useCancelLuggageRequest } from '../../hooks/useLuggage';
+import { useCreateRide, useCancelRaisedRequest } from '../../hooks/useRideMutations';
 import { getLuggageRequests } from '../../services/api/luggage';
 import { getPublishedRides } from '../../services/api/ride';
 import GradientButton from '../../components/GradientButton';
@@ -127,16 +128,64 @@ const TrackScreen: React.FC = () => {
     failureReason: failureReasonBooked
   } = useBookedRides();
 
+  // Fetch raised requests from API
+  const {
+    data: raisedRequestsData,
+    isLoading: isLoadingRaised,
+    isFetching: isFetchingRaised,
+    refetch: refetchRaised
+  } = useRaisedRequests();
+
+  // Cancel mutation
+  const cancelRaisedRequestMutation = useCancelRaisedRequest();
+
   console.log('bookedRidesData', bookedRidesData);
+  console.log('raisedRequestsData', raisedRequestsData);
 
 
   // Initialize data only when switching to a tab that hasn't been initialized yet
   // This preserves loaded data when switching between tabs
   useEffect(() => {
-    if (activeTab === 'Booked' && bookedRidesData?.rides && !initializedTabsRef.current.has('Booked')) {
-      // Initialize Booked tab data only if it hasn't been initialized yet
-      console.log('Initializing booked rides:', bookedRidesData.rides.map(r => ({ id: r.id, travelerName: r.travelerName })));
-      setAllBookedRides(bookedRidesData.rides);
+    if (activeTab === 'Booked' && bookedRidesData?.rides) {
+      // If we've already initialized with booked rides, we still might need to update raised requests
+      // if they weren't available during the first initialization
+      const alreadyHasRaised = allBookedRides.some(r => r.id.startsWith('raised-'));
+      const hasRaisedData = raisedRequestsData && raisedRequestsData.length > 0;
+
+      if (initializedTabsRef.current.has('Booked') && alreadyHasRaised) {
+        // Already initialized with both, or at least tried.
+        return;
+      }
+
+      console.log('Initializing booked rides and raised requests...');
+
+      // Helper function to format date
+      const formatDate = (dateString: string): string => {
+        if (!dateString) return 'Invalid Date';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = months[date.getMonth()];
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${month} ${day}`;
+      };
+
+      // Map raised requests to BookedRideCardData
+      const raisedRides: BookedRideCardData[] = (raisedRequestsData || []).map((req: any) => ({
+        id: `raised-${req.id}`,
+        status: req.status || 'pending',
+        date: formatDate(req.travel_date),
+        origin: req.origin_name || 'Unknown',
+        originTime: '',
+        destination: req.destination_name || 'Unknown',
+        destinationTime: '',
+        passengers: 0,
+        showRateButton: false,
+        travelerName: 'Request Raised',
+        bookingRequest: undefined, // It's a raised request, not a booking
+      }));
+
+      setAllBookedRides([...raisedRides, ...bookedRidesData.rides]);
       setNextPageUrlBooked(bookedRidesData.pagination?.next_page || null);
       initializedTabsRef.current.add('Booked');
     } else if (activeTab === 'Published' && publishedRidesData?.rides && !initializedTabsRef.current.has('Published')) {
@@ -145,7 +194,7 @@ const TrackScreen: React.FC = () => {
       setNextPageUrlPublished(publishedRidesData.pagination?.next_page || null);
       initializedTabsRef.current.add('Published');
     }
-  }, [activeTab, bookedRidesData, publishedRidesData]);
+  }, [activeTab, bookedRidesData, publishedRidesData, raisedRequestsData]);
 
   // Track initial page sizes for refresh handling
   const initialPageSizeRef = useRef<{ booked: number; published: number }>({ booked: 0, published: 0 });
@@ -364,12 +413,30 @@ const TrackScreen: React.FC = () => {
     }
   };
 
-  const rides = activeTab === 'Booked' ? allBookedRides : allPublishedRides;
+  const listData = useMemo(() => {
+    if (activeTab === 'Published') return allPublishedRides;
+
+    const raised = allBookedRides.filter(r => r.id.startsWith('raised-'));
+    const bookings = allBookedRides.filter(r => !r.id.startsWith('raised-'));
+
+    const combined: any[] = [];
+    if (raised.length > 0) {
+      combined.push({ isHeader: true, title: 'Raised Requests', id: 'header-raised' });
+      combined.push(...raised);
+    }
+    if (bookings.length > 0) {
+      combined.push({ isHeader: true, title: 'Confirmed Bookings', id: 'header-bookings' });
+      combined.push(...bookings);
+    }
+
+    return combined.length > 0 ? combined : [];
+  }, [activeTab, allBookedRides, allPublishedRides]);
+
   const nextPageUrl = activeTab === 'Booked' ? nextPageUrlBooked : nextPageUrlPublished;
   const isLoadingMore = activeTab === 'Booked' ? isLoadingMoreBooked : isLoadingMorePublished;
   const handleLoadMore = activeTab === 'Booked' ? handleLoadMoreBooked : handleLoadMorePublished;
-  const isLoading = activeTab === 'Booked' ? isLoadingBooked : isLoadingPublished;
-  const isFetching = activeTab === 'Booked' ? isFetchingBooked : isFetchingPublished;
+  const isLoading = activeTab === 'Booked' ? (isLoadingBooked || isLoadingRaised) : isLoadingPublished;
+  const isFetching = activeTab === 'Booked' ? (isFetchingBooked || isFetchingRaised) : isFetchingPublished;
   const isError = activeTab === 'Booked' ? isErrorBooked : isErrorPublished;
   const refetch = activeTab === 'Booked' ? refetchBooked : refetchPublished;
 
@@ -390,15 +457,43 @@ const TrackScreen: React.FC = () => {
       initialPageSizeRef.current.booked = 0;
 
       // Refetch data
-      const result = await refetchBooked();
+      const [bookedResult, raisedResult] = await Promise.all([
+        refetchBooked(),
+        refetchRaised()
+      ]);
 
       // Update local state with fresh data
-      if (result.data?.rides) {
-        setAllBookedRides(result.data.rides);
-        setNextPageUrlBooked(result.data.pagination?.next_page || null);
+      if (bookedResult.data?.rides) {
+        // Helper function to format date
+        const formatDate = (dateString: string): string => {
+          if (!dateString) return 'Invalid Date';
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return 'Invalid Date';
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const month = months[date.getMonth()];
+          const day = date.getDate().toString().padStart(2, '0');
+          return `${month} ${day}`;
+        };
+
+        const raisedRides: BookedRideCardData[] = (raisedResult.data || []).map((req: any) => ({
+          id: `raised-${req.id}`,
+          status: req.status || 'pending',
+          date: formatDate(req.travel_date),
+          origin: req.origin_name || 'Unknown',
+          originTime: '',
+          destination: req.destination_name || 'Unknown',
+          destinationTime: '',
+          passengers: 0,
+          showRateButton: false,
+          travelerName: 'Request Raised',
+          bookingRequest: undefined,
+        }));
+
+        setAllBookedRides([...raisedRides, ...bookedResult.data.rides]);
+        setNextPageUrlBooked(bookedResult.data.pagination?.next_page || null);
         // Update data hash
-        lastDataRef.current.booked = result.data.rides.map(r => r.id).join(',');
-        initialPageSizeRef.current.booked = result.data.rides.length;
+        lastDataRef.current.booked = bookedResult.data.rides.map(r => r.id).join(',');
+        initialPageSizeRef.current.booked = bookedResult.data.rides.length;
       }
     } else {
       // Invalidate cache to force fresh fetch
@@ -445,6 +540,12 @@ const TrackScreen: React.FC = () => {
   }, [activeTab, queryClient, refetchBooked, refetchPublished]);
 
   const handleRidePress = (ride: RideCardData | BookedRideCardData) => {
+    // If it's a raised request (no bookingRequest), don't navigate for now
+    if (activeTab === 'Booked' && 'id' in ride && ride.id.startsWith('raised-')) {
+      // Optional: show info toast
+      return;
+    }
+
     // If it's a booked ride, navigate to booking request detail screen
     if (activeTab === 'Booked' && 'bookingRequest' in ride && ride.bookingRequest) {
       const bookedRide = ride as BookedRideCardData;
@@ -721,13 +822,38 @@ const TrackScreen: React.FC = () => {
     []
   );
 
-  const renderRideCard = ({ item }: { item: RideCardData | BookedRideCardData }) => (
-    <RideCard
-      ride={item}
-      onPress={() => handleRidePress(item)}
-      onRatePress={item.showRateButton ? () => handleRatePress(item) : undefined}
-    />
-  );
+  const handleCancelRaisedRequest = (id: string) => {
+    const actualId = id.replace('raised-', '');
+    cancelRaisedRequestMutation.mutate(actualId, {
+      onSuccess: () => {
+        showSuccess('Request cancelled successfully');
+        handleRefresh();
+      },
+      onError: (error: any) => {
+        showError(error?.response?.data?.message || 'Failed to cancel request');
+      },
+    });
+  };
+
+  const renderListItem = ({ item }: { item: any }) => {
+    if (item.isHeader) {
+      return (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{item.title}</Text>
+        </View>
+      );
+    }
+
+    const ride = item as RideCardData | BookedRideCardData;
+    return (
+      <RideCard
+        ride={ride}
+        onPress={() => handleRidePress(ride)}
+        onRatePress={ride.showRateButton ? () => handleRatePress(ride) : undefined}
+        onDeletePress={ride.id.startsWith('raised-') ? () => handleCancelRaisedRequest(ride.id) : undefined}
+      />
+    );
+  };
 
   // Get screen height for empty state to ensure pull-to-refresh works
   const screenHeight = Dimensions.get('window').height;
@@ -761,11 +887,11 @@ const TrackScreen: React.FC = () => {
         </View>
       ) : (
         <FlatList
-          data={rides || []}
-          renderItem={renderRideCard}
+          data={listData}
+          renderItem={renderListItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={
-            rides && rides.length > 0
+            listData && listData.length > 0
               ? styles.listContent
               : [styles.emptyListContent, { minHeight: screenHeight * 0.8 }]
           }
@@ -800,7 +926,7 @@ const TrackScreen: React.FC = () => {
             )
           }
           ListFooterComponent={
-            rides && rides.length > 0 && nextPageUrl ? (
+            listData && listData.length > 0 && nextPageUrl ? (
               <View style={styles.loadMoreContainer}>
                 <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
                   {isLoadingMore ? (
@@ -1049,6 +1175,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 40,
+  },
+  sectionHeader: {
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    marginBottom: 4,
+    // marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: Fonts.xs,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
   loadingText: {
     fontSize: Fonts.base,

@@ -198,6 +198,10 @@ const SearchScreen: React.FC = () => {
           from: searchFrom,
           to: searchTo,
           date: formatDate(searchDate),
+          fromLatitude: fromLatitude,
+          fromLongitude: fromLongitude,
+          toLatitude: toLatitude,
+          toLongitude: toLongitude,
         });
       },
       onError: (error: any) => {

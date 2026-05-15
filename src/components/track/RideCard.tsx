@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, Image } from 'react-native';
-import { MapPin, Clock, User } from 'lucide-react-native';
+import { MapPin, Clock, User, Trash2 } from 'lucide-react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import StatusBadge, { StatusType } from './StatusBadge';
@@ -34,10 +34,11 @@ interface RideCardProps {
   ride: RideCardData;
   onPress?: () => void;
   onRatePress?: () => void;
+  onDeletePress?: () => void;
   style?: ViewStyle;
 }
 
-const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }) => {
+const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, onDeletePress, style }) => {
   // Check if this is a booked ride (has bookingRequest property)
   const isBookedRide = 'bookingRequest' in ride && (ride as any).bookingRequest !== undefined;
 
@@ -128,8 +129,14 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, style }
             <Text style={styles.pendingText}>{ride.pendingRequestCount} pending</Text>
           )}
         </View>
-        <View></View>
-        <Text style={styles.date}>{ride.date}</Text>
+        <View style={styles.headerRight}>
+          <Text style={styles.date}>{ride.date}</Text>
+          {onDeletePress && (
+            <TouchableOpacity onPress={onDeletePress} style={styles.deleteButton}>
+              <Trash2 size={20} color="#FF5C5C" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.routeContainer}>
@@ -223,6 +230,14 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sm,
     color: Colors.primaryCyan,
     fontWeight: Fonts.weightMedium,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  deleteButton: {
+    padding: 4,
   },
   routeContainer: {
     // marginBottom: 16,

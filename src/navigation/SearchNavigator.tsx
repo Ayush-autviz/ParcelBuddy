@@ -27,6 +27,10 @@ export type SearchStackParamList = {
     from: string;
     to: string;
     date: string;
+    fromLatitude?: number;
+    fromLongitude?: number;
+    toLatitude?: number;
+    toLongitude?: number;
   };
   SendRequest: {
     ride: AvailableRideData;
