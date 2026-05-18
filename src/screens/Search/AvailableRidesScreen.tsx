@@ -80,10 +80,13 @@ const AvailableRidesScreen: React.FC = () => {
       origin_lng: fromLongitude || 0,
     };
 
+    console.log('Request Raise Payload:', payload);
+
     requestRaiseMutation.mutate(payload, {
       onSuccess: (response) => {
         console.log('Request Raise Response:', response);
         showSuccess('Request raised successfully! You will be notified when a ride is available.');
+        navigation.goBack();
       },
       onError: (error: any) => {
         console.error('Request Raise Error:', error?.response?.data || error.message);
@@ -131,7 +134,7 @@ const AvailableRidesScreen: React.FC = () => {
         />
       </View>
 
-      {rides.length > 0 && (
+      {/* {rides.length > 0 && (
         <View style={styles.footerRequestContainer}>
           <View style={styles.footerRequestContent}>
             <Text style={styles.footerRequestTitle}>Didn't find a suitable ride?</Text>
@@ -147,7 +150,7 @@ const AvailableRidesScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
-      )}
+      )} */}
 
       {/* Available Rides List */}
       {rides.length > 0 ? (

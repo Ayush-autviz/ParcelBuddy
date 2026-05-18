@@ -132,6 +132,10 @@ const SearchScreen: React.FC = () => {
     const searchFrom = from;
     const searchTo = to;
     const searchDate = date;
+    const searchFromLatitude = fromLatitude;
+    const searchFromLongitude = fromLongitude;
+    const searchToLatitude = toLatitude;
+    const searchToLongitude = toLongitude;
 
     // Prepare search parameters
     const searchParams = {
@@ -198,10 +202,10 @@ const SearchScreen: React.FC = () => {
           from: searchFrom,
           to: searchTo,
           date: formatDate(searchDate),
-          fromLatitude: fromLatitude,
-          fromLongitude: fromLongitude,
-          toLatitude: toLatitude,
-          toLongitude: toLongitude,
+          fromLatitude: searchFromLatitude,
+          fromLongitude: searchFromLongitude,
+          toLatitude: searchToLatitude,
+          toLongitude: searchToLongitude,
         });
       },
       onError: (error: any) => {
@@ -279,6 +283,10 @@ const SearchScreen: React.FC = () => {
             from: item.from,
             to: item.to,
             date: item.travel_date,
+            fromLatitude: item.origin_lat,
+            fromLongitude: item.origin_lng,
+            toLatitude: item.destination_lat,
+            toLongitude: item.destination_lng,
           });
         },
         onError: (error: any) => {

@@ -29,6 +29,7 @@ import { useCreateRide, useCancelRaisedRequest } from '../../hooks/useRideMutati
 import { getLuggageRequests } from '../../services/api/luggage';
 import { getPublishedRides } from '../../services/api/ride';
 import GradientButton from '../../components/GradientButton';
+import ConfirmationModal from '../../components/Modal/ConfirmationModal';
 import { SvgXml } from 'react-native-svg';
 import { ProfileUserIcon } from '../../assets/icons/svg/profileIcon';
 import { getLuggageRequestsForRide, getApprovedLuggageRequestsForRide } from '../../services/api/luggage';
@@ -98,6 +99,10 @@ const TrackScreen: React.FC = () => {
   const [allPublishedRides, setAllPublishedRides] = useState<RideCardData[]>([]);
   const [nextPageUrlPublished, setNextPageUrlPublished] = useState<string | null>(null);
   const [isLoadingMorePublished, setIsLoadingMorePublished] = useState(false);
+
+  // Cancellation modal state
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [requestToCancelId, setRequestToCancelId] = useState<string | null>(null);
 
   // Track which tabs have been initialized to preserve data when switching
   const initializedTabsRef = useRef<Set<TabType>>(new Set());
@@ -823,14 +828,25 @@ const TrackScreen: React.FC = () => {
   );
 
   const handleCancelRaisedRequest = (id: string) => {
-    const actualId = id.replace('raised-', '');
+    setRequestToCancelId(id);
+    setIsCancelModalVisible(true);
+  };
+
+  const confirmCancelRequest = () => {
+    if (!requestToCancelId) return;
+
+    const actualId = requestToCancelId.replace('raised-', '');
     cancelRaisedRequestMutation.mutate(actualId, {
       onSuccess: () => {
         showSuccess('Request cancelled successfully');
+        setIsCancelModalVisible(false);
+        setRequestToCancelId(null);
         handleRefresh();
       },
       onError: (error: any) => {
         showError(error?.response?.data?.message || 'Failed to cancel request');
+        setIsCancelModalVisible(false);
+        setRequestToCancelId(null);
       },
     });
   };
@@ -1134,6 +1150,17 @@ const TrackScreen: React.FC = () => {
           )}
         </BottomSheetView>
       </BottomSheetModal>
+
+      <ConfirmationModal
+        visible={isCancelModalVisible}
+        title="Cancel Request"
+        message="Are you sure you want to cancel this ride request notification?"
+        confirmText="Yes, Cancel"
+        cancelText="No, Keep It"
+        onConfirm={confirmCancelRequest}
+        onCancel={() => setIsCancelModalVisible(false)}
+        type="destructive"
+      />
     </SafeAreaView>
   );
 };

@@ -131,11 +131,6 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, onDelet
         </View>
         <View style={styles.headerRight}>
           <Text style={styles.date}>{ride.date}</Text>
-          {onDeletePress && (
-            <TouchableOpacity onPress={onDeletePress} style={styles.deleteButton}>
-              <Trash2 size={20} color="#FF5C5C" />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
@@ -178,6 +173,12 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, onDelet
             <Text style={styles.travelerName}>{ride.travelerName}</Text>
           )}
         </View>
+        {onDeletePress && ride.status !== 'cancelled' && (
+          <TouchableOpacity onPress={onDeletePress} style={styles.footerCancelButton}>
+            <Trash2 size={16} color="#FF5C5C" />
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+        )}
         {ride.showRateButton && (isBookedRide || ride.status === 'completed') && (
           ride.isRated ? (
             <></>
@@ -312,6 +313,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
+  },
+  footerCancelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#FFF1F1',
+  },
+  cancelText: {
+    fontSize: Fonts.xs,
+    color: '#FF5C5C',
+    fontWeight: Fonts.weightSemiBold,
   },
   passengerAvatarOverlap: {
     marginLeft: -12,
