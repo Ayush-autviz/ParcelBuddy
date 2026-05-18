@@ -87,7 +87,7 @@ const PromoCodesScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isFetching}
+            refreshing={isFetching && !isLoading}
             onRefresh={refetch}
             colors={[Colors.primaryCyan]}
             tintColor={Colors.primaryCyan}
@@ -125,7 +125,7 @@ const PromoCodesScreen: React.FC = () => {
                   variant="secondary"
                   onPress={handleCopyCode}
                   style={styles.copyBtn}
-                  textStyle={styles.copyBtnText}
+                // textStyle={styles.copyBtnText}
                 />
                 {/* <Button
                   title="Share Code"
@@ -288,7 +288,7 @@ const PromoCodesScreen: React.FC = () => {
                 </View>
                 <View style={styles.stepTextContainer}>
                   <Text style={styles.stepTitle}>Enjoy your rewards</Text>
-                  <Text style={styles.stepDescription}>Unlock special platform perks and membership benefits upon successful usage.</Text>
+                  <Text style={styles.stepDescription}>Unlock special 20% discount on your subscription.</Text>
                 </View>
               </View>
             </View>

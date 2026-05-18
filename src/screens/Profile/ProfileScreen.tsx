@@ -219,6 +219,14 @@ const ProfileScreen: React.FC = () => {
       },
     },
     {
+      id: 'promo',
+      title: 'Promo Codes',
+      icon: ProfilePromoIcon,
+      onPress: () => {
+        navigation.navigate('PromoCodes' as any);
+      },
+    },
+    {
       id: 'ratings',
       title: 'Ratings',
       icon: ProfileRatingsIcon,
@@ -241,14 +249,6 @@ const ProfileScreen: React.FC = () => {
       icon: ProfilePaymentHistoryIcon,
       onPress: () => {
         navigation.navigate('PaymentHistory');
-      },
-    },
-    {
-      id: 'promo',
-      title: 'Promo Codes',
-      icon: ProfilePromoIcon,
-      onPress: () => {
-        navigation.navigate('PromoCodes' as any);
       },
     },
     {

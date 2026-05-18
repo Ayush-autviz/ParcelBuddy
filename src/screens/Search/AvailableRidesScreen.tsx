@@ -239,7 +239,7 @@ const AvailableRidesScreen: React.FC = () => {
           <EmptyStateCard
             icon={Package}
             title="No rides found"
-            description="You will get notification for the rides when someone post it"
+            description="You will receive notifications whenever new rides become available for this month. You can cancel the request anytime, or it will automatically expire at the end of the month."
             buttonLabel="Request Raise"
             onButtonPress={handleRequestRaise}
             loading={requestRaiseMutation.isPending}
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   criteriaContainer: {
     marginTop: 16,
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    // paddingBottom: 16,
   },
   listContent: {
     paddingHorizontal: 20,

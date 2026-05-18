@@ -28,6 +28,7 @@ export interface RideCardData {
     profilePhoto?: string | null;
   }>;
   travelerProfilePhoto?: string | null;
+  activeRideCount?: number;
 }
 
 interface RideCardProps {
@@ -128,6 +129,11 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, onDelet
           {ride.pendingRequestCount !== undefined && ride.pendingRequestCount > 0 && ride.status !== 'completed' && (
             <Text style={styles.pendingText}>{ride.pendingRequestCount} pending</Text>
           )}
+          {ride.activeRideCount !== undefined && ride.activeRideCount > 0 && (
+            <View style={styles.activeRideBadge}>
+              <Text style={styles.activeRideBadgeText}>{ride.activeRideCount} active rides</Text>
+            </View>
+          )}
         </View>
         <View style={styles.headerRight}>
           <Text style={styles.date}>{ride.date}</Text>
@@ -226,6 +232,19 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sm,
     color: '#FF5C5C',
     fontWeight: Fonts.weightMedium,
+  },
+  activeRideBadge: {
+    backgroundColor: 'rgba(77, 186, 165, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 186, 165, 0.2)',
+  },
+  activeRideBadgeText: {
+    fontSize: 11,
+    fontWeight: Fonts.weightSemiBold,
+    color: Colors.primaryTeal,
   },
   date: {
     fontSize: Fonts.sm,

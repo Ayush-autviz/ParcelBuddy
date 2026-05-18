@@ -91,7 +91,6 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     textAlign: 'center',
     lineHeight: 20,
-    marginHorizontal: 30,
   },
   button: {
     marginTop: 24,

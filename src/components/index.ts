@@ -5,6 +5,7 @@ export { default as GradientButton } from './GradientButton';
 export { default as ConfirmationModal } from './Modal/ConfirmationModal';
 export { default as KYCVerificationModal } from './Modal/KYCVerificationModal';
 export { default as SubscriptionModal } from './Modal/SubscriptionModal';
+export { default as PromoModal } from './Modal/PromoModal';
 export { default as Header } from './Header';
 export { default as ProfileHeader } from './ProfileHeader';
 

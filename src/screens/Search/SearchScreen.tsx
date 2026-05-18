@@ -14,10 +14,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
-import { Card, Header, GradientButton, TabButton, SearchInput, SearchHistoryItem, PlaceResultItemData, DatePickerInput } from '../../components';
+import { Card, Header, GradientButton, TabButton, SearchInput, SearchHistoryItem, DatePickerInput, PromoModal } from '../../components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
-import { useSearchFormStore } from '../../services/store';
+import { useSearchFormStore, useAuthStore } from '../../services/store';
 import { useSearchRides } from '../../hooks/useSearchRides';
 import { useSearchHistory, SearchHistoryItem as SearchHistoryItemType } from '../../hooks/useSearchHistory';
 import { useSendFcmToken } from '../../hooks/useAuthMutations';
@@ -26,11 +26,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPinIcon } from '../../assets/icons/svg/main';
 import messaging from '@react-native-firebase/messaging';
 
-const { width } = Dimensions.get('window');
-
 type TabType = 'Domestic' | 'International';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'SearchList'>;
+
+let hasShownPromoSession = false;
 
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
@@ -65,6 +65,31 @@ const SearchScreen: React.FC = () => {
 
   // Toast hook
   const { showWarning } = useToast();
+
+  // Promo Modal State and handler
+  const { user } = useAuthStore();
+  const [showPromoModal, setShowPromoModal] = useState(false);
+
+  useEffect(() => {
+    // If last_login is null/falsy, show the promo modal exactly once per session
+    if (user && !user.last_login && !hasShownPromoSession) {
+      console.log('🎉 [SearchScreen] First login detected. Opening PromoModal!');
+      setShowPromoModal(true);
+    }
+  }, [user]);
+
+  const handleDismissPromoModal = (shouldNavigate: boolean) => {
+    setShowPromoModal(false);
+    hasShownPromoSession = true;
+    if (shouldNavigate) {
+      navigation.navigate('MainApp' as any, {
+        screen: 'Profile',
+        params: {
+          screen: 'PromoCodes',
+        },
+      });
+    }
+  };
 
   // Clear form when screen comes into focus after a successful search
   // This ensures clearing happens when screen is active, not before navigation
@@ -357,6 +382,11 @@ const SearchScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <Header title="Search Rides" variant="centered" />
+
+      <PromoModal
+        visible={showPromoModal}
+        onDismiss={handleDismissPromoModal}
+      />
 
       <KeyboardAwareScrollView
         style={styles.scrollView}

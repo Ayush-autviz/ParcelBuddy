@@ -193,6 +193,7 @@ const TrackScreen: React.FC = () => {
         travelerName: 'Request Raised',
         bookingRequest: undefined, // It's a raised request, not a booking
         raisedRequest: req,
+        activeRideCount: req.active_ride_count,
       } as any));
 
       setAllBookedRides([...raisedRides, ...bookedRidesData.rides]);
@@ -498,6 +499,7 @@ const TrackScreen: React.FC = () => {
           travelerName: 'Request Raised',
           bookingRequest: undefined,
           raisedRequest: req,
+          activeRideCount: req.active_ride_count,
         } as any));
 
         setAllBookedRides([...raisedRides, ...bookedResult.data.rides]);
