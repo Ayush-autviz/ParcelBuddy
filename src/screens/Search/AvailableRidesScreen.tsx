@@ -6,6 +6,7 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,14 +16,15 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { Header, EmptyStateCard } from '../../components';
 import { AvailableRideCard, SearchCriteriaCard } from '../../components/search';
-import { SearchStackParamList } from '../../navigation/SearchNavigator';
+import { RootStackParamList } from '../../navigation/types';
 import { AvailableRideData } from '../../components/search/AvailableRideCard';
 import { Package } from 'lucide-react-native';
 import { useToast } from '../../components/Toast';
 import { useRequestRaise } from '../../hooks/useRideMutations';
+import { useSearchRides } from '../../hooks/useSearchRides';
 
-type AvailableRidesScreenRouteProp = RouteProp<SearchStackParamList, 'AvailableRides'>;
-type AvailableRidesScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'AvailableRides'>;
+type AvailableRidesScreenRouteProp = RouteProp<RootStackParamList, 'AvailableRides'>;
+type AvailableRidesScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AvailableRides'>;
 
 const AvailableRidesScreen: React.FC = () => {
   const route = useRoute<AvailableRidesScreenRouteProp>();
@@ -35,11 +37,70 @@ const AvailableRidesScreen: React.FC = () => {
     fromLatitude,
     fromLongitude,
     toLatitude,
-    toLongitude
+    toLongitude,
   } = route.params;
   const [searchQuery, setSearchQuery] = React.useState(`${from} to ${to}`);
   const { showSuccess } = useToast();
   const requestRaiseMutation = useRequestRaise();
+  const searchRidesMutation = useSearchRides();
+
+  const [localRides, setLocalRides] = React.useState<AvailableRideData[] | undefined>(rides);
+  const [isLoading, setIsLoading] = React.useState(!rides);
+
+  React.useEffect(() => {
+    if (!rides) {
+      setIsLoading(true);
+      const searchParams = {
+        origin: from,
+        destination: to,
+        origin_lat: fromLatitude,
+        origin_lng: fromLongitude,
+        destination_lat: toLatitude,
+        destination_lng: toLongitude,
+        date_from: date,
+        max_price: 10,
+        ordering: '-travel_date',
+      };
+
+      searchRidesMutation.mutate(searchParams, {
+        onSuccess: (response) => {
+          const transformedRides = (response || []).map((item: any) => {
+            const profileId = item.traveler?.profile?.id;
+            return {
+              id: item.id,
+              traveler: {
+                first_name: item.traveler?.first_name || '',
+                last_name: item.traveler?.last_name || '',
+                profile: {
+                  profile_photo: item.traveler?.profile?.profile_photo,
+                  average_rating: item.traveler?.profile?.average_rating,
+                  id: item.traveler?.profile?.id,
+                },
+              },
+              profileId: profileId,
+              travel_date: item.travel_date,
+              origin_name: item.origin_name,
+              destination_name: item.destination_name,
+              available_weight_kg: item.available_weight_kg,
+              price_per_kg: item.price_per_kg,
+              rating: item.traveler?.profile?.average_rating || 0,
+              review_count: item.traveler?.total_rating || 128,
+              notes: item.notes,
+            };
+          });
+          setLocalRides(transformedRides);
+          setIsLoading(false);
+        },
+        onError: (error) => {
+          console.error('AvailableRidesScreen search error:', error);
+          setLocalRides([]);
+          setIsLoading(false);
+        }
+      });
+    }
+  }, [rides, from, to, date, fromLatitude, fromLongitude, toLatitude, toLongitude]);
+
+
 
 
   const formatDate = (dateString: string): string => {
@@ -57,7 +118,14 @@ const AvailableRidesScreen: React.FC = () => {
     if (availableWeight === '0') {
       return;
     }
-    navigation.navigate('SendRequest', { ride });
+    // Replace the root stack with MainApp and navigate deep into Search's SendRequest screen
+    navigation.replace('MainApp', {
+      screen: 'Search',
+      params: {
+        screen: 'SendRequest',
+        params: { ride }
+      }
+    } as any);
   };
 
   const handleRidePress = (ride: AvailableRideData) => {
@@ -153,9 +221,14 @@ const AvailableRidesScreen: React.FC = () => {
       )} */}
 
       {/* Available Rides List */}
-      {rides.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primaryTeal} />
+          <Text style={styles.loadingText}>Searching matching rides...</Text>
+        </View>
+      ) : localRides && localRides.length > 0 ? (
         <FlatList
-          data={rides}
+          data={localRides}
           renderItem={renderRideCard}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -262,6 +335,17 @@ const styles = StyleSheet.create({
     color: Colors.backgroundWhite,
     fontSize: Fonts.sm,
     fontWeight: Fonts.weightSemiBold,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+    marginTop: 16,
   },
 });
 

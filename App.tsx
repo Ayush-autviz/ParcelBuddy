@@ -17,6 +17,7 @@ import { RootStackParamList } from './src/navigation/RootNavigator';
 import { navigationRef } from './src/navigation/navigationRef';
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import { searchRides } from './src/services/api/ride';
 
 // React Query client
 const queryClient = new QueryClient({
@@ -29,7 +30,7 @@ const queryClient = new QueryClient({
 });
 
 
-import { setPendingDeepLink } from './src/screens/Splash/SplashScreen';
+import { setPendingDeepLink, setPendingNotification } from './src/screens/Splash/SplashScreen';
 import {
   getPaymentReturnDestination,
   clearPaymentReturnDestination,
@@ -38,7 +39,7 @@ import {
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
-  const handleNotificationNavigation = (data: any) => {
+  const handleNotificationNavigation = async (data: any) => {
     let type = data?.type;
     console.log('🔔 [App] Handling push notification navigation');
     console.log('🔔 [App] Data:', JSON.stringify(data, null, 2));
@@ -59,6 +60,35 @@ function App() {
 
     if (!type) {
       console.log('⚠️ [App] No notification type found, aborting navigation');
+      return;
+    }
+
+    // Special handling for ride_available push notification
+    if (type === 'ride_available') {
+      try {
+        console.log('🔔 [App] Navigating instantly to AvailableRides for type "ride_available"');
+        
+        // Navigate directly to AvailableRides in RootNavigator
+        if (navigationRef.isReady()) {
+          navigationRef.dispatch(
+            CommonActions.navigate({
+              name: 'AvailableRides',
+              params: {
+                rides: undefined, // Let the screen fetch them asynchronously
+                from: data.origin || '',
+                to: data.destination || '',
+                date: data.travel_date || '',
+                fromLatitude: data.origin_lat ? parseFloat(data.origin_lat) : undefined,
+                fromLongitude: data.origin_lng ? parseFloat(data.origin_lng) : undefined,
+                toLatitude: data.destination_lat ? parseFloat(data.destination_lat) : undefined,
+                toLongitude: data.destination_lng ? parseFloat(data.destination_lng) : undefined,
+              },
+            })
+          );
+        }
+      } catch (error) {
+        console.error('🔔 [App] Error navigating from notification:', error);
+      }
       return;
     }
 
@@ -221,13 +251,9 @@ function App() {
       .then(remoteMessage => {
         if (remoteMessage) {
           console.log('🔔 [App] Notification opened app from quit state:', remoteMessage);
-          if (remoteMessage.data?.type) {
-            console.log('🔔 [App] Waiting for app initialization before navigation...');
-            // Wait for navigation to be ready and splash screen to likely finish
-            setTimeout(() => {
-              console.log('🔔 [App] Executing delayed quit-state navigation');
-              handleNotificationNavigation(remoteMessage.data);
-            }, 2500);
+          if (remoteMessage.data) {
+            console.log('🔔 [App] Storing pending notification for cold-start initialization');
+            setPendingNotification(remoteMessage.data);
           }
         } else {
           console.log('🔔 [App] No initial notification found');

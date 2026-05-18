@@ -7,6 +7,7 @@ import AuthNavigator from './AuthNavigator';
 import BottomTabNavigator from './BottomTabNavigator';
 import SuspendedScreen from '../screens/Auth/SuspendedScreen';
 import SubscriptionScreen from '../screens/Profile/SubscriptionScreen';
+import AvailableRidesScreen from '../screens/Search/AvailableRidesScreen';
 import { useAuth } from '../contexts/AuthContext';
 
 import { RootStackParamList } from './types';
@@ -67,6 +68,10 @@ const RootNavigator: React.FC = () => {
       <Stack.Screen
         name="Subscription"
         component={SubscriptionScreen}
+      />
+      <Stack.Screen
+        name="AvailableRides"
+        component={AvailableRidesScreen}
       />
     </Stack.Navigator>
   );

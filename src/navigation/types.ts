@@ -1,3 +1,5 @@
+import { AvailableRideData } from '../components/search/AvailableRideCard';
+
 export type RootStackParamList = {
   Splash: undefined;
   Auth: undefined;
@@ -9,4 +11,14 @@ export type RootStackParamList = {
     returnParams?: any;
     isUpgradeFlow?: boolean;
   } | undefined;
+  AvailableRides: {
+    rides?: AvailableRideData[];
+    from: string;
+    to: string;
+    date: string;
+    fromLatitude?: number;
+    fromLongitude?: number;
+    toLatitude?: number;
+    toLongitude?: number;
+  };
 };

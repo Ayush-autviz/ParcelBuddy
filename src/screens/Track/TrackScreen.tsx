@@ -26,6 +26,7 @@ import { ExtendedTrackStackParamList } from '../../navigation/TrackNavigator';
 import { usePublishedRides, useRaisedRequests } from '../../hooks/useRides';
 import { useBookedRides, BookedRideCardData, useCancelLuggageRequest } from '../../hooks/useLuggage';
 import { useCreateRide, useCancelRaisedRequest } from '../../hooks/useRideMutations';
+import { useSearchRides } from '../../hooks/useSearchRides';
 import { getLuggageRequests } from '../../services/api/luggage';
 import { getPublishedRides } from '../../services/api/ride';
 import GradientButton from '../../components/GradientButton';
@@ -70,9 +71,12 @@ interface LuggageRequest {
 const TrackScreen: React.FC = () => {
   const navigation = useNavigation<TrackScreenNavigationProp>();
   const route = useRoute<RouteProp<ExtendedTrackStackParamList, 'TrackList'>>();
-  const { showError, showSuccess } = useToast();
+  const { showError, showSuccess, showInfo } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('Booked');
+
+  // Search rides mutation
+  const searchRidesMutation = useSearchRides();
 
   useEffect(() => {
     if (route.params?.initialTab) {
@@ -188,7 +192,8 @@ const TrackScreen: React.FC = () => {
         showRateButton: false,
         travelerName: 'Request Raised',
         bookingRequest: undefined, // It's a raised request, not a booking
-      }));
+        raisedRequest: req,
+      } as any));
 
       setAllBookedRides([...raisedRides, ...bookedRidesData.rides]);
       setNextPageUrlBooked(bookedRidesData.pagination?.next_page || null);
@@ -492,7 +497,8 @@ const TrackScreen: React.FC = () => {
           showRateButton: false,
           travelerName: 'Request Raised',
           bookingRequest: undefined,
-        }));
+          raisedRequest: req,
+        } as any));
 
         setAllBookedRides([...raisedRides, ...bookedResult.data.rides]);
         setNextPageUrlBooked(bookedResult.data.pagination?.next_page || null);
@@ -545,9 +551,21 @@ const TrackScreen: React.FC = () => {
   }, [activeTab, queryClient, refetchBooked, refetchPublished]);
 
   const handleRidePress = (ride: RideCardData | BookedRideCardData) => {
-    // If it's a raised request (no bookingRequest), don't navigate for now
+    // If it's a raised request (no bookingRequest), navigate instantly to AvailableRides screen and let it fetch matching rides locally
     if (activeTab === 'Booked' && 'id' in ride && ride.id.startsWith('raised-')) {
-      // Optional: show info toast
+      const raisedRequest = (ride as any).raisedRequest;
+      if (!raisedRequest) return;
+
+      (navigation as any).navigate('AvailableRides', {
+        rides: undefined,
+        from: raisedRequest.origin_name,
+        to: raisedRequest.destination_name,
+        date: raisedRequest.travel_date,
+        fromLatitude: raisedRequest.origin_lat,
+        fromLongitude: raisedRequest.origin_lng,
+        toLatitude: raisedRequest.destination_lat,
+        toLongitude: raisedRequest.destination_lng,
+      });
       return;
     }
 

@@ -197,7 +197,7 @@ const SearchScreen: React.FC = () => {
         refetchHistory();
 
         // Navigate to Available Rides screen with results
-        navigation.navigate('AvailableRides', {
+        navigation.navigate('AvailableRides' as any, {
           rides: transformedRides,
           from: searchFrom,
           to: searchTo,
@@ -278,7 +278,7 @@ const SearchScreen: React.FC = () => {
           refetchHistory();
 
           // Navigate to Available Rides screen with results
-          navigation.navigate('AvailableRides', {
+          navigation.navigate('AvailableRides' as any, {
             rides: transformedRides,
             from: item.from,
             to: item.to,

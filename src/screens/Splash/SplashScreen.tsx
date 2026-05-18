@@ -35,6 +35,18 @@ export const clearPendingDeepLink = () => {
   pendingDeepLink = null;
 };
 
+// Store for pending push notification on cold start
+export let pendingNotification: any = null;
+export const setPendingNotification = (data: any) => {
+  pendingNotification = data;
+};
+export const getPendingNotification = (): any => {
+  return pendingNotification;
+};
+export const clearPendingNotification = () => {
+  pendingNotification = null;
+};
+
 const { width, height } = Dimensions.get('window');
 
 type RootStackParamList = {
@@ -195,12 +207,59 @@ const SplashScreen: React.FC = () => {
 
 
         } else if (profile_check) {
-          console.log('SplashScreen: Navigating to MainApp');
-          // Normal navigation to MainApp 
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'MainApp' }],
-          });
+          const notificationData = getPendingNotification();
+          if (notificationData) {
+            console.log('SplashScreen: Handling pending notification return', notificationData);
+            clearPendingNotification();
+
+            const type = notificationData.type;
+            if (type === 'ride_available') {
+              console.log('[SplashScreen] Resetting stack to AvailableRides from notification');
+              navigation.reset({
+                index: 1,
+                routes: [
+                  { name: 'MainApp' },
+                  {
+                    name: 'AvailableRides' as any,
+                    params: {
+                      rides: undefined,
+                      from: notificationData.origin || '',
+                      to: notificationData.destination || '',
+                      date: notificationData.travel_date || '',
+                      fromLatitude: notificationData.origin_lat ? parseFloat(notificationData.origin_lat) : undefined,
+                      fromLongitude: notificationData.origin_lng ? parseFloat(notificationData.origin_lng) : undefined,
+                      toLatitude: notificationData.destination_lat ? parseFloat(notificationData.destination_lat) : undefined,
+                      toLongitude: notificationData.destination_lng ? parseFloat(notificationData.destination_lng) : undefined,
+                    }
+                  }
+                ],
+              });
+            } else {
+              const targetTab = notificationData.type === 'chat' ? 'Chat' : (['ride', 'request'].includes(notificationData.type) ? 'Track' : 'Search');
+              console.log(`[SplashScreen] Resetting stack to tab: ${targetTab}`);
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'MainApp',
+                    state: {
+                      routes: [
+                        { name: targetTab }
+                      ],
+                      index: 0
+                    }
+                  }
+                ]
+              });
+            }
+          } else {
+            console.log('SplashScreen: Navigating to MainApp');
+            // Normal navigation to MainApp 
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'MainApp' }],
+            });
+          }
         } else {
           console.log('SplashScreen: Navigating to ProfileSetup');
           navigation.reset({
