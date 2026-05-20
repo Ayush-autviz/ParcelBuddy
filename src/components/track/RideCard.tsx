@@ -42,6 +42,8 @@ interface RideCardProps {
 const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, onDeletePress, style }) => {
   // Check if this is a booked ride (has bookingRequest property)
   const isBookedRide = 'bookingRequest' in ride && (ride as any).bookingRequest !== undefined;
+  // Check if this is a raised request (starts with raised-)
+  const isRaisedRequest = ride.id?.startsWith('raised-');
 
   const renderPassengerIcons = () => {
     // For booked rides, allow showing the traveler's photo if available
@@ -125,7 +127,9 @@ const RideCard: React.FC<RideCardProps> = ({ ride, onPress, onRatePress, onDelet
     >
       <View style={styles.header}>
         <View style={styles.statusContainer}>
-          <StatusBadge status={ride.status} />
+          {!(isRaisedRequest && ride.status === 'active') && (
+            <StatusBadge status={ride.status} />
+          )}
           {ride.pendingRequestCount !== undefined && ride.pendingRequestCount > 0 && ride.status !== 'completed' && (
             <Text style={styles.pendingText}>{ride.pendingRequestCount} pending</Text>
           )}

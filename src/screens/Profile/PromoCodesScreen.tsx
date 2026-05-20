@@ -40,7 +40,7 @@ const PromoCodesScreen: React.FC = () => {
     console.log('🎁 [PromoCodesScreen] Rewards API Response:', JSON.stringify(rewardsData, null, 2));
 
     // Map API fields if available, otherwise fall back to reference values
-    const apiCode = rewardsData?.referral_code || 'PARCELBUDDY20';
+    const apiCode = rewardsData?.referral_code;
     const rawDiscount = rewardsData?.discount_percentage || '20%';
     const apiDiscount = rawDiscount.includes('OFF') ? rawDiscount : `${rawDiscount} OFF`;
     const apiTitle = 'Referral Reward';
@@ -65,10 +65,9 @@ const PromoCodesScreen: React.FC = () => {
   const handleShareCode = async () => {
     if (!promoData?.code) return;
     try {
-      const shareUrl = rewardsData?.share_link || `https://parcelbuddy.app/join?ref=${promoData.code}`;
       await Share.open({
         title: 'Share Referral Code',
-        message: `Use my exclusive code ${promoData.code} on ParcelBuddy to get awesome discounts! Join here: ${shareUrl}`,
+        message: `Use my exclusive code ${promoData.code} on ParcelBuddy to get awesome discounts!`,
       });
     } catch (error) {
       console.log('Share dismissed or error:', error);

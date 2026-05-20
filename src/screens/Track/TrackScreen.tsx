@@ -436,7 +436,7 @@ const TrackScreen: React.FC = () => {
       combined.push(...raised);
     }
     if (bookings.length > 0) {
-      combined.push({ isHeader: true, title: 'Confirmed Bookings', id: 'header-bookings' });
+      combined.push({ isHeader: true, title: 'Bookings', id: 'header-bookings' });
       combined.push(...bookings);
     }
 

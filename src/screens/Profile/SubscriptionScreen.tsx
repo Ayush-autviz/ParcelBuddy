@@ -90,9 +90,8 @@ const SubscriptionScreen: React.FC = () => {
 
         // Build features array
         const features: PlanFeature[] = [
-          { text: `Create up to ${plan.rides_per_month} rides.` },
+          { text: `Create up to ${plan.rides_per_month} ride${plan.rides_per_month !== 1 ? 's' : ''} or send request to ${plan.requests_per_month} traveller${plan.requests_per_month !== 1 ? 's' : ''}.` },
           // { text: 'Search rides unlimited.' },
-          { text: `Send requests to ${plan.requests_per_month} travellers.` },
           ...(plan.features || []).map((feature) => ({ text: feature })),
         ];
 
