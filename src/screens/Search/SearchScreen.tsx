@@ -9,7 +9,7 @@ import {
   Platform,
   PermissionsAndroid,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Colors } from '../../constants/colors';
@@ -17,7 +17,7 @@ import { Fonts } from '../../constants/fonts';
 import { Card, Header, GradientButton, TabButton, SearchInput, SearchHistoryItem, DatePickerInput, PromoModal } from '../../components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SearchStackParamList } from '../../navigation/SearchNavigator';
-import { useSearchFormStore, useAuthStore } from '../../services/store';
+import { useSearchFormStore } from '../../services/store';
 import { useSearchRides } from '../../hooks/useSearchRides';
 import { useSearchHistory, SearchHistoryItem as SearchHistoryItemType } from '../../hooks/useSearchHistory';
 import { useSendFcmToken } from '../../hooks/useAuthMutations';
@@ -29,11 +29,11 @@ import messaging from '@react-native-firebase/messaging';
 type TabType = 'Domestic' | 'International';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList, 'SearchList'>;
-
-let hasShownPromoSession = false;
+type SearchScreenRouteProp = RouteProp<SearchStackParamList, 'SearchList'>;
 
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
+  const route = useRoute<SearchScreenRouteProp>();
   const [activeTab, setActiveTab] = useState<TabType>('Domestic');
   const [date, setDate] = useState<Date | null>(null);
   const shouldClearOnFocus = useRef(false);
@@ -67,20 +67,19 @@ const SearchScreen: React.FC = () => {
   const { showWarning } = useToast();
 
   // Promo Modal State and handler
-  const { user } = useAuthStore();
   const [showPromoModal, setShowPromoModal] = useState(false);
 
   useEffect(() => {
-    // If last_login is null/falsy, show the promo modal exactly once per session
-    if (user && !user.last_login && !hasShownPromoSession) {
-      console.log('🎉 [SearchScreen] First login detected. Opening PromoModal!');
+    if (route.params?.fromProfileSetup) {
+      console.log('🎉 [SearchScreen] Arrived from ProfileSetup. Opening PromoModal!');
       setShowPromoModal(true);
+      // Clear the parameter so it doesn't trigger again
+      navigation.setParams({ fromProfileSetup: undefined });
     }
-  }, [user]);
+  }, [route.params?.fromProfileSetup]);
 
   const handleDismissPromoModal = (shouldNavigate: boolean) => {
     setShowPromoModal(false);
-    hasShownPromoSession = true;
     if (shouldNavigate) {
       navigation.navigate('MainApp' as any, {
         screen: 'Profile',

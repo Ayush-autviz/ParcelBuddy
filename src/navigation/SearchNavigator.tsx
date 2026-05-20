@@ -14,6 +14,7 @@ export type SearchStackParamList = {
   SearchList: {
     selectedPlace?: PlaceResultItemData;
     fieldType?: 'from' | 'to';
+    fromProfileSetup?: boolean;
   };
   PlacesSearch: {
     fieldType: 'from' | 'to' | 'origin' | 'destination';

@@ -274,7 +274,20 @@ const ProfileSetupScreen: React.FC = () => {
         console.log('response', response);
         navigation.reset({
           index: 0,
-          routes: [{ name: 'MainApp' }],
+          routes: [
+            {
+              name: 'MainApp',
+              params: {
+                screen: 'Search',
+                params: {
+                  screen: 'SearchList',
+                  params: {
+                    fromProfileSetup: true,
+                  },
+                },
+              },
+            },
+          ],
         });
       },
       onError: (error: any) => {
