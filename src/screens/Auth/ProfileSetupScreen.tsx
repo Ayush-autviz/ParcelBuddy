@@ -114,10 +114,11 @@ const ProfileSetupScreen: React.FC = () => {
     if (user) {
 
       // Pre-fill full name from first_name and last_name
-      if (user.first_name || user.last_name) {
-        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+      if (user.first_name || user.last_name || user.full_name) {
+        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.full_name || '';
         setFullName(fullName);
       }
+
 
       // Pre-fill date of birth if available
       if (user.date_of_birth) {
@@ -199,10 +200,6 @@ const ProfileSetupScreen: React.FC = () => {
       return;
     }
 
-    if (!dateOfBirth) {
-      showWarning('Please enter your date of birth');
-      return;
-    }
 
     if (!location || !country) {
       showWarning('Please fetch your location');
@@ -238,7 +235,9 @@ const ProfileSetupScreen: React.FC = () => {
       return `${year}-${month}-${day}`;
     };
 
-    formData.append('date_of_birth', formatDateForAPI(dateOfBirth));
+    if (dateOfBirth) {
+      formData.append('date_of_birth', formatDateForAPI(dateOfBirth));
+    }
     formData.append('email', email.trim());
     formData.append('phone', fullPhoneNumber);
     formData.append('profile.bio', bio.trim() || '');
@@ -539,7 +538,7 @@ const ProfileSetupScreen: React.FC = () => {
           {/* Date of Birth Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>
-              Date of Birth<Text style={styles.required}>*</Text>
+              Date of Birth
             </Text>
             <TouchableOpacity
               style={styles.dateInputWrapper}

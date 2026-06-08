@@ -73,9 +73,9 @@ export const useGoogleLogin = (): UseMutationResult<any, Error, { token: string 
   });
 };
 
-export const useAppleLogin = (): UseMutationResult<any, Error, { token: string }, unknown> => {
+export const useAppleLogin = (): UseMutationResult<any, Error, { token: string, first_name?: string | null, last_name?: string | null }, unknown> => {
   return useMutation({
-    mutationFn: (data: { token: string }) => appleLogin(data),
+    mutationFn: (data: { token: string, first_name?: string | null, last_name?: string | null }) => appleLogin(data),
   });
 };
 

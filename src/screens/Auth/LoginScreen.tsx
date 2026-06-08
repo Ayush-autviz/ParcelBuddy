@@ -49,7 +49,7 @@ const LoginScreen: React.FC = () => {
       setStep('email-login');
     }
   }, [route.params]);
-  
+
   const getOtpEmailMutation = useGetOtpEmail();
   const verifyOtpMutation = useVerifyOtpEmail();
   const resendOtpMutation = useResendOtpEmail();
@@ -82,10 +82,10 @@ const LoginScreen: React.FC = () => {
         },
         onError: (error: any) => {
           console.log('Error sending OTP:', error);
-          const errorMessage = error?.response?.data?.message || 
-                              error?.response?.data?.error || 
-                              error?.message || 
-                              'Failed to send OTP. Please try again.';
+          const errorMessage = error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            error?.message ||
+            'Failed to send OTP. Please try again.';
           showError(errorMessage);
         },
       }
@@ -148,14 +148,14 @@ const LoginScreen: React.FC = () => {
       const result = await signInWithGoogle();
       if (result && result.idToken) {
         console.log('Google Sign-In Token:', result.idToken);
-        
+
         // Call Google login API using React Query
         googleLoginMutation.mutate(
           { token: result.idToken },
           {
             onSuccess: (response: any) => {
               console.log('Google Login API Response:', response);
-              
+
               // Store tokens
               if (response.tokens) {
                 setToken({
@@ -163,12 +163,12 @@ const LoginScreen: React.FC = () => {
                   refresh_token: response.tokens.refresh,
                 });
               }
-              
+
               // Store user data
               if (response.profile) {
                 setUser(response.profile);
               }
-              
+
               // Check if user is suspended
               if (response.profile?.is_suspended === true) {
                 navigation.dispatch(
@@ -179,7 +179,7 @@ const LoginScreen: React.FC = () => {
                 );
                 return;
               }
-              
+
               // Navigate based on profile setup status
               if (response.profile_setup === false) {
                 // Navigate to ProfileSetupScreen if profile is not set up
@@ -199,7 +199,7 @@ const LoginScreen: React.FC = () => {
             },
             onError: (error: any) => {
               console.error('Google Login API Error:', error);
-              
+
               // Check if account is suspended from error response
               if (error?.response?.data?.is_suspended === true) {
                 navigation.dispatch(
@@ -210,11 +210,11 @@ const LoginScreen: React.FC = () => {
                 );
                 return;
               }
-              
-              const errorMessage = error?.response?.data?.message || 
-                                  error?.response?.data?.error || 
-                                  error?.message || 
-                                  'Failed to login with Google';
+
+              const errorMessage = error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message ||
+                'Failed to login with Google';
               showError(errorMessage);
             },
           }
@@ -245,10 +245,12 @@ const LoginScreen: React.FC = () => {
 
       const { identityToken, fullName, email: appleEmail } = appleAuthRequestResponse;
 
+      console.log(appleAuthRequestResponse, "ap[pklecess")
+
       if (identityToken) {
         console.log('[Apple Sign-In] identityToken:', identityToken);
         appleLoginMutation.mutate(
-          { token: identityToken },
+          { token: identityToken, first_name: fullName?.givenName, last_name: fullName?.familyName },
           {
             onSuccess: (response: any) => {
               console.log('Apple Login API Response:', response);
@@ -358,40 +360,40 @@ const LoginScreen: React.FC = () => {
       enableAutomaticScroll={true}
       keyboardShouldPersistTaps="handled"
     >
-        {/* Header Section */}
-        <View style={styles.header}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-           <Image source={require('../../assets/images/Logo.png')} style={styles.logo} />
-          </View>
-          
-          {/* App Name */}
-          <Text style={styles.appName}>ParcelBuddy</Text>
-          
-          {/* Tagline */}
-          <Text style={styles.tagline}>
-            Your bag's extra space, someone's{'\n'}perfect place.
-          </Text>
+      {/* Header Section */}
+      <View style={styles.header}>
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image source={require('../../assets/images/Logo.png')} style={styles.logo} />
         </View>
 
-        {/* White Card Section */}
-        <View style={styles.card}>
-          {step === 'auth-methods' ? (
-            <>
-          {/* Welcome Title */}
-          <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
-              
-              {/* Auth Method Buttons */}
-              <AuthMethodButtons
-                onGooglePress={handleGooglePress}
-                onEmailPress={handleEmailPress}
-                onApplePress={handleApplePress}
-                appleLoading={isAppleSignInLoading}
-                showAppleButton={Platform.OS === 'ios'}
-              />
-            </>
-          ) : step === 'email-login' ? (
-            <>
+        {/* App Name */}
+        <Text style={styles.appName}>ParcelBuddy</Text>
+
+        {/* Tagline */}
+        <Text style={styles.tagline}>
+          Your bag's extra space, someone's{'\n'}perfect place.
+        </Text>
+      </View>
+
+      {/* White Card Section */}
+      <View style={styles.card}>
+        {step === 'auth-methods' ? (
+          <>
+            {/* Welcome Title */}
+            <Text style={styles.cardTitle}>Welcome to ParcelBuddy</Text>
+
+            {/* Auth Method Buttons */}
+            <AuthMethodButtons
+              onGooglePress={handleGooglePress}
+              onEmailPress={handleEmailPress}
+              onApplePress={handleApplePress}
+              appleLoading={isAppleSignInLoading}
+              showAppleButton={Platform.OS === 'ios'}
+            />
+          </>
+        ) : step === 'email-login' ? (
+          <>
             <View style={styles.headerRow}>
               {/* Back Button */}
               {/* <TouchableOpacity
@@ -407,49 +409,49 @@ const LoginScreen: React.FC = () => {
               {/* <View style={styles.backButton} /> */}
             </View>
 
-              {/* Email Input */}
-              <View style={styles.emailInputContainer}>
-                <Text style={styles.inputLabel}>Email Address</Text>
-                <TextInput
-                  style={styles.emailInput}
-                  placeholder="Enter your email"
-                  placeholderTextColor={Colors.textLight}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-
-              {/* Get OTP Button with Gradient */}
-              <GradientButton
-                title={getOtpEmailMutation.isPending ? 'Sending OTP...' : 'Get OTP'}
-                onPress={handleGetOTP}
-                loading={getOtpEmailMutation.isPending}
-                style={styles.otpButton}
-                disabled={getOtpEmailMutation.isPending}
+            {/* Email Input */}
+            <View style={styles.emailInputContainer}>
+              <Text style={styles.inputLabel}>Email Address</Text>
+              <TextInput
+                style={styles.emailInput}
+                placeholder="Enter your email"
+                placeholderTextColor={Colors.textLight}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
+            </View>
 
-              {/* Alternative Login Options */}
-              <View style={styles.alternativeContainer}>
-                <Text style={styles.alternativeText}>Already have an account? </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    navigation.navigate('EmailLogin');
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.alternativeLinkText}>Login</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+            {/* Get OTP Button with Gradient */}
+            <GradientButton
+              title={getOtpEmailMutation.isPending ? 'Sending OTP...' : 'Get OTP'}
+              onPress={handleGetOTP}
+              loading={getOtpEmailMutation.isPending}
+              style={styles.otpButton}
+              disabled={getOtpEmailMutation.isPending}
+            />
+
+            {/* Alternative Login Options */}
+            <View style={styles.alternativeContainer}>
+              <Text style={styles.alternativeText}>Already have an account? </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate('EmailLogin');
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.alternativeLinkText}>Login</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               {/* Back Button */}
               <TouchableOpacity
-                style={{justifyContent: 'space-between', alignItems: 'center'}}
+                style={{ justifyContent: 'space-between', alignItems: 'center' }}
                 onPress={handleBackPress}
                 activeOpacity={0.7}
               >
@@ -457,25 +459,25 @@ const LoginScreen: React.FC = () => {
               </TouchableOpacity>
 
               {/* Title */}
-              <Text style={{fontSize: Fonts.xl, fontWeight: Fonts.weightBold, color: Colors.textPrimary, textAlign: 'center'}}>Verify OTP</Text>
-              <View style={{width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-start'}} />
+              <Text style={{ fontSize: Fonts.xl, fontWeight: Fonts.weightBold, color: Colors.textPrimary, textAlign: 'center' }}>Verify OTP</Text>
+              <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-start' }} />
             </View>
 
-              {/* OTP Verification Form */}
-              <OtpVerificationForm
-                email={email}
-                onVerifySuccess={handleVerifySuccess}
-                verifyMutation={verifyOtpMutation}
-                resendMutation={resendOtpMutation}
-                initialTimer={60}
-                verifyButtonText="Verify OTP"
-                resendButtonText="Resend OTP"
-              />
-            </>
-          )}
-              {/* Commented out Phone Number Input */}
-              {/* <Text style={styles.inputLabel}>Enter your mobile number</Text> */}
-              {/* <View style={styles.phoneInputContainer}>
+            {/* OTP Verification Form */}
+            <OtpVerificationForm
+              email={email}
+              onVerifySuccess={handleVerifySuccess}
+              verifyMutation={verifyOtpMutation}
+              resendMutation={resendOtpMutation}
+              initialTimer={60}
+              verifyButtonText="Verify OTP"
+              resendButtonText="Resend OTP"
+            />
+          </>
+        )}
+        {/* Commented out Phone Number Input */}
+        {/* <Text style={styles.inputLabel}>Enter your mobile number</Text> */}
+        {/* <View style={styles.phoneInputContainer}>
             <View style={styles.phoneInputWrapper}>
               <PhoneInput
                 ref={phoneInputRef}
@@ -539,8 +541,8 @@ const LoginScreen: React.FC = () => {
             </View>
               </View> */}
 
-          {/* Terms and Privacy Policy */}
-          {/* <Text style={styles.termsText}>
+        {/* Terms and Privacy Policy */}
+        {/* <Text style={styles.termsText}>
             By continuing, you agree to our{' '}
             <Text style={styles.linkText} onPress={handleTermsPress}>
               Terms of Service
@@ -550,7 +552,7 @@ const LoginScreen: React.FC = () => {
               Privacy Policy
             </Text>
           </Text> */}
-        </View>
+      </View>
     </KeyboardAwareScrollView>
   );
 };
@@ -614,8 +616,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: Fonts.xl,
-    marginTop:10,
-    marginBottom:30,
+    marginTop: 10,
+    marginBottom: 30,
     fontWeight: Fonts.weightBold,
     color: Colors.textPrimary,
     textAlign: 'center',

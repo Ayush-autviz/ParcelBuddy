@@ -63,11 +63,13 @@ const PromoCodesScreen: React.FC = () => {
   };
 
   const handleShareCode = async () => {
+    const shareAndroidUrl = 'https://play.google.com/store/apps/details?id=com.parcelbuddy'
+    const shareIosUrl = `https://apps.apple.com/in/app/dropaddy/id6746367360?action=download&pt=${promoData.code}&ct=${promoData.code}`
     if (!promoData?.code) return;
     try {
       await Share.open({
         title: 'Share Referral Code',
-        message: `Use my exclusive code ${promoData.code} on ParcelBuddy to get awesome discounts!`,
+        message: `Use my exclusive ParcelBuddy referral code: ${promoData.code}\n\nDownload ParcelBuddy:\nAndroid: ${shareAndroidUrl}`,
       });
     } catch (error) {
       console.log('Share dismissed or error:', error);

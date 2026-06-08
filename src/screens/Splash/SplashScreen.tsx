@@ -128,7 +128,7 @@ const SplashScreen: React.FC = () => {
         hasNavigated.current = true;
         setUser(profile);
 
-        const profile_check = profile?.first_name && profile?.email && profile?.phone && profile?.date_of_birth && (profile?.country || profile?.profile?.country); // profile.date_of_birth is NOT ALWAYS in profile.profile
+        const profile_check = profile?.first_name && profile?.email && profile?.phone && (profile?.country || profile?.profile?.country); // profile.date_of_birth is NOT ALWAYS in profile.profile
         console.log('profile_check', profile_check);
         // Check both root level and nested profile for date_of_birth and country
 

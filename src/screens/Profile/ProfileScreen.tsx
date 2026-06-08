@@ -300,7 +300,9 @@ const ProfileScreen: React.FC = () => {
             )}
           </TouchableOpacity>
           <Text style={styles.userName}>{user?.first_name} {user?.last_name}</Text>
-          <Text style={styles.userAge}>{user?.date_of_birth ? new Date().getFullYear() - new Date(user?.date_of_birth).getFullYear() : ''} years old</Text>
+          {user?.date_of_birth &&
+            <Text style={styles.userAge}>{user?.date_of_birth ? new Date().getFullYear() - new Date(user?.date_of_birth).getFullYear() : ''} years old</Text>
+          }
         </View>
 
         {/* Menu Items */}
