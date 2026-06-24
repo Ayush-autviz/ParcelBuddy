@@ -48,10 +48,10 @@ const EditProfileScreen: React.FC = () => {
 
   // Fetch profile data from API
   const { data: profileData, isLoading, isError, error } = useMyProfile();
-  
+  console.log('sasc', profileData)
   // Profile update mutation
   const profileSetupMutation = useProfileSetup();
-  
+
   // Confirmation modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -59,23 +59,23 @@ const EditProfileScreen: React.FC = () => {
   React.useEffect(() => {
     if (profileData) {
       console.log('📱 [EDIT PROFILE] Profile data from API:', JSON.stringify(profileData, null, 2));
-      
+
       // Update form fields with API data
       const firstName = profileData.first_name || '';
       const lastName = profileData.last_name || '';
       setFullName(`${firstName} ${lastName}`.trim() || '');
-      
+
       // Handle null date_of_birth
       setDateOfBirth(
         profileData.date_of_birth && profileData.date_of_birth !== null
           ? new Date(profileData.date_of_birth)
           : null
       );
-      
+
       setBio(profileData.profile?.bio || '');
       setEmail(profileData.email || '');
       setProfilePhoto(profileData.profile?.profile_photo || null);
-      
+
       // Set location and country if available
       if (profileData.profile?.latitude && profileData.profile?.longitude) {
         setLocation({
@@ -86,9 +86,9 @@ const EditProfileScreen: React.FC = () => {
       if (profileData.profile?.country) {
         setCountry(profileData.profile.country);
       }
-      
+
       // Parse and set phone number
-      const parsed = parsePhoneNumber(profileData.phone);
+      const parsed = parsePhoneNumber(profileData.phone, profileData.phone_country);
       setPhoneNumber(parsed.number);
       setSelectedCountry(parsed.country);
     }
@@ -101,27 +101,26 @@ const EditProfileScreen: React.FC = () => {
   }, [profileData, isError, error, isLoading]);
 
   // Parse phone number from user data
-  const parsePhoneNumber = (phone: string | undefined) => {
-    if (!phone) return { number: '', country: 'US' };
-    // If phone starts with +, extract country code
+  const parsePhoneNumber = (phone: string | undefined, phoneCountryFromApi?: string) => {
+    const defaultCountry = phoneCountryFromApi || 'US';
+    if (!phone) return { number: '', country: defaultCountry };
+    
+    // Remove the country calling code from the phone number to get the local number
+    let number = phone;
     if (phone.startsWith('+1')) {
-      return { number: phone.replace(/^\+1/, ''), country: 'US' };
+      number = phone.replace(/^\+1/, '');
+    } else if (phone.startsWith('+91')) {
+      number = phone.replace(/^\+91/, '');
+    } else {
+      number = phone.replace(/^\+\d+/, '');
     }
-    if (phone.startsWith('+91')) {
-      return { number: phone.replace(/^\+91/, ''), country: 'IN' };
-    }
-    // Try to detect other country codes (simplified - can be enhanced)
-    const usMatch = phone.match(/^\+1(.+)/);
-    if (usMatch) {
-      return { number: usMatch[1], country: 'CA' };
-    }
-    // Default to US
-    return { number: phone.replace(/^\+\d+/, ''), country: 'CA' };
+
+    return { number, country: defaultCountry };
   };
 
   // Use profile data from API if available, otherwise fallback to user from store
   const currentProfile = profileData || user;
-  const parsedPhone = parsePhoneNumber(currentProfile?.phone);
+  const parsedPhone = parsePhoneNumber(currentProfile?.phone, currentProfile?.phone_country);
 
   // Form state - initialize from API data or store
   const [fullName, setFullName] = useState(
@@ -198,12 +197,12 @@ const EditProfileScreen: React.FC = () => {
     setIsFetchingLocation(true);
     try {
       const result = await getCurrentLocation();
-      
+
       // Check if result is LocationCoordinates (has latitude property)
       if ('latitude' in result && 'longitude' in result) {
         const locationData = result as LocationCoordinates;
         setLocation(locationData);
-        
+
         // Fetch country using coordinates
         setIsFetchingCountry(true);
         try {
@@ -307,7 +306,8 @@ const EditProfileScreen: React.FC = () => {
     formData.append('last_name', last_name);
     formData.append('email', email.trim());
     formData.append('phone', fullPhoneNumber);
-    
+    formData.append('phone_country', selectedCountry);
+
     // Format date as YYYY-MM-DD
     const formatDateForAPI = (date: Date | null): string => {
       if (!date) return '';
@@ -316,11 +316,11 @@ const EditProfileScreen: React.FC = () => {
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
+
     if (dateOfBirth) {
       formData.append('date_of_birth', formatDateForAPI(dateOfBirth));
     }
-    
+
     if (bio.trim()) {
       formData.append('profile.bio', bio.trim());
     }
@@ -340,7 +340,7 @@ const EditProfileScreen: React.FC = () => {
       const fileExtension = profileImageAsset.uri.split('.').pop() || 'jpg';
       const fileName = profileImageAsset.fileName || `profile_photo.${fileExtension}`;
       const fileType = profileImageAsset.type || `image/${fileExtension}`;
-      
+
       formData.append('profile.profile_photo', {
         uri: profileImageAsset.uri,
         type: fileType,
@@ -395,8 +395,8 @@ const EditProfileScreen: React.FC = () => {
         <View style={styles.profilePictureSection}>
           <View style={styles.avatarContainer}>
             {profilePhoto ? (
-              <Image 
-                source={{ uri: profilePhoto }} 
+              <Image
+                source={{ uri: profilePhoto }}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />
@@ -484,6 +484,7 @@ const EditProfileScreen: React.FC = () => {
                 }}
                 onChangeSelectedCountry={(country: any) => {
                   setCountryCode(country?.idd?.root || '+1');
+                  setSelectedCountry(country?.cca2 || 'US');
                 }}
                 customCaret={() => <ChevronDown size={16} color="#666" />}
                 phoneInputStyles={{

@@ -69,6 +69,7 @@ const ProfileSetupScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('');
+  const [phoneCountry, setPhoneCountry] = useState('US');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(new Date());
@@ -240,6 +241,7 @@ const ProfileSetupScreen: React.FC = () => {
     }
     formData.append('email', email.trim());
     formData.append('phone', fullPhoneNumber);
+    formData.append('phone_country', phoneCountry);
     formData.append('profile.bio', bio.trim() || '');
 
 
@@ -480,12 +482,13 @@ const ProfileSetupScreen: React.FC = () => {
                 ref={phoneInputRef}
                 defaultValue={phoneNumber}
                 value={phoneNumber}
-                defaultCountry="US"
+                defaultCountry="IN"
                 onChangePhoneNumber={(number) => {
                   setPhoneNumber(number);
                 }}
                 onChangeSelectedCountry={(country: any) => {
                   setCountryCode(country?.idd?.root || '');
+                  setPhoneCountry(country?.cca2 || 'CA');
                 }}
                 customCaret={() => <ChevronDown size={16} color="#666" />}
                 phoneInputStyles={{
