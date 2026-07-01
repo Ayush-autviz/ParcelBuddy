@@ -9,7 +9,7 @@ import { useNavigation, useFocusEffect, CommonActions, useRoute, RouteProp } fro
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
-import { CheckCircle, Check, Shield } from 'lucide-react-native';
+import { CheckCircle, Check, Shield, X } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -20,8 +20,8 @@ import { useToast } from '../../components/Toast';
 import { DocumentIcon, SmileyIcon } from '../../assets/icons/svg/main';
 import { useAuthStore } from '../../services/store';
 import { fetchAndUpdateProfile } from '../../utils/profileUtils';
-import KycPhoneOtpForm from '../../components/kyc/KycPhoneOtpForm';
-import { useRequestKycPhoneOtp, useVerifyKycPhoneOtp } from '../../hooks/useAuthMutations';
+// import KycPhoneOtpForm from '../../components/kyc/KycPhoneOtpForm';
+// import { useRequestKycPhoneOtp, useVerifyKycPhoneOtp } from '../../hooks/useAuthMutations';
 import { useMyProfile } from '../../hooks/useProfile';
 
 type KYCVerificationScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'KYCVerification'>;
@@ -39,8 +39,8 @@ const KYCVerificationScreen: React.FC = () => {
   const { data: profileData } = useMyProfile();
 
   // KYC Phone OTP mutations
-  const requestKycPhoneOtpMutation = useRequestKycPhoneOtp();
-  const verifyKycPhoneOtpMutation = useVerifyKycPhoneOtp();
+  // const requestKycPhoneOtpMutation = useRequestKycPhoneOtp();
+  // const verifyKycPhoneOtpMutation = useVerifyKycPhoneOtp();
 
   // Fetch and update profile when screen comes into focus to get latest KYC status
   useFocusEffect(
@@ -103,6 +103,7 @@ const KYCVerificationScreen: React.FC = () => {
     }
   };
 
+  /*
   const handleKycOtpVerifySuccess = async (response?: any) => {
     console.log('KYC OTP verification successful:', response);
     showSuccess('Phone number verified successfully!');
@@ -152,6 +153,7 @@ const KYCVerificationScreen: React.FC = () => {
       }
     }
   };
+  */
 
   return (
     <SafeAreaView style={styles.container}>
@@ -196,7 +198,8 @@ const KYCVerificationScreen: React.FC = () => {
             </View>
           </View>
         ) : isKYCRejected ? (
-          /* Phone OTP Verification for In Progress Status */
+          /* Phone OTP Verification for In Progress Status - Commented out */
+          /*
           <KycPhoneOtpForm
             phone={phoneNumber}
             onVerifySuccess={handleKycOtpVerifySuccess}
@@ -204,6 +207,20 @@ const KYCVerificationScreen: React.FC = () => {
             verifyMutation={verifyKycPhoneOtpMutation}
             initialTimer={60}
           />
+          */
+          <View style={styles.failureCard}>
+            <View style={styles.failureContent}>
+              <View style={styles.bigCrossContainer}>
+                <View style={styles.bigCrossCircle}>
+                  <X size={56} color={Colors.error} strokeWidth={4} />
+                </View>
+              </View>
+              <Text style={styles.failureTitle}>Verification Declined</Text>
+              <Text style={styles.failureDescription}>
+                Your identity verification could not be completed. Please try again.
+              </Text>
+            </View>
+          </View>
         ) : (
           /* Normal Screen for Not Started Status */
           <>
@@ -239,11 +256,11 @@ const KYCVerificationScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Continue Button - Only show for not_started status */}
-      {!isKYCRejected && !isKYCApproved && (
+      {/* Continue or Retry Button */}
+      {!isKYCApproved && (
         <View style={styles.buttonContainer}>
           <GradientButton
-            title={isLoading ? 'Loading...' : 'Continue'}
+            title={isLoading ? 'Loading...' : (isKYCRejected ? 'Retry Verification' : 'Continue')}
             onPress={handleContinue}
             style={styles.continueButton}
             disabled={isLoading}
@@ -386,6 +403,53 @@ const styles = StyleSheet.create({
     fontSize: Fonts.base,
     color: Colors.textWhite,
     fontWeight: Fonts.weightMedium,
+  },
+  failureCard: {
+    marginTop: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: Colors.backgroundWhite,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  failureContent: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  bigCrossContainer: {
+    marginBottom: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bigCrossCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFEBEA', // Light red background
+    shadowColor: Colors.error,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  failureTitle: {
+    fontSize: Fonts.xxl,
+    fontWeight: Fonts.weightBold,
+    color: Colors.textPrimary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  failureDescription: {
+    fontSize: Fonts.base,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });
 
